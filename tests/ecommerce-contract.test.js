@@ -176,15 +176,28 @@ test('legacy page guards do not suppress the live checkout, tracking and newslet
   assert.ok(account.includes('event.stopImmediatePropagation()'), 'tracking handles its own submit without bubbling to legacy handlers');
   assert.ok(newsletter.includes('event.stopPropagation()'), 'newsletter handles its own submit without legacy override');
 });
-test('homepage slider consumes published CMS slides and replays data when sync finishes early', async () => {
+test('homepage hero is image-first with one CMS-configurable CTA and never swaps to an unpreloaded image', async () => {
   const premium = await read('js/premium-home.js');
   const sync = await read('js/storefront-sync.js');
-  assert.match(premium, /Array\.isArray\(data\.slides\)/);
-  assert.match(premium, /slides=incoming/);
-  assert.match(premium, /Array\.isArray\(window\.MV_HOMEPAGE_SLIDES\)/);
-  assert.match(premium, /dispatchEvent\(new CustomEvent\('mystic-vibe-storefront-data'/);
+  const html = await read('admin.html');
+  const css = await read('css/premium.css');
+  assert.match(premium, /class="premium-hero-media"><img/);
+  assert.match(premium, /class="premium-hero-actions"><a class="btn" href="collection\.html">Explore<\/a>/);
+  assert.doesNotMatch(premium, /Discover Signatures|<h1 class="serif">Every Scent/);
+  assert.match(premium, /function setHeroImage\(source, alt\)/);
+  assert.match(premium, /probe\.onload=function\(\)/);
+  assert.match(premium, /probe\.onerror=function\(\)/);
+  assert.match(premium, /image\.src=fallbackImage/);
+  assert.match(premium, /cta_text/);
+  assert.match(premium, /cta_link/);
+  assert.match(premium, /showFallback\(\)/);
   assert.match(sync, /readPublished\('homepage_slides'\)/);
   assert.match(sync, /window\.MV_HOMEPAGE_SLIDES = await hydrateSlideImages\(publishedSlides\)/);
   assert.match(sync, /window\.MV_STOREFRONT_CMS_CONNECTED = Array\.isArray\(products\)/);
   assert.match(sync, /mergeCatalogBySlug\(\[\], mappedProducts/);
+  assert.match(html, /Slide name \(admin only\)/);
+  assert.match(html, /Button text<input name="cta_text"/);
+  assert.match(html, /Button link<input name="cta_link"/);
+  assert.doesNotMatch(html, /Subtitle<input name="subtitle"/);
+  assert.match(css, /\.hero-note\{display:none!important\}/);
 });
