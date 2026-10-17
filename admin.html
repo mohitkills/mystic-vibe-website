@@ -153,6 +153,16 @@
           <label class="check-label wide"><input type="checkbox" name="cod_enabled" checked> Enable Cash on Delivery</label>
           <div class="form-actions wide"><button class="btn" type="submit">Save shipping settings</button></div>
         </form>
+        <form id="store-copy-form" class="panel admin-form">
+          <h3 class="serif wide">Homepage & brand copy</h3>
+          <p class="admin-help wide">Edit the words shown in the homepage story, brand promise, value section and newsletter. For the large hero banner, use the Homepage Slides tab.</p>
+          <label class="wide">Our story paragraph<textarea name="story_description" rows="3" maxlength="2000" placeholder="A short paragraph about the brand"></textarea></label>
+          <label class="wide">Brand promise<textarea name="brand_promise" rows="3" maxlength="2000" placeholder="What makes Mystic Vibe special?"></textarea></label>
+          <label class="wide">Why Mystic Vibe description<textarea name="why_description" rows="3" maxlength="2000" placeholder="Explain the brand's value"></textarea></label>
+          <label class="wide">Newsletter description<textarea name="newsletter_description" rows="3" maxlength="1000" placeholder="Copy shown beside the newsletter signup"></textarea></label>
+          <div class="form-actions wide"><button class="btn" type="submit">Save homepage copy</button></div>
+          <p class="admin-help wide">Only these supported homepage text fields are exposed here. This prevents accidentally breaking the storefront with invalid JSON.</p>
+        </form>
         <form id="store-contact-form" class="panel admin-form">
           <h3 class="serif wide">Public contact & social links</h3>
           <label>Customer support email<input name="support_email" type="email" maxlength="254" placeholder="support@example.com"></label>
