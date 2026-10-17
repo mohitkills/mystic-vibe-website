@@ -228,6 +228,12 @@ if (form) {
     const feedback = form.querySelector('#checkout-feedback');
     const button = form.querySelector('#place-order');
     if (!form.reportValidity()) return;
+    if (checkoutState.busy || !checkoutState.verified) {
+      feedback.textContent = 'Please wait until the store has verified your cart total and stock before placing the order.';
+      feedback.hidden = false;
+      await refreshPreview(checkoutState.coupon);
+      return;
+    }
     const cart = readCart();
     if (!cart.length) { feedback.textContent = 'Your cart is empty. Add a perfume before checking out.'; feedback.hidden = false; return; }
     const formData = new FormData(form);
