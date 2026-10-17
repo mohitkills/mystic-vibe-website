@@ -334,7 +334,9 @@ begin
   update public.orders
     set subtotal = v_subtotal,
         shipping_fee = v_shipping_fee,
-        total = v_subtotal + v_shipping_fee,
+        discount_amount = v_discount_amount,
+        coupon_code = v_coupon_code,
+        total = greatest(0, v_subtotal + v_shipping_fee - v_discount_amount),
         updated_at = pg_catalog.now()
     where id = v_order_id;
 
@@ -791,8 +793,6 @@ begin
 end;
 $function$;
 
-revoke all on function public.place_order(jsonb, jsonb, text, text) from public, anon, authenticated;
-grant execute on function public.place_order(jsonb, jsonb, text, text) to anon, authenticated;
 
 create or replace function public.lookup_order(
   p_order_number text,
