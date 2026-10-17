@@ -57,7 +57,7 @@ function render() {
         <h2 class="serif full">Delivery details</h2>
         <label class="full">Full name<input name="full_name" autocomplete="name" required minlength="2" maxlength="120"></label>
         <label>Email address<input name="email" type="email" autocomplete="email" required maxlength="254"></label>
-        <label>Mobile number<input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="10-digit Indian mobile" required pattern="(?:\\+91[- ]?)?[6-9][0-9]{9}"></label>
+        <label>Mobile number<input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="10-digit Indian mobile" required pattern="(?:[+]91[- ]?)?[6-9][0-9]{9}"></label>
         <label class="full">Address line 1<input name="address_line1" autocomplete="address-line1" required minlength="5" maxlength="240" placeholder="House / flat, street, area"></label>
         <label class="full">Address line 2 <span class="admin-help">(optional)</span><input name="address_line2" autocomplete="address-line2" maxlength="240" placeholder="Landmark, locality"></label>
         <label>City / town<input name="city" autocomplete="address-level2" required minlength="2" maxlength="100"></label>
