@@ -102,4 +102,11 @@
     show(0);
     start();
   });
+  // Re-play storefront data when the asynchronous Supabase module finished before this script attached its listener.
+  if (Array.isArray(window.MV_HOMEPAGE_SLIDES)) {
+    window.dispatchEvent(new CustomEvent('mystic-vibe-storefront-data', { detail: {
+      products: window.MV_PRODUCTS || [], collections: window.MV_COLLECTIONS || [],
+      slides: window.MV_HOMEPAGE_SLIDES, content: window.MV_SITE_CONTENT || {},
+    }}));
+  }
 })();
