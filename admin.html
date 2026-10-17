@@ -45,6 +45,7 @@
       <nav class="admin-tabs" aria-label="Admin sections">
         <button type="button" class="active" data-tab="products">Products</button>
         <button type="button" data-tab="orders">Orders</button>
+        <button type="button" data-tab="coupons">Coupons & Offers</button>
         <button type="button" data-tab="collections">Collections</button>
         <button type="button" data-tab="slides">Homepage slides</button>
         <button type="button" data-tab="content">Site content</button>
@@ -159,6 +160,28 @@
           <div class="form-actions wide"><button class="btn" type="submit">Save contact settings</button></div>
           <p class="admin-help wide">These details are public and can appear on the storefront. Never enter passwords, API keys or payment secrets here.</p>
         </form>
+      </section>
+      <section class="admin-panel" data-panel="coupons" hidden>
+        <div class="admin-panel-heading"><div><span class="eyebrow">Promotions</span><h2 class="serif">Coupons & Offers</h2><p>Create percentage or fixed discounts with date windows, minimum order values and redemption limits.</p></div><button class="btn light" type="button" data-coupon-new>New coupon</button></div>
+        <p id="coupon-admin-status" class="admin-status" role="status" aria-live="polite"></p>
+        <form id="coupon-form" class="panel admin-form" hidden>
+          <input type="hidden" name="id">
+          <h3 class="serif wide">Coupon details</h3>
+          <label>Coupon code<input name="code" required maxlength="40" pattern="[A-Za-z0-9_-]{3,40}" placeholder="MYSTIC10"></label>
+          <label>Description<input name="description" maxlength="180" placeholder="10% off selected orders"></label>
+          <label>Discount type<select name="discount_type" required><option value="percent">Percentage (%)</option><option value="fixed">Fixed amount (₹)</option></select></label>
+          <label>Discount value<input name="discount_value" type="number" required min="0.01" step="0.01"></label>
+          <label>Minimum order value (₹)<input name="minimum_order_value" type="number" min="0" max="1000000" step="0.01" value="0" required></label>
+          <label>Maximum discount (₹)<input name="maximum_discount" type="number" min="0" max="1000000" step="0.01" placeholder="Optional cap; useful for percentage offers"></label>
+          <label>Total redemption limit<input name="usage_limit" type="number" min="1" max="10000000" step="1" placeholder="Leave blank for unlimited"></label>
+          <label>Uses per email<input name="per_customer_limit" type="number" min="0" max="1000" step="1" value="1" required><small>0 means unlimited uses per email.</small></label>
+          <label>Starts at<input name="starts_at" type="datetime-local"></label>
+          <label>Ends at<input name="ends_at" type="datetime-local"></label>
+          <label class="check-label wide"><input name="is_active" type="checkbox" checked> Active</label>
+          <div class="form-actions wide"><button class="btn" type="submit">Save coupon</button><button class="btn light" type="button" data-coupon-cancel>Cancel</button></div>
+          <p class="admin-help wide">A discount is applied and redemption limits are checked in the database during order placement. Existing redemptions are retained even when a coupon is deactivated.</p>
+        </form>
+        <div id="coupon-list" class="admin-record-list" aria-live="polite"></div>
       </section>
     </section>
     <dialog id="slide-preview" class="slide-preview-dialog" aria-labelledby="slide-preview-title">
