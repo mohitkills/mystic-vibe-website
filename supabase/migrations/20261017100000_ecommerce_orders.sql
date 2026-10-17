@@ -584,4 +584,62 @@ revoke all on function public.preview_checkout(jsonb,text,text) from public,anon
 grant execute on function public.preview_checkout(jsonb,text,text) to anon,authenticated;
 
 
+
+create table if not exists public.newsletter_subscribers (
+  id uuid primary key default pg_catalog.gen_random_uuid(),
+  email text not null unique check (email = pg_catalog.lower(pg_catalog.btrim(email)) and pg_catalog.length(email) <= 254),
+  source text not null default 'homepage',
+  is_subscribed boolean not null default true,
+  subscribed_at timestamptz not null default pg_catalog.now(),
+  unsubscribed_at timestamptz,
+  created_at timestamptz not null default pg_catalog.now(),
+  updated_at timestamptz not null default pg_catalog.now()
+);
+
+create index if not exists newsletter_subscribers_active_idx
+  on public.newsletter_subscribers (is_subscribed, subscribed_at desc);
+
+alter table public.newsletter_subscribers enable row level security;
+revoke all on table public.newsletter_subscribers from public, anon, authenticated;
+grant select, update on table public.newsletter_subscribers to authenticated;
+
+drop policy if exists newsletter_subscribers_admin_all on public.newsletter_subscribers;
+create policy newsletter_subscribers_admin_all on public.newsletter_subscribers
+  for all to authenticated
+  using ((select private.is_admin()))
+  with check ((select private.is_admin()));
+
+create or replace function public.subscribe_newsletter(p_email text, p_source text default 'homepage')
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  v_email text := pg_catalog.lower(pg_catalog.btrim(coalesce(p_email, '')));
+  v_source text := pg_catalog.left(pg_catalog.btrim(coalesce(p_source, 'homepage')), 80);
+begin
+  if v_email !~* '^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$' or pg_catalog.length(v_email) > 254 then
+    raise exception 'Enter a valid email address.' using errcode = '22023';
+  end if;
+  if v_source !~ '^[a-zA-Z0-9 _.-]{1,80}$' then
+    v_source := 'website';
+  end if;
+
+  insert into public.newsletter_subscribers (email, source, is_subscribed, subscribed_at, unsubscribed_at, updated_at)
+  values (v_email, v_source, true, pg_catalog.now(), null, pg_catalog.now())
+  on conflict (email) do update
+  set source = excluded.source,
+      is_subscribed = true,
+      subscribed_at = pg_catalog.now(),
+      unsubscribed_at = null,
+      updated_at = pg_catalog.now();
+
+  return pg_catalog.jsonb_build_object('ok', true);
+end;
+$function$;
+
+revoke all on function public.subscribe_newsletter(text, text) from public, anon, authenticated;
+grant execute on function public.subscribe_newsletter(text, text) to anon, authenticated;
+
 commit;
