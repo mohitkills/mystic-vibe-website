@@ -642,4 +642,66 @@ $function$;
 revoke all on function public.subscribe_newsletter(text, text) from public, anon, authenticated;
 grant execute on function public.subscribe_newsletter(text, text) to anon, authenticated;
 
+
+create or replace function public.cancel_order(p_order_number text, p_email text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  v_order public.orders%rowtype;
+  v_item record;
+begin
+  if pg_catalog.length(pg_catalog.btrim(coalesce(p_order_number, ''))) < 8
+     or pg_catalog.length(pg_catalog.btrim(coalesce(p_order_number, ''))) > 40
+     or pg_catalog.length(pg_catalog.btrim(coalesce(p_email, ''))) > 254 then
+    raise exception 'Enter the order number and checkout email used for this order.' using errcode = '22023';
+  end if;
+
+  select * into v_order
+  from public.orders
+  where pg_catalog.upper(order_number) = pg_catalog.upper(pg_catalog.btrim(p_order_number))
+    and pg_catalog.lower(email) = pg_catalog.lower(pg_catalog.btrim(p_email))
+  for update;
+
+  if not found then
+    raise exception 'No order matched that order number and email.' using errcode = 'P0002';
+  end if;
+  if v_order.payment_method <> 'cod' then
+    raise exception 'Online-payment orders require support to process a cancellation.' using errcode = '22023';
+  end if;
+  if v_order.order_status not in ('pending', 'confirmed') then
+    raise exception 'This order can no longer be cancelled online. Please contact customer support.' using errcode = '22023';
+  end if;
+
+  for v_item in
+    select product_slug, pg_catalog.sum(quantity)::integer as quantity
+    from public.order_items
+    where order_id = v_order.id
+    group by product_slug
+  loop
+    update public.products
+    set stock = coalesce(stock, 0) + v_item.quantity,
+        updated_at = pg_catalog.now()
+    where slug = v_item.product_slug;
+  end loop;
+
+  update public.orders
+  set order_status = 'cancelled',
+      status_note = 'Cancelled by customer',
+      updated_at = pg_catalog.now()
+  where id = v_order.id;
+
+  return pg_catalog.jsonb_build_object(
+    'order_number', v_order.order_number,
+    'order_status', 'cancelled',
+    'payment_status', v_order.payment_status
+  );
+end;
+$function$;
+
+revoke all on function public.cancel_order(text, text) from public, anon, authenticated;
+grant execute on function public.cancel_order(text, text) to anon, authenticated;
+
 commit;
