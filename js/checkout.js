@@ -122,8 +122,10 @@ function refreshShippingSummary() {
   const threshold = Number(shippingSettings.free_shipping_threshold || 0);
   const fee = threshold > 0 && subtotal >= threshold ? 0 : Number(shippingSettings.standard_fee || 0);
   const summary = document.querySelector('.summary');
-  const shippingText = summary?.querySelector('p strong');
-  const totalText = summary?.querySelector('h3 span');
+  const subtotalText = summary?.querySelector('#checkout-subtotal');
+  const shippingText = summary?.querySelector('#checkout-shipping');
+  const totalText = summary?.querySelector('#checkout-total');
+  if (subtotalText) subtotalText.textContent = rupees(subtotal);
   if (shippingText) shippingText.textContent = shippingSettingsKnown ? (fee === 0 ? 'Free' : rupees(fee)) : 'Confirmed by store';
   if (totalText) totalText.textContent = rupees(subtotal + fee);
   const cod = document.querySelector('#checkout-form input[name="pay"]');
