@@ -114,6 +114,11 @@ declare
   v_order_id uuid;
   v_order_number text;
   v_item_count integer := 0;
+  v_shipping_settings jsonb := '{}'::jsonb;
+  v_standard_shipping numeric(12,2) := 0;
+  v_free_threshold numeric(12,2) := 0;
+  v_shipping_fee numeric(12,2) := 0;
+  v_cod_enabled boolean := true;
 begin
   if pg_catalog.jsonb_typeof(p_customer) is distinct from 'object' then
     raise exception 'Customer details are required.' using errcode = '22023';
@@ -150,6 +155,30 @@ begin
   end if;
   if p_payment_method is distinct from 'cod' then
     raise exception 'Online payment is not enabled yet. Please choose Cash on Delivery.' using errcode = '22023';
+  end if;
+
+  select c.content_value into v_shipping_settings
+  from public.site_content c
+  where c.content_key = 'store.shipping' and c.is_published is true
+  limit 1;
+
+  if pg_catalog.jsonb_typeof(v_shipping_settings) = 'object' then
+    if pg_catalog.jsonb_typeof(v_shipping_settings -> 'standard_fee') = 'number' then
+      v_standard_shipping := (v_shipping_settings ->> 'standard_fee')::numeric;
+    end if;
+    if pg_catalog.jsonb_typeof(v_shipping_settings -> 'free_shipping_threshold') = 'number' then
+      v_free_threshold := (v_shipping_settings ->> 'free_shipping_threshold')::numeric;
+    end if;
+    if pg_catalog.jsonb_typeof(v_shipping_settings -> 'cod_enabled') = 'boolean' then
+      v_cod_enabled := (v_shipping_settings ->> 'cod_enabled')::boolean;
+    end if;
+  end if;
+
+  if v_standard_shipping < 0 or v_standard_shipping > 100000 or v_free_threshold < 0 or v_free_threshold > 1000000 then
+    raise exception 'Store shipping settings are invalid. Please contact the store.' using errcode = 'P0001';
+  end if;
+  if not v_cod_enabled then
+    raise exception 'Cash on Delivery is temporarily unavailable. Please contact the store.' using errcode = 'P0001';
   end if;
 
   v_order_number := 'MV-' || pg_catalog.to_char(pg_catalog.clock_timestamp(), 'YYYYMMDD') || '-' ||
@@ -234,17 +263,25 @@ begin
     raise exception 'Your cart is empty.' using errcode = '22023';
   end if;
 
+  v_shipping_fee := case
+    when v_free_threshold > 0 and v_subtotal >= v_free_threshold then 0
+    else v_standard_shipping
+  end;
+
   update public.orders
-    set subtotal = v_subtotal, total = v_subtotal, updated_at = pg_catalog.now()
+    set subtotal = v_subtotal,
+        shipping_fee = v_shipping_fee,
+        total = v_subtotal + v_shipping_fee,
+        updated_at = pg_catalog.now()
     where id = v_order_id;
 
   return pg_catalog.jsonb_build_object(
     'id', v_order_id,
     'order_number', v_order_number,
     'subtotal', v_subtotal,
-    'shipping_fee', 0,
+    'shipping_fee', v_shipping_fee,
     'discount_amount', 0,
-    'total', v_subtotal,
+    'total', v_subtotal + v_shipping_fee,
     'currency', 'INR',
     'payment_method', 'cod',
     'payment_status', 'pending',
