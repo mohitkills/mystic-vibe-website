@@ -71,16 +71,17 @@ function render() {
         <p class="admin-help full">Online payments will appear here only after a verified payment gateway and server-side verification are configured.</p>
         <label class="check-label full"><input type="checkbox" name="accept_terms" required> I agree to the <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a>.</label>
         <p class="checkout-feedback full" id="checkout-feedback" role="status" aria-live="polite" hidden></p>
-        <button class="btn full" id="place-order" type="submit" ${cart.length ? '' : 'disabled'}>Place COD Order</button>
+        <button class="btn full" id="place-order" type="submit" disabled>Place COD Order</button>
         <a class="btn light full" href="cart.html">Back to cart</a>
       </form>
-      <aside class="panel summary"><h2 class="serif">Your order</h2>
-        ${cart.length ? cart.map((item) => {
+      <aside class="panel summary" id="checkout-summary"><h2 class="serif">Your order</h2>
+        <div id="checkout-lines">${cart.length ? cart.map((item) => {
           const product = localProduct(item.slug);
           return `<div class="checkout-line"><span>${escapeHtml(product.name)} × ${item.quantity}</span><strong>${rupees(Number(product.price || 0) * item.quantity)}</strong></div>`;
         }).join('') : '<p>Your cart is empty.</p><a class="btn" href="collection.html">Explore perfumes</a>'}
-        <hr><p>Shipping <strong style="float:right">Free</strong></p><h3>Total <span style="float:right">${rupees(subtotal)}</span></h3>
-        <p class="admin-help">Indicative total. The server recalculates prices, checks publication status and reserves stock before confirming your order.</p>
+        </div>
+        <div class="checkout-coupon"><label for="coupon-code">Coupon code</label><input id="coupon-code" type="text" maxlength="40" autocomplete="off" placeholder="Enter offer code"><div class="checkout-coupon-actions"><button class="btn light" id="apply-coupon" type="button">Apply coupon</button><button class="btn light" id="remove-coupon" type="button" hidden>Remove</button></div><p id="coupon-feedback" class="checkout-feedback" role="status" aria-live="polite" hidden></p></div>
+        <hr><p>Subtotal <strong id="checkout-subtotal" style="float:right">${rupees(subtotal)}</strong></p><p>Shipping <strong id="checkout-shipping" style="float:right">Free</strong></p><p id="checkout-discount-row" hidden>Discount <strong id="checkout-discount" style="float:right">−₹0</strong></p><h3>Total <span id="checkout-total" style="float:right">${rupees(subtotal)}</span></h3><p id="checkout-preview-message" class="admin-help">Verifying current prices and stock…</p>
       </aside>
     </div></section>`;
 }
