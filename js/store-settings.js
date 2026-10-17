@@ -102,9 +102,6 @@ export function initializeStoreSettings(supabase) {
     try {
       await Promise.all(entries.map(([key, value]) => save(key, value)));
       show('Homepage copy saved. Refresh the storefront to see the updated text.');
-      window.dispatchEvent(new CustomEvent('mystic-vibe-storefront-data', {
-        detail: { content: Object.fromEntries(entries) }
-      }));
     } catch (error) {
       show(error?.message || 'Homepage copy could not be saved.', true);
     } finally { button.disabled = false; button.textContent = 'Save homepage copy'; }
