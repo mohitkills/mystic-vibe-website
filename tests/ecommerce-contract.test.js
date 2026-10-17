@@ -13,7 +13,7 @@ test('order migration has one ordered schema and four non-duplicated server func
     assert.match(sql, new RegExp('create table if not exists public\\.' + table + '\\b', 'i'));
     assert.match(sql, new RegExp('alter table public\\.' + table + ' enable row level security', 'i'));
   }
-  for (const fn of ['place_order', 'preview_checkout', 'lookup_order', 'admin_update_order', 'subscribe_newsletter']) {
+  for (const fn of ['place_order', 'preview_checkout', 'lookup_order', 'admin_update_order', 'cancel_order', 'subscribe_newsletter']) {
     assert.equal((sql.match(new RegExp('create or replace function public\\.' + fn + '\\s*\\(', 'gi')) || []).length, 1, fn + ' must be defined once');
   }
   assert.equal((sql.match(/commit;/gi) || []).length, 1, 'migration is a single transaction');
@@ -48,6 +48,7 @@ test('customer order history and guest order lookup are connected to the secured
   assert.match(accountHtml, /js\/customer-account\.js/);
   assert.match(trackingHtml, /data-page="tracking"/);
   assert.match(account, /supabase\.rpc\('lookup_order'/);
+  assert.match(account, /supabase\.rpc\('cancel_order'/);
   assert.match(account, /supabase\.from\('orders'\)/);
   assert.match(account, /supabase\.from\('order_items'\)/);
   assert.match(account, /Track a guest order/);
