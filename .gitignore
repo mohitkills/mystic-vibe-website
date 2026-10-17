@@ -1,3 +1,4 @@
 .vercel
 .env*
 js/supabase-config.js
+dist/
