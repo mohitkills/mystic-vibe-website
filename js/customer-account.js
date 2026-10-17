@@ -29,6 +29,7 @@ function renderOrderResult(order) {
       ${statusSteps(order.order_status)}
       ${order.carrier || order.tracking_number ? '<div class="tracking-shipment"><h3>Shipment details</h3><p>' + escapeHtml(order.carrier || 'Delivery partner') + (order.tracking_number ? ': ' + escapeHtml(order.tracking_number) : '') + '</p></div>' : ''}
       ${order.status_note ? '<div class="tracking-shipment"><h3>Store update</h3><p>' + escapeHtml(order.status_note) + '</p></div>' : ''}
+      ${order.payment_method === 'cod' && ['pending','confirmed'].includes(order.order_status) ? '<div class="order-cancel-actions"><button class="btn light" type="button" data-cancel-order>Cancel this order</button><p class="admin-help">Cancellation is available before processing or dispatch.</p></div>' : ''}
       <h3 class="serif">Items</h3>
       <div class="order-items-list">${items.map((item) => '<div class="order-item-line"><div><strong>' + escapeHtml(item.product_name) + '</strong><small>' + escapeHtml(item.size_ml ? item.size_ml + ' ml' : '') + ' × ' + Number(item.quantity || 0) + '</small></div><strong>' + money(item.line_total) + '</strong></div>').join('')}</div>
       <div class="order-total-lines"><p>Subtotal <strong>${money(order.subtotal)}</strong></p><p>Shipping <strong>${Number(order.shipping_fee || 0) === 0 ? 'Free' : money(order.shipping_fee)}</strong></p>${Number(order.discount_amount || 0) > 0 ? '<p>Discount <strong>−' + money(order.discount_amount) + '</strong></p>' : ''}<h3>Total <strong>${money(order.total)}</strong></h3></div>
@@ -51,6 +52,29 @@ async function initialiseTracking() {
   const orderInput = form.elements.namedItem('order_number');
   const queryOrder = new URLSearchParams(location.search).get('order');
   if (queryOrder) orderInput.value = queryOrder.slice(0, 40);
+  const trackResult = document.querySelector('#track-result');
+  trackResult.addEventListener('click', async (event) => {
+    const cancelButton = event.target.closest('[data-cancel-order]');
+    if (!cancelButton) return;
+    if (!window.confirm('Cancel this Cash on Delivery order? This cannot be undone.')) return;
+    cancelButton.disabled = true; cancelButton.textContent = 'Cancelling…';
+    try {
+      const { error } = await supabase.rpc('cancel_order', {
+        p_order_number: orderInput.value.trim(),
+        p_email: form.elements.namedItem('email').value.trim(),
+      });
+      if (error) throw error;
+      const feedback = form.querySelector('#track-feedback');
+      feedback.textContent = 'Your order has been cancelled and the available stock has been restored.';
+      feedback.hidden = false;
+      form.requestSubmit();
+    } catch (error) {
+      cancelButton.disabled = false; cancelButton.textContent = 'Cancel this order';
+      const feedback = form.querySelector('#track-feedback');
+      feedback.textContent = error?.message || 'The order could not be cancelled. Please contact support.';
+      feedback.hidden = false;
+    }
+  });
   form.addEventListener('submit', async (event) => {
     event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation();
     const feedback = form.querySelector('#track-feedback');
