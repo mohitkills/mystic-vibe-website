@@ -20,6 +20,8 @@ test('order migration has one ordered schema and four non-duplicated server func
   assert.match(sql, /security definer[\s\S]*?set search_path = ''/i);
   assert.match(sql, /where p\.slug\s*=\s*v_slug and p\.is_published is true[\s\S]*?for update/i);
   assert.match(sql, /set stock = stock - v_quantity/i);
+  assert.match(sql, /v_product_image\s*:=\s*v_product\.image_urls\[1\]/i, 'products.image_urls is text[]; order creation must read its first array element');
+  assert.doesNotMatch(sql, /jsonb_typeof\(v_product\.image_urls\)/i, 'do not treat products.image_urls as JSONB');
   assert.match(sql, /p_payment_method is distinct from 'cod'/i);
   assert.match(sql, /coupon_redemptions/);
   assert.match(sql, /private\.is_admin\(\)/);
