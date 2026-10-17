@@ -91,3 +91,19 @@
   .order-update-form { grid-template-columns: 1fr; }
   .order-update-form > * { grid-column: 1 / -1; }
 }
+
+
+.customer-admin-tools { display: grid; grid-template-columns: minmax(240px,1fr) auto; gap: .8rem; align-items: end; margin: 1rem 0; }
+.customer-admin-tools label { display: grid; gap: .4rem; }
+.customer-admin-tools input { width: 100%; min-width: 0; }
+.customer-admin-list { min-width: 0; }
+.customer-table-wrap { overflow-x: auto; }
+.customer-admin-table { width: 100%; border-collapse: collapse; min-width: 760px; }
+.customer-admin-table th, .customer-admin-table td { padding: .85rem .7rem; text-align: left; vertical-align: top; border-bottom: 1px solid rgba(255,255,255,.1); }
+.customer-admin-table th { font-size: .75rem; opacity: .72; text-transform: uppercase; letter-spacing: .08em; }
+.customer-admin-table td strong, .customer-admin-table td small { display: block; overflow-wrap: anywhere; }
+.customer-admin-table td small { margin-top: .28rem; font-size: .78rem; opacity: .7; }
+.customer-admin-table .customer-view-order { margin-top: .55rem; padding: .35rem .6rem; font-size: .78rem; }
+@media (max-width: 600px) {
+  .customer-admin-tools { grid-template-columns: 1fr; }
+}
