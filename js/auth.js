@@ -127,7 +127,18 @@ if (authForm) {
         return;
       }
 
-      window.location.assign(page === 'login' ? 'account.html' : 'index.html');
+      if (page === 'login') {
+        let isAdmin = false;
+        try {
+          const roleResult = await supabase.rpc('is_current_user_admin');
+          isAdmin = !roleResult.error && roleResult.data === true;
+        } catch (roleError) {
+          console.warn('Could not determine account role after sign-in:', roleError?.message || roleError);
+        }
+        window.location.assign(isAdmin ? 'admin.html' : 'account.html');
+      } else {
+        window.location.assign('index.html');
+      }
     } catch (error) {
       console.error('Supabase authentication failed:', error);
       feedback.textContent = error.message || 'Authentication failed. Please try again.';
