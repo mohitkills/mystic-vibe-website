@@ -107,3 +107,9 @@
 @media (max-width: 600px) {
   .customer-admin-tools { grid-template-columns: 1fr; }
 }
+
+
+.newsletter-feedback { margin: .7rem 0 0; font-size: .88rem; line-height: 1.5; color: #d8c7a6; }
+.newsletter-feedback.error { color: #f1a7a7; }
+.newsletter-feedback:empty { display: none; }
+.customer-admin-table .badge { display: inline-flex; border: 1px solid rgba(255,255,255,.16); border-radius: 99px; padding: .3rem .55rem; font-size: .75rem; background: rgba(255,255,255,.04); }
