@@ -280,12 +280,8 @@ begin
       raise exception 'Stock changed while placing the order. Please retry.' using errcode = 'P0001';
     end if;
 
-    v_product_image := null;
-    if pg_catalog.jsonb_typeof(v_product.image_urls) = 'array' then
-      v_product_image := v_product.image_urls ->> 0;
-    elsif pg_catalog.jsonb_typeof(v_product.image_urls) = 'string' then
-      v_product_image := v_product.image_urls #>> '{}';
-    end if;
+    -- public.products.image_urls is text[] (not jsonb); use its first image slot.
+    v_product_image := v_product.image_urls[1];
 
     v_line_total := pg_catalog.round(v_product.price::numeric * v_quantity, 2);
     v_subtotal := v_subtotal + v_line_total;
