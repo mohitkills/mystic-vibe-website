@@ -49,6 +49,19 @@ test('checkout recalculates products, shipping and offers on the server before p
 
 });
 
+test('storefront blocks out-of-stock products and cart quantities above current inventory', async () => {
+  const app = await read('js/app.js');
+  const checkout = await read('js/checkout.js');
+  assert.match(app, /outOfStock\?' disabled aria-disabled="true"'/);
+  assert.match(app, /This perfume is out of stock/);
+  assert.match(app, /stock<currentQty\+q/);
+  assert.match(app, /Only '\+Number\(product\.stock\)\+' available in stock/);
+  assert.match(app, /Out of stock; remove this item to continue checkout/);
+  assert.match(checkout, /function cartAvailability\(item\)/);
+  assert.match(checkout, /data-remove-checkout-item/);
+  assert.match(checkout, /checkoutErrorMessage\(cart, error\)/);
+});
+
 test('customer order history and guest order lookup are connected to the secured order backend', async () => {
   const account = await read('js/customer-account.js');
   const accountHtml = await read('account.html');
