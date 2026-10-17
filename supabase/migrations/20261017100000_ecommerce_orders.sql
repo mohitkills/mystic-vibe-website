@@ -57,8 +57,7 @@ alter table public.order_items enable row level security;
 
 revoke all on table public.orders, public.order_items from anon, authenticated;
 grant select on table public.orders, public.order_items to authenticated;
-grant update (order_status, payment_status, carrier, tracking_number, status_note, updated_at)
-  on table public.orders to authenticated;
+revoke update on table public.orders from anon, authenticated;
 
 drop policy if exists orders_read_own_or_admin on public.orders;
 create policy orders_read_own_or_admin
@@ -313,5 +312,96 @@ $function$;
 
 revoke all on function public.lookup_order(text, text) from public, anon, authenticated;
 grant execute on function public.lookup_order(text, text) to anon, authenticated;
+
+
+create or replace function public.admin_update_order(
+  p_order_id uuid,
+  p_order_status text,
+  p_payment_status text,
+  p_carrier text default null,
+  p_tracking_number text default null,
+  p_status_note text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  v_order public.orders%rowtype;
+  v_item record;
+  v_carrier text := nullif(pg_catalog.left(pg_catalog.btrim(coalesce(p_carrier, '')), 120), '');
+  v_tracking text := nullif(pg_catalog.left(pg_catalog.btrim(coalesce(p_tracking_number, '')), 180), '');
+  v_note text := nullif(pg_catalog.left(pg_catalog.btrim(coalesce(p_status_note, '')), 1000), '');
+begin
+  if not coalesce(private.is_admin(), false) then
+    raise exception 'Administrator access is required.' using errcode = '42501';
+  end if;
+  if p_order_status not in ('pending','confirmed','processing','shipped','delivered','cancelled','returned','refunded') then
+    raise exception 'Invalid order status.' using errcode = '22023';
+  end if;
+  if p_payment_status not in ('pending','paid','failed','refunded','cod_collected') then
+    raise exception 'Invalid payment status.' using errcode = '22023';
+  end if;
+  if pg_catalog.length(coalesce(p_carrier, '')) > 120
+     or pg_catalog.length(coalesce(p_tracking_number, '')) > 180
+     or pg_catalog.length(coalesce(p_status_note, '')) > 1000 then
+    raise exception 'One or more order fields exceed the allowed length.' using errcode = '22023';
+  end if;
+
+  select * into v_order
+    from public.orders
+    where id = p_order_id
+    for update;
+  if not found then
+    raise exception 'Order not found.' using errcode = 'P0002';
+  end if;
+
+  if v_order.order_status = 'cancelled' and p_order_status <> 'cancelled' then
+    raise exception 'A cancelled order cannot be reopened from this screen.' using errcode = '22023';
+  end if;
+  if p_order_status = 'cancelled' and v_order.order_status in ('shipped','delivered','returned','refunded') then
+    raise exception 'An order that has shipped or completed cannot be cancelled. Contact the customer to arrange a return or refund.' using errcode = '22023';
+  end if;
+  if v_order.order_status in ('returned','refunded') and p_order_status not in ('returned','refunded') then
+    raise exception 'A returned or refunded order cannot be moved back to active fulfilment.' using errcode = '22023';
+  end if;
+
+  if p_order_status = 'cancelled' and v_order.order_status <> 'cancelled' then
+    for v_item in
+      select product_slug, pg_catalog.sum(quantity)::integer as quantity
+      from public.order_items
+      where order_id = p_order_id
+      group by product_slug
+    loop
+      update public.products
+      set stock = coalesce(stock, 0) + v_item.quantity,
+          updated_at = pg_catalog.now()
+      where slug = v_item.product_slug;
+    end loop;
+  end if;
+
+  update public.orders
+  set order_status = p_order_status,
+      payment_status = p_payment_status,
+      carrier = v_carrier,
+      tracking_number = v_tracking,
+      status_note = v_note,
+      updated_at = pg_catalog.now()
+  where id = p_order_id
+  returning * into v_order;
+
+  return pg_catalog.jsonb_build_object(
+    'id', v_order.id,
+    'order_number', v_order.order_number,
+    'order_status', v_order.order_status,
+    'payment_status', v_order.payment_status,
+    'updated_at', v_order.updated_at
+  );
+end;
+$function$;
+
+revoke all on function public.admin_update_order(uuid, text, text, text, text, text) from public, anon, authenticated;
+grant execute on function public.admin_update_order(uuid, text, text, text, text, text) to authenticated;
 
 commit;
