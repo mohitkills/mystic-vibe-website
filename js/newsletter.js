@@ -14,6 +14,7 @@ forms.forEach((form) => {
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    event.stopPropagation();
     if (!input || !form.reportValidity()) return;
     const email = input.value.trim().toLowerCase();
     if (email.length > 254) {
