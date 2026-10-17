@@ -58,13 +58,17 @@ test('Admin exposes orders, promotions and store settings through connected modu
   const admin = await read('js/admin.js');
   const orders = await read('js/orders-admin.js');
   const coupons = await read('js/coupons-admin.js');
+  const customers = await read('js/customers-admin.js');
   const settings = await read('js/store-settings.js');
-  for (const tab of ['products', 'orders', 'coupons', 'collections', 'slides', 'content', 'media', 'settings']) {
+  for (const tab of ['products', 'orders', 'customers', 'coupons', 'collections', 'slides', 'content', 'media', 'settings']) {
     assert.match(html, new RegExp('data-tab="' + tab + '"'));
     assert.match(html, new RegExp('data-panel="' + tab + '"'));
   }
   assert.match(admin, /initializeOrdersAdmin\(supabase\)/);
   assert.match(admin, /initializeCouponsAdmin\(supabase\)/);
+  assert.match(admin, /initializeCustomersAdmin\(supabase\)/);
+  assert.match(customers, /supabase\.from\('orders'\)/);
+  assert.match(customers, /Export CSV/);
   assert.match(admin, /initializeStoreSettings\(supabase\)/);
   assert.match(orders, /admin_update_order/);
   assert.match(coupons, /coupon_redemptions|coupons/);
