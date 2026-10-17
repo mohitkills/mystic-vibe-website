@@ -107,12 +107,11 @@
         <div class="admin-panel-heading"><div><span class="eyebrow">Homepage</span><h2 class="serif">Slides</h2></div><button class="btn light" type="button" data-reset-form="slide-form">New slide</button></div>
         <form id="slide-form" class="panel admin-form">
           <input type="hidden" name="id">
-          <label>Heading<input name="heading" required maxlength="180"></label>
-          <label>Subtitle<input name="subtitle" maxlength="260"></label>
-          <label>Button text<input name="cta_text" value="Explore"></label>
-          <label>Button link<input name="cta_link" value="/collection.html"></label>
-          <label>Image path<input name="image_url" placeholder="mystic-vibe-images/slides/... "></label>
-          <label class="file-field">Upload slide image<input name="slide-image" type="file" accept="image/jpeg,image/png,image/webp,image/avif"><small>The image stays private. A published slide image is delivered through the slide-image Edge Function.</small></label>
+          <label>Slide name (admin only)<input name="heading" required maxlength="180" placeholder="e.g. Royal Marine launch"><small>Internal name and image description for accessibility; it will not appear as text over the homepage image.</small></label>
+          <label>Button text<input name="cta_text" value="Explore" maxlength="40" placeholder="Explore, Buy Now, Claim Now"></label>
+          <label>Button link<input name="cta_link" value="/collection.html" maxlength="500" placeholder="/products/royal-marine.html"></label>
+          <label class="wide">Image path<input name="image_url" placeholder="mystic-vibe-images/slides/... "><small>Or use Upload slide image below. Choose a wide, high-resolution image for a full-screen hero.</small></label>
+          <label class="file-field wide">Upload slide image<input name="slide-image" type="file" accept="image/jpeg,image/png,image/webp,image/avif"><small>The image stays private. A published slide image is delivered securely; failed images now fall back instead of leaving a blank slide.</small></label>
           <label>Sort order<input name="sort_order" type="number" step="1" value="0"></label>
           <label class="check-label"><input name="is_published" type="checkbox"> Published <small>Draft slides do not appear on the storefront.</small></label>
           <div class="form-actions wide"><button class="btn" type="submit">Save slide</button><button class="btn light" type="button" data-preview-slide>Preview</button><button class="btn light" type="button" data-reset-form="slide-form">Clear</button></div>
