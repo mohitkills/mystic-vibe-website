@@ -9,11 +9,11 @@ const read = (relative) => readFile(path.join(root, relative), 'utf8');
 
 test('order migration has one ordered schema and four non-duplicated server functions', async () => {
   const sql = await read('supabase/migrations/20261017100000_ecommerce_orders.sql');
-  for (const table of ['orders', 'order_items', 'coupons', 'coupon_redemptions']) {
+  for (const table of ['orders', 'order_items', 'coupons', 'coupon_redemptions', 'newsletter_subscribers']) {
     assert.match(sql, new RegExp('create table if not exists public\\.' + table + '\\b', 'i'));
     assert.match(sql, new RegExp('alter table public\\.' + table + ' enable row level security', 'i'));
   }
-  for (const fn of ['place_order', 'preview_checkout', 'lookup_order', 'admin_update_order']) {
+  for (const fn of ['place_order', 'preview_checkout', 'lookup_order', 'admin_update_order', 'subscribe_newsletter']) {
     assert.equal((sql.match(new RegExp('create or replace function public\\.' + fn + '\\s*\\(', 'gi')) || []).length, 1, fn + ' must be defined once');
   }
   assert.equal((sql.match(/commit;/gi) || []).length, 1, 'migration is a single transaction');
@@ -59,14 +59,17 @@ test('Admin exposes orders, promotions and store settings through connected modu
   const orders = await read('js/orders-admin.js');
   const coupons = await read('js/coupons-admin.js');
   const customers = await read('js/customers-admin.js');
+  const marketing = await read('js/marketing-admin.js');
   const settings = await read('js/store-settings.js');
-  for (const tab of ['products', 'orders', 'customers', 'coupons', 'collections', 'slides', 'content', 'media', 'settings']) {
+  for (const tab of ['products', 'orders', 'customers', 'coupons', 'marketing', 'collections', 'slides', 'content', 'media', 'settings']) {
     assert.match(html, new RegExp('data-tab="' + tab + '"'));
     assert.match(html, new RegExp('data-panel="' + tab + '"'));
   }
   assert.match(admin, /initializeOrdersAdmin\(supabase\)/);
   assert.match(admin, /initializeCouponsAdmin\(supabase\)/);
   assert.match(admin, /initializeCustomersAdmin\(supabase\)/);
+  assert.match(admin, /initializeMarketingAdmin\(supabase\)/);
+  assert.match(marketing, /newsletter_subscribers/);
   assert.match(customers, /supabase\.from\('orders'\)/);
   assert.match(customers, /Export CSV/);
   assert.match(admin, /initializeStoreSettings\(supabase\)/);
@@ -74,6 +77,18 @@ test('Admin exposes orders, promotions and store settings through connected modu
   assert.match(coupons, /coupon_redemptions|coupons/);
   assert.match(settings, /store\.shipping/);
   assert.match(settings, /store\.contact/);
+});
+
+test('newsletter signups are stored through a restricted server function and managed by Admin', async () => {
+  const migration = await read('supabase/migrations/20261017100000_ecommerce_orders.sql');
+  const script = await read('js/newsletter.js');
+  const index = await read('index.html');
+  const marketing = await read('js/marketing-admin.js');
+  assert.match(index, /js\/newsletter\.js/);
+  assert.match(script, /supabase\.rpc\('subscribe_newsletter'/);
+  assert.match(migration, /revoke all on table public\.newsletter_subscribers from public, anon, authenticated/i);
+  assert.match(migration, /grant execute on function public\.subscribe_newsletter\(text, text\) to anon, authenticated/i);
+  assert.match(marketing, /newsletter_subscribers/);
 });
 
 test('homepage slider consumes published CMS slides and replays data when sync finishes early', async () => {
