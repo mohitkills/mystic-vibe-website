@@ -488,6 +488,12 @@ begin
       set stock = coalesce(stock, 0) + v_item.quantity, updated_at = pg_catalog.now()
       where slug = v_item.product_slug;
     end loop;
+    if v_order.coupon_code is not null then
+      delete from public.coupon_redemptions where order_id = p_order_id;
+      update public.coupons
+      set usage_count = greatest(usage_count - 1, 0), updated_at = pg_catalog.now()
+      where code = v_order.coupon_code;
+    end if;
   end if;
 
   update public.orders
@@ -686,6 +692,12 @@ begin
         updated_at = pg_catalog.now()
     where slug = v_item.product_slug;
   end loop;
+  if v_order.coupon_code is not null then
+    delete from public.coupon_redemptions where order_id = v_order.id;
+    update public.coupons
+    set usage_count = greatest(usage_count - 1, 0), updated_at = pg_catalog.now()
+    where code = v_order.coupon_code;
+  end if;
 
   update public.orders
   set order_status = 'cancelled',
