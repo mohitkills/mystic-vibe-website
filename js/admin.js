@@ -2,6 +2,7 @@ import { supabase } from './supabase-client.js';
 import { initializeOrdersAdmin } from './orders-admin.js';
 import { initializeStoreSettings } from './store-settings.js';
 import { initializeCouponsAdmin } from './coupons-admin.js';
+import { initializeCustomersAdmin } from './customers-admin.js';
 import { SUPABASE_URL } from './supabase-config.js';
 import { buildOrderSwap, buildSlidePayload, normalizePersistentImageReference, saveCmsRecord } from './cms-records.js';
 
@@ -1053,6 +1054,7 @@ async function initializeAdmin() {
   initializeOrdersAdmin(supabase);
   initializeStoreSettings(supabase);
   initializeCouponsAdmin(supabase);
+  initializeCustomersAdmin(supabase);
 }
 
 document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => {
