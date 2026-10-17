@@ -226,7 +226,7 @@ async function readPublished(table) {
     const { data, error } = await query.range(offset, offset + batchSize - 1);
     if (error) {
       console.warn(`Mystic Vibe could not load published ${table}:`, error.message);
-      return [];
+      return null;
     }
     rows.push(...(Array.isArray(data) ? data : []));
     if (!data || data.length < batchSize) break;
@@ -317,17 +317,25 @@ function applySiteContent(rows) {
 }
 
 async function applyRemoteData({ products, collections, slides, content }) {
-  const collectionNames = new Map(collections.filter((row) => row?.is_published).map((row) => [row.id, row.name]));
-  const mappedProducts = products.map((row) => toStorefrontProduct(row, collectionNames)).filter(Boolean);
+  const publishedCollections = Array.isArray(collections) ? collections : (window.MV_COLLECTIONS || []);
+  const publishedSlidesSource = Array.isArray(slides) ? slides : (window.MV_HOMEPAGE_SLIDES || []);
+  const publishedContent = Array.isArray(content) ? content : null;
+  const collectionNames = new Map(publishedCollections.filter((row) => row?.is_published).map((row) => [row.id, row.name]));
+  const productReadFailed = !Array.isArray(products);
+  const mappedProducts = (Array.isArray(products) ? products : []).map((row) => toStorefrontProduct(row, collectionNames)).filter(Boolean);
   const imageSlotsBySlug = new Map(mappedProducts.map(({ product, imageSlots }) => [product.slug, imageSlots]));
   const fallback = window.MV_STATIC_PRODUCTS || [];
-  const mergedProducts = mergeCatalogBySlug(fallback, mappedProducts.map(({ product }) => product));
+  // Only show fallback catalog cards if the CMS request itself failed. On a healthy connection,
+  // visitors see published database records only, so every visible product can be checked out.
+  const mergedProducts = productReadFailed
+    ? mergeCatalogBySlug(fallback, mappedProducts.map(({ product }) => product))
+    : mergeCatalogBySlug([], mappedProducts.map(({ product }) => product));
   window.MV_PRODUCTS.splice(0, window.MV_PRODUCTS.length, ...mergedProducts);
-  window.MV_COLLECTIONS = collections.filter((row) => row?.is_published);
-  const publishedSlides = slides.filter((row) => row?.is_published)
+  window.MV_COLLECTIONS = publishedCollections.filter((row) => row?.is_published);
+  const publishedSlides = publishedSlidesSource.filter((row) => row?.is_published)
     .sort((left, right) => Number(left.sort_order) - Number(right.sort_order) || String(left.created_at || '').localeCompare(String(right.created_at || '')));
-  window.MV_HOMEPAGE_SLIDES = await hydrateSlideImages(publishedSlides);
-  applySiteContent(content);
+  if (Array.isArray(slides)) window.MV_HOMEPAGE_SLIDES = await hydrateSlideImages(publishedSlides);
+  if (publishedContent) applySiteContent(publishedContent);
   rerenderImagePage();
 
   await Promise.all([hydrateProductImages(mergedProducts, imageSlotsBySlug)]);
