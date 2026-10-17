@@ -113,3 +113,5 @@
 .newsletter-feedback.error { color: #f1a7a7; }
 .newsletter-feedback:empty { display: none; }
 .customer-admin-table .badge { display: inline-flex; border: 1px solid rgba(255,255,255,.16); border-radius: 99px; padding: .3rem .55rem; font-size: .75rem; background: rgba(255,255,255,.04); }
+.order-cancel-actions { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+.order-cancel-actions .admin-help { margin: 0; }
