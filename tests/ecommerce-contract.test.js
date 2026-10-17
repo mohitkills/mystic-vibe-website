@@ -94,6 +94,19 @@ test('newsletter signups are stored through a restricted server function and man
   assert.match(marketing, /newsletter_subscribers/);
 });
 
+test('legacy page guards do not suppress the live checkout, tracking and newsletter modules', async () => {
+  const app = await read('js/app.js');
+  const checkout = await read('js/checkout.js');
+  const account = await read('js/customer-account.js');
+  const newsletter = await read('js/newsletter.js');
+  assert.doesNotMatch(app, /form\\.replaceWith\\(panel\\)/, 'legacy checkout guard must not replace module-rendered checkout');
+  assert.doesNotMatch(app, /Live order tracking is not connected yet/, 'legacy tracking fallback must not replace the live tracking UI');
+  assert.doesNotMatch(app, /event\\.target\\.id==='checkout-form'\\|\\|event\\.target\\.id==='track-form'/, 'no document capture handler may suppress checkout/tracking submits');
+  assert.match(checkout, /event\\.stopImmediatePropagation\\(\\)/);
+  assert.match(account, /event\\.stopImmediatePropagation\\(\\)/);
+  assert.match(newsletter, /event\\.stopPropagation\\(\\)/);
+});
+
 test('homepage slider consumes published CMS slides and replays data when sync finishes early', async () => {
   const premium = await read('js/premium-home.js');
   const sync = await read('js/storefront-sync.js');
