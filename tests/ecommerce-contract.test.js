@@ -100,4 +100,6 @@ test('homepage slider consumes published CMS slides and replays data when sync f
   assert.match(premium, /dispatchEvent\(new CustomEvent\('mystic-vibe-storefront-data'/);
   assert.match(sync, /readPublished\('homepage_slides'\)/);
   assert.match(sync, /window\.MV_HOMEPAGE_SLIDES = await hydrateSlideImages\(publishedSlides\)/);
+  assert.match(sync, /window\.MV_STOREFRONT_CMS_CONNECTED = Array\.isArray\(products\)/);
+  assert.match(sync, /mergeCatalogBySlug\(\[\], mappedProducts/);
 });
