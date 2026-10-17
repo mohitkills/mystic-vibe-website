@@ -6,7 +6,7 @@ const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character
 const money = (value) => '₹' + Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
 const csvCell = (value) => {
   let safe = String(value ?? '');
-  if (/^[\\s]*[=+\\-@]/.test(safe)) safe = "'" + safe;
+  if (/^\s*[=+@-]/.test(safe)) safe = "'" + safe;
   return '"' + safe.replace(/"/g, '""') + '"';
 };
 const label = (value) => String(value || 'pending').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
