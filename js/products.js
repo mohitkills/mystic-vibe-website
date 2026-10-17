@@ -86,3 +86,6 @@ const MV_PRODUCTS=[
 ];
 const MV_IMAGE="assets/images/perfume-bottle.svg";
 const MV_PRODUCT_IMAGE="../assets/images/perfume-bottle.svg";
+// Keep a local catalog fallback available if Supabase is unreachable or has no published rows.
+window.MV_STATIC_PRODUCTS=MV_PRODUCTS.map(function(product){return Object.assign({},product)});
+window.MV_PRODUCTS=MV_PRODUCTS;

@@ -1,0 +1,8 @@
+[functions.product-image]
+# The function verifies the publishable key with @supabase/server. The gateway
+# JWT check must be disabled because current publishable keys are not JWTs.
+verify_jwt = false
+
+[functions.slide-image]
+# Anonymous requests are filtered through published-slide RLS in the function.
+verify_jwt = false
