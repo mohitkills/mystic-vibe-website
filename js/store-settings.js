@@ -85,7 +85,6 @@ export function initializeStoreSettings(supabase) {
     try {
       await save('store.contact', contact);
       show('Public contact settings saved. Refresh the storefront to see the changes.');
-      window.dispatchEvent(new CustomEvent('mystic-vibe-storefront-data', { detail: { content: { 'store.contact': contact } } }));
     } catch (error) { show(error?.message || 'Contact settings could not be saved.', true); }
     finally { button.disabled = false; button.textContent = 'Save contact settings'; }
   });
