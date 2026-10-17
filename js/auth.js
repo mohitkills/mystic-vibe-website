@@ -21,7 +21,7 @@ function notify(message) {
 
 function updateAccountLinks(session) {
   currentSession = session;
-  document.querySelectorAll('.nav-actions a[href$="login.html"], .mobile-account-link').forEach(function (link) {
+  document.querySelectorAll('.nav-actions a[href$="login.html"], .nav-actions a[href$="account.html"], .mobile-account-link').forEach(function (link) {
     const label = session ? 'Sign out' : 'Sign in';
     link.setAttribute('aria-label', label);
     link.setAttribute('title', label);
@@ -29,7 +29,7 @@ function updateAccountLinks(session) {
 }
 
 document.addEventListener('click', async function (event) {
-  const link = event.target.closest('.nav-actions a[href$="login.html"], .mobile-account-link');
+  const link = event.target.closest('.nav-actions a[href$="login.html"], .nav-actions a[href$="account.html"], .mobile-account-link');
   if (!link || !currentSession) return;
 
   event.preventDefault();
