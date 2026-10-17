@@ -68,7 +68,7 @@ export function initializeStoreSettings(supabase) {
     event.preventDefault();
     const button = contactForm.querySelector('button[type="submit"]');
     const values = new FormData(contactForm);
-    const phone = String(values.get('whatsapp_phone') || '').replace(/D/g, '');
+    const phone = String(values.get('whatsapp_phone') || '').replace(/\D/g, '');
     if (phone && !/^[1-9][0-9]{7,14}$/.test(phone)) {
       show('Enter a valid WhatsApp country code and phone number using digits only.', true); return;
     }
