@@ -49,6 +49,7 @@
         <button type="button" data-tab="slides">Homepage slides</button>
         <button type="button" data-tab="content">Site content</button>
         <button type="button" data-tab="media">Media library</button>
+        <button type="button" data-tab="settings">Store settings</button>
       </nav>
 
       <section class="admin-panel active" data-panel="products">
@@ -138,6 +139,26 @@
         <div class="admin-panel-heading"><h3 class="serif">Stored media</h3><button id="refresh-media" class="btn light" type="button">Refresh library</button></div>
         <p class="admin-help">Files are listed with temporary previews. Deletion is not offered because the current schema has no reference index to prove an object is unused.</p>
         <div id="media-library-list" class="admin-record-list" aria-live="polite"></div>
+      </section>
+      <section class="admin-panel" data-panel="settings" hidden>
+        <div class="admin-panel-heading"><div><span class="eyebrow">Store configuration</span><h2 class="serif">Store Settings</h2><p>Manage delivery fees, Cash on Delivery, and the public support channels without editing code.</p></div></div>
+        <p id="store-settings-status" class="admin-status" role="status" aria-live="polite"></p>
+        <form id="store-shipping-form" class="panel admin-form">
+          <h3 class="serif wide">Shipping & payments</h3>
+          <label>Standard shipping fee (₹)<input name="standard_fee" type="number" min="0" max="100000" step="0.01" required value="0"></label>
+          <label>Free shipping above (₹)<input name="free_shipping_threshold" type="number" min="0" max="1000000" step="0.01" required value="0"><small>Enter 0 to disable a threshold. If the fee is ₹0, shipping remains free.</small></label>
+          <label class="check-label wide"><input type="checkbox" name="cod_enabled" checked> Enable Cash on Delivery</label>
+          <div class="form-actions wide"><button class="btn" type="submit">Save shipping settings</button></div>
+        </form>
+        <form id="store-contact-form" class="panel admin-form">
+          <h3 class="serif wide">Public contact & social links</h3>
+          <label>Customer support email<input name="support_email" type="email" maxlength="254" placeholder="support@example.com"></label>
+          <label>WhatsApp number<input name="whatsapp_phone" inputmode="numeric" maxlength="15" placeholder="919876543210"><small>Include country code and digits only, for example 91 followed by the 10-digit mobile number.</small></label>
+          <label>Instagram profile URL<input name="instagram_url" type="url" maxlength="500" placeholder="https://www.instagram.com/yourbrand/"></label>
+          <label>Facebook page URL<input name="facebook_url" type="url" maxlength="500" placeholder="https://www.facebook.com/yourbrand"></label>
+          <div class="form-actions wide"><button class="btn" type="submit">Save contact settings</button></div>
+          <p class="admin-help wide">These details are public and can appear on the storefront. Never enter passwords, API keys or payment secrets here.</p>
+        </form>
       </section>
     </section>
     <dialog id="slide-preview" class="slide-preview-dialog" aria-labelledby="slide-preview-title">
