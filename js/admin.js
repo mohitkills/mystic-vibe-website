@@ -120,9 +120,15 @@ async function renderProductImageGallery() {
   }
 }
 
+function markAdminGateReady() {
+  document.documentElement.dataset.adminGateState = 'ready';
+  window.dispatchEvent(new Event('mystic-vibe-admin-ready'));
+}
+
 function showGate(message, showLogin) {
   gateMessage.textContent = message;
   loginLink.hidden = !showLogin;
+  markAdminGateReady();
 }
 
 function showWorkspace(user) {
@@ -130,6 +136,7 @@ function showWorkspace(user) {
   workspace.hidden = false;
   signOutButton.hidden = false;
   document.querySelector('#admin-user-label').textContent = user?.email || 'Signed-in administrator';
+  markAdminGateReady();
 }
 
 function appendRecord(container, title, detail, id, actions, imageUrl) {
