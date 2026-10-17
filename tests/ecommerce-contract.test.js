@@ -99,14 +99,13 @@ test('legacy page guards do not suppress the live checkout, tracking and newslet
   const checkout = await read('js/checkout.js');
   const account = await read('js/customer-account.js');
   const newsletter = await read('js/newsletter.js');
-  assert.doesNotMatch(app, /form\\.replaceWith\\(panel\\)/, 'legacy checkout guard must not replace module-rendered checkout');
-  assert.doesNotMatch(app, /Live order tracking is not connected yet/, 'legacy tracking fallback must not replace the live tracking UI');
-  assert.doesNotMatch(app, /event\\.target\\.id==='checkout-form'\\|\\|event\\.target\\.id==='track-form'/, 'no document capture handler may suppress checkout/tracking submits');
-  assert.match(checkout, /event\\.stopImmediatePropagation\\(\\)/);
-  assert.match(account, /event\\.stopImmediatePropagation\\(\\)/);
-  assert.match(newsletter, /event\\.stopPropagation\\(\\)/);
+  assert.equal(app.includes('form.replaceWith(panel)'), false, 'legacy checkout guard must not replace module-rendered checkout');
+  assert.equal(app.includes('Live order tracking is not connected yet'), false, 'legacy tracking fallback must not replace the live tracking UI');
+  assert.equal(app.includes("event.target.id==='checkout-form'||event.target.id==='track-form'"), false, 'no document capture handler may suppress checkout/tracking submits');
+  assert.ok(checkout.includes('event.stopImmediatePropagation()'), 'checkout handles its own submit without bubbling to legacy handlers');
+  assert.ok(account.includes('event.stopImmediatePropagation()'), 'tracking handles its own submit without bubbling to legacy handlers');
+  assert.ok(newsletter.includes('event.stopPropagation()'), 'newsletter handles its own submit without legacy override');
 });
-
 test('homepage slider consumes published CMS slides and replays data when sync finishes early', async () => {
   const premium = await read('js/premium-home.js');
   const sync = await read('js/storefront-sync.js');
