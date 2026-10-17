@@ -29,6 +29,93 @@ const stateOptions = [
 ];
 let shippingSettings = { standard_fee: 0, free_shipping_threshold: 0, cod_enabled: true };
 let shippingSettingsKnown = true;
+
+const checkoutState = { coupon: '', preview: null, verified: false, busy: false };
+
+function updateCheckoutButton() {
+  const button = document.querySelector('#place-order');
+  const cart = readCart();
+  if (button) button.disabled = !cart.length || checkoutState.busy || !checkoutState.verified || !shippingSettings.cod_enabled;
+}
+
+async function refreshPreview(candidateCode = checkoutState.coupon) {
+  const feedback = document.querySelector('#coupon-feedback');
+  const previewMessage = document.querySelector('#checkout-preview-message');
+  const applyButton = document.querySelector('#apply-coupon');
+  const removeButton = document.querySelector('#remove-coupon');
+  const codeInput = document.querySelector('#coupon-code');
+  const cart = readCart();
+  const form = document.querySelector('#checkout-form');
+  const email = String(form?.elements.namedItem('email')?.value || '').trim();
+
+  checkoutState.busy = true;
+  updateCheckoutButton();
+  if (applyButton) { applyButton.disabled = true; applyButton.textContent = 'Checking…'; }
+  if (previewMessage) previewMessage.textContent = 'Verifying live product prices and stock…';
+  if (feedback && candidateCode) { feedback.hidden = true; feedback.textContent = ''; }
+
+  try {
+    if (!cart.length) throw new Error('Your cart is empty. Add a perfume before checkout.');
+    if (candidateCode && !email) throw new Error('Enter your checkout email before applying a coupon.');
+    const response = await supabase.rpc('preview_checkout', {
+      p_items: cart.map(({ slug, quantity }) => ({ slug, quantity })),
+      p_email: email,
+      p_coupon_code: candidateCode || null,
+    });
+    if (response.error) throw response.error;
+    const preview = Array.isArray(response.data) ? response.data[0] : response.data;
+    if (!preview || !Array.isArray(preview.items) || !Number.isFinite(Number(preview.total))) {
+      throw new Error('The store could not verify the checkout total. Please refresh and try again.');
+    }
+    checkoutState.preview = preview;
+    checkoutState.coupon = preview.coupon_code || '';
+    checkoutState.verified = true;
+
+    const lines = document.querySelector('#checkout-lines');
+    if (lines) {
+      lines.innerHTML = preview.items.map((item) =>
+        '<div class="checkout-line"><span>' + escapeHtml(item.product_name) + ' × ' + Number(item.quantity) +
+        '</span><strong>' + rupees(item.line_total) + '</strong></div>'
+      ).join('');
+    }
+    const subtotalNode = document.querySelector('#checkout-subtotal');
+    const shippingNode = document.querySelector('#checkout-shipping');
+    const discountRow = document.querySelector('#checkout-discount-row');
+    const discountNode = document.querySelector('#checkout-discount');
+    const totalNode = document.querySelector('#checkout-total');
+    if (subtotalNode) subtotalNode.textContent = rupees(preview.subtotal);
+    if (shippingNode) shippingNode.textContent = Number(preview.shipping_fee || 0) > 0 ? rupees(preview.shipping_fee) : 'Free';
+    if (discountRow) discountRow.hidden = !(Number(preview.discount_amount) > 0);
+    if (discountNode) discountNode.textContent = '−' + rupees(preview.discount_amount);
+    if (totalNode) totalNode.textContent = rupees(preview.total);
+    if (codeInput) codeInput.value = checkoutState.coupon;
+    if (removeButton) removeButton.hidden = !checkoutState.coupon;
+    if (previewMessage) previewMessage.textContent = preview.cod_enabled
+      ? 'Prices and available stock verified. The final total is rechecked when you place the order.'
+      : 'Cash on Delivery is disabled by the store. You cannot place an order at this time.';
+    shippingSettings.cod_enabled = preview.cod_enabled === true;
+    const cod = document.querySelector('#checkout-form input[name="pay"]');
+    if (cod) cod.disabled = !preview.cod_enabled;
+    if (feedback) {
+      feedback.textContent = checkoutState.coupon
+        ? 'Coupon ' + checkoutState.coupon + ' applied. You save ' + rupees(preview.discount_amount) + '.'
+        : candidateCode ? 'Coupon was not applied.' : '';
+      feedback.hidden = !checkoutState.coupon && !candidateCode;
+    }
+  } catch (error) {
+    checkoutState.verified = false;
+    if (previewMessage) previewMessage.textContent = 'Checkout could not be verified. Review the message below and retry.';
+    if (feedback) {
+      feedback.textContent = error?.message || 'Could not validate the coupon or checkout.';
+      feedback.hidden = false;
+    }
+    if (candidateCode && checkoutState.coupon !== candidateCode && codeInput) codeInput.value = candidateCode;
+  } finally {
+    checkoutState.busy = false;
+    if (applyButton) { applyButton.disabled = false; applyButton.textContent = 'Apply coupon'; }
+    updateCheckoutButton();
+  }
+}
 function refreshShippingSummary() {
   const cart = readCart();
   const subtotal = cart.reduce((sum, item) => sum + Number(localProduct(item.slug).price || 0) * item.quantity, 0);
@@ -90,7 +177,7 @@ function showConfirmation(order) {
     <section class="page-hero"><div class="page-title"><span class="eyebrow">Order confirmed</span><h1 class="serif">Thank you for choosing Mystic Vibe.</h1><p>Your Cash on Delivery order has been recorded.</p></div></section>
     <section class="section"><div class="container"><div class="panel order-confirmation">
       <span class="eyebrow">Your order number</span><h2 class="serif">${escapeHtml(order.order_number)}</h2>
-      <p>Order total: <strong>${rupees(order.total)}</strong></p><p>Payment: Cash on Delivery · Payment status: Pending</p>
+      <p>Order total: <strong>${rupees(order.total)}</strong></p><p>Shipping: ${Number(order.shipping_fee || 0) ? rupees(order.shipping_fee) : 'Free'} · ${Number(order.discount_amount || 0) ? 'Coupon discount: ' + rupees(order.discount_amount) + ' · ' : ''}Payment: Cash on Delivery · Payment status: Pending</p>
       <p>Save the order number and use your checkout email to track delivery progress.</p>
       <a class="btn" href="tracking.html?order=${encodeURIComponent(order.order_number)}">Track this order</a>
       <a class="btn light" href="account.html">My account & orders</a><a class="btn light" href="collection.html">Continue shopping</a>
@@ -121,6 +208,19 @@ if (form) {
     }
   } catch (error) { console.warn('Could not prefill account details:', error?.message || error); }
 
+  await refreshPreview(null);
+  document.querySelector('#apply-coupon')?.addEventListener('click', () => {
+    const candidate = String(document.querySelector('#coupon-code')?.value || '').trim().toUpperCase();
+    refreshPreview(candidate);
+  });
+  document.querySelector('#remove-coupon')?.addEventListener('click', () => {
+    checkoutState.coupon = '';
+    const codeInput = document.querySelector('#coupon-code');
+    if (codeInput) codeInput.value = '';
+    refreshPreview(null);
+  });
+  form.elements.namedItem('email').addEventListener('change', () => refreshPreview(checkoutState.coupon));
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation();
     const feedback = form.querySelector('#checkout-feedback');
@@ -138,6 +238,7 @@ if (form) {
       const { data, error } = await supabase.rpc('place_order', {
         p_customer: customer, p_items: cart.map(({ slug, quantity }) => ({ slug, quantity })),
         p_payment_method: 'cod', p_customer_notes: String(formData.get('customer_notes') || '').trim() || null,
+        p_coupon_code: checkoutState.coupon || null,
       });
       if (error) throw error;
       const order = Array.isArray(data) ? data[0] : data;
