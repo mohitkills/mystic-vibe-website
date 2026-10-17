@@ -56,6 +56,17 @@ test('customer order history and guest order lookup are connected to the secured
   assert.match(account, /Track a guest order/);
 });
 
+test('Admin access gate has an independent timeout and explicit ready signal', async () => {
+  const html = await read('admin.html');
+  const admin = await read('js/admin.js');
+  assert.match(html, /setTimeout\(\(\)\s*=>/);
+  assert.match(html, /The admin workspace could not finish connecting/);
+  assert.match(html, /mystic-vibe-admin-ready/);
+  assert.match(admin, /function markAdminGateReady\(\)/);
+  assert.match(admin, /window\.dispatchEvent\(new Event\('mystic-vibe-admin-ready'\)\)/);
+  assert.match(admin, /markAdminGateReady\(\)/);
+});
+
 test('Admin exposes orders, promotions and store settings through connected modules', async () => {
   const html = await read('admin.html');
   const admin = await read('js/admin.js');
