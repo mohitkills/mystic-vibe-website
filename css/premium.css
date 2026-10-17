@@ -30,3 +30,9 @@
 @media(max-width:980px){.product-card-gallery .visual{min-height:210px}}
 @media(max-width:640px){.product-card-gallery .visual{min-height:190px}.product-image-controls{left:5px;right:5px;bottom:5px}.gallery-arrow{width:28px;height:28px}.discovery-number img{display:none}.story-band:after{width:140px;height:100px}}
 .premium-slide-controls{position:absolute;z-index:2;left:max(28px,calc((100vw - 1280px)/2));bottom:28px;display:flex;align-items:center;gap:9px;color:#fff}.premium-slide-controls[hidden]{display:none}.premium-slide-arrow{width:38px;height:38px;border:1px solid rgba(255,255,255,.45);border-radius:50%;background:rgba(7,8,10,.5);color:#fff;font-size:24px;line-height:1;cursor:pointer}.premium-slide-arrow:hover,.premium-slide-arrow:focus-visible{background:#fff;color:#111}.premium-slide-status{min-width:74px;text-align:center;font-size:10px;letter-spacing:.12em;text-transform:uppercase}.premium-hero-content h1{white-space:pre-line}@media(max-width:640px){.premium-slide-controls{left:20px;bottom:20px}.hero-note{bottom:32px;right:20px;font-size:8px}}
+
+
+/* Accessible status feedback for the homepage newsletter form. */
+.newsletter-feedback { margin: .7rem 0 0; font-size: .88rem; line-height: 1.5; color: #d8c7a6; }
+.newsletter-feedback.error { color: #f1a7a7; }
+.newsletter-feedback:empty { display: none; }
