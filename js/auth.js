@@ -127,7 +127,7 @@ if (authForm) {
         return;
       }
 
-      window.location.assign('index.html');
+      window.location.assign(page === 'login' ? 'account.html' : 'index.html');
     } catch (error) {
       console.error('Supabase authentication failed:', error);
       feedback.textContent = error.message || 'Authentication failed. Please try again.';
