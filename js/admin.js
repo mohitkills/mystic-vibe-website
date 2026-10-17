@@ -1,9 +1,6 @@
 import { supabase } from './supabase-client.js';
-import { initializeOrdersAdmin } from './orders-admin.js';
-import { initializeStoreSettings } from './store-settings.js';
-import { initializeCouponsAdmin } from './coupons-admin.js';
-import { initializeCustomersAdmin } from './customers-admin.js';
-import { initializeMarketingAdmin } from './marketing-admin.js';
+// Optional dashboard modules are loaded after the admin session is verified.
+// A broken non-auth module must never prevent the login gate from initializing.
 import { SUPABASE_URL } from './supabase-config.js';
 import { buildOrderSwap, buildSlidePayload, normalizePersistentImageReference, saveCmsRecord } from './cms-records.js';
 
@@ -1051,12 +1048,37 @@ async function initializeAdmin() {
     return;
   }
   showWorkspace(session.user);
-  await loadRecords();
-  initializeOrdersAdmin(supabase);
-  initializeStoreSettings(supabase);
-  initializeCouponsAdmin(supabase);
-  initializeCustomersAdmin(supabase);
-  initializeMarketingAdmin(supabase);
+  try {
+    await loadRecords();
+  } catch (error) {
+    console.error('Mystic Vibe catalog/content admin data could not load:', error);
+    setStatus(error?.message || 'Catalog/content data could not load. The admin account is authenticated; retry loading records.', true);
+  }
+
+  const optionalModules = [
+    { label: 'Orders', load: () => import('./orders-admin.js'), initialize: 'initializeOrdersAdmin' },
+    { label: 'Store settings', load: () => import('./store-settings.js'), initialize: 'initializeStoreSettings' },
+    { label: 'Coupons', load: () => import('./coupons-admin.js'), initialize: 'initializeCouponsAdmin' },
+    { label: 'Customers', load: () => import('./customers-admin.js'), initialize: 'initializeCustomersAdmin' },
+    { label: 'Newsletter', load: () => import('./marketing-admin.js'), initialize: 'initializeMarketingAdmin' },
+  ];
+  const moduleResults = await Promise.allSettled(optionalModules.map(async (feature) => {
+    const module = await feature.load();
+    if (typeof module[feature.initialize] !== 'function') {
+      throw new Error('The module did not provide its expected initializer.');
+    }
+    module[feature.initialize](supabase);
+    return feature.label;
+  }));
+  const failedFeatures = moduleResults.flatMap((result, index) => result.status === 'rejected'
+    ? [{ label: optionalModules[index].label, error: result.reason }]
+    : []);
+  if (failedFeatures.length) {
+    failedFeatures.forEach((feature) => console.error('Mystic Vibe admin feature failed to initialize:', feature.label, feature.error));
+    setStatus('Admin access is verified, but these sections could not load: ' +
+      failedFeatures.map((feature) => feature.label).join(', ') +
+      '. Refresh the page or check the browser connection.', true);
+  }
 }
 
 document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => {
