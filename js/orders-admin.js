@@ -4,6 +4,11 @@ const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
 })[character]);
 const money = (value) => '₹' + Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+const csvCell = (value) => {
+  let safe = String(value ?? '');
+  if (/^[\\s]*[=+\\-@]/.test(safe)) safe = "'" + safe;
+  return '"' + safe.replace(/"/g, '""') + '"';
+};
 const label = (value) => String(value || 'pending').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 const formatDate = (value) => {
   const date = new Date(value);
@@ -179,8 +184,7 @@ export function initializeOrdersAdmin(supabase) {
     const rows = visibleOrders();
     const columns = ['order_number','created_at','customer_name','email','phone','shipping_address_line1','shipping_address_line2','city','state','postal_code','country','subtotal','shipping_fee','discount_amount','total','payment_method','payment_status','order_status','carrier','tracking_number','status_note'];
     const csv = [columns.join(','), ...rows.map((row) => columns.map((key) => {
-      const value = String(row[key] ?? '').replace(/"/g, '""');
-      return '"' + value + '"';
+      return csvCell(row[key]);
     }).join(','))].join('\r\n');
     const url = URL.createObjectURL(new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8;' }));
     const link = document.createElement('a');
