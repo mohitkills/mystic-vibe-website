@@ -40,6 +40,13 @@ test('checkout recalculates products, shipping and offers on the server before p
   assert.match(checkout, /preview\.items/);
   assert.match(checkout, /value="cod"/);
   assert.match(checkout, /final total is rechecked when you place the order/i);
+  assert.match(checkout, /function cartAvailability\(item\)/);
+  assert.match(checkout, /function renderCheckoutLines\(cart, verifiedItems = null\)/);
+  assert.match(checkout, /data-remove-checkout-item/);
+  assert.match(checkout, /Remove these items here, or update their real stock in Admin/);
+  assert.match(checkout, /subtotalNode\.textContent = '—'/, 'do not present an unverified total as final');
+  assert.match(checkout, /await waitForStorefrontCatalog\(\)/);
+
 });
 
 test('customer order history and guest order lookup are connected to the secured order backend', async () => {
