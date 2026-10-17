@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="css/premium.css">
   <link rel="stylesheet" href="css/admin.css">
   <link rel="stylesheet" href="css/admin-product-upload.css">
+  <link rel="stylesheet" href="css/orders.css">
 </head>
 <body class="admin-page">
   <header class="admin-topbar">
@@ -43,6 +44,7 @@
       </section>
       <nav class="admin-tabs" aria-label="Admin sections">
         <button type="button" class="active" data-tab="products">Products</button>
+        <button type="button" data-tab="orders">Orders</button>
         <button type="button" data-tab="collections">Collections</button>
         <button type="button" data-tab="slides">Homepage slides</button>
         <button type="button" data-tab="content">Site content</button>
@@ -76,6 +78,8 @@
         </form>
         <div id="product-list" class="admin-record-list" aria-live="polite"></div>
       </section>
+
+      <section class="admin-panel" data-panel="orders" hidden><div class="panel"><h2 class="serif">Customer Orders</h2><p>Loading the order management workspace…</p></div></section>
 
       <section class="admin-panel" data-panel="collections" hidden>
         <div class="admin-panel-heading"><div><span class="eyebrow">Catalog taxonomy</span><h2 class="serif">Collections</h2></div><div><button class="btn light" type="button" id="seed-collections">Add missing fragrance categories</button><button class="btn light" type="button" data-reset-form="collection-form">New collection</button></div></div>
