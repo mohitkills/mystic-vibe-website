@@ -263,6 +263,57 @@ function applySiteContent(rows) {
     const text = typeof value === 'string' ? value : (value && typeof value.text === 'string' ? value.text : null);
     if (text !== null) node.textContent = text;
   });
+
+  const contact = content['store.contact'] && typeof content['store.contact'] === 'object' ? content['store.contact'] : {};
+  const phone = String(contact.whatsapp_phone || '').replace(/\D/g, '');
+  const whatsapp = document.querySelector('.whatsapp-float');
+  if (whatsapp) {
+    if (/^[1-9][0-9]{7,14}$/.test(phone)) {
+      whatsapp.href = 'https://wa.me/' + phone;
+      whatsapp.hidden = false;
+      whatsapp.removeAttribute('aria-hidden');
+    } else {
+      whatsapp.hidden = true;
+      whatsapp.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  const supportEmail = typeof contact.support_email === 'string' ? contact.support_email.trim() : '';
+  const exploreLinks = [...document.querySelectorAll('.footer-grid .links')].find((group) =>
+    group.querySelector('a[href$="contact.html"]'));
+  if (exploreLinks) {
+    let emailLink = exploreLinks.querySelector('[data-store-support-email]');
+    if (supportEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supportEmail)) {
+      if (!emailLink) {
+        emailLink = document.createElement('a');
+        emailLink.dataset.storeSupportEmail = 'true';
+        emailLink.textContent = 'Email support';
+        exploreLinks.append(emailLink);
+      }
+      emailLink.href = 'mailto:' + supportEmail;
+      emailLink.hidden = false;
+    } else if (emailLink) emailLink.hidden = true;
+  }
+
+  const copyright = document.querySelector('#site-footer .copyright');
+  if (copyright) {
+    copyright.textContent = '© 2026 Mystic Vibe. All rights reserved.';
+    for (const [key, title] of [['instagram_url', 'Instagram'], ['facebook_url', 'Facebook']]) {
+      let url = '';
+      try {
+        const parsed = new URL(String(contact[key] || ''));
+        if (parsed.protocol === 'https:' && !parsed.username && !parsed.password) url = parsed.href;
+      } catch { /* Optional social links may be unset. */ }
+      if (!url) continue;
+      const separator = document.createTextNode(' · ');
+      const link = document.createElement('a');
+      link.href = url;
+      link.textContent = title;
+      link.rel = 'noopener noreferrer';
+      link.target = '_blank';
+      copyright.append(separator, link);
+    }
+  }
 }
 
 async function applyRemoteData({ products, collections, slides, content }) {
