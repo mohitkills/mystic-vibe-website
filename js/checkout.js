@@ -17,8 +17,90 @@ function readCart() {
   } catch { return []; }
 }
 function localProduct(slug) {
-  return (window.MV_PRODUCTS || window.MV_STATIC_PRODUCTS || []).find((product) => product.slug === slug) ||
-    { slug, name: slug.replace(/-/g, ' '), price: 0, size: '50ML' };
+  const liveProducts = Array.isArray(window.MV_PRODUCTS) ? window.MV_PRODUCTS : [];
+  const liveProduct = liveProducts.find((product) => product.slug === slug);
+  if (liveProduct) return liveProduct;
+
+  const fallback = (window.MV_STATIC_PRODUCTS || []).find((product) => product.slug === slug);
+  if (window.MV_STOREFRONT_CMS_CONNECTED === true) {
+    return fallback
+      ? { ...fallback, published: false, stock: 0, unavailable: true }
+      : { slug, name: slug.replace(/-/g, ' '), price: 0, size: '50ML', published: false, stock: 0, unavailable: true };
+  }
+  return fallback || { slug, name: slug.replace(/-/g, ' '), price: 0, size: '50ML' };
+}
+
+async function waitForStorefrontCatalog() {
+  if (typeof window.MV_STOREFRONT_CMS_CONNECTED === 'boolean') return;
+  await Promise.race([
+    new Promise((resolve) => window.addEventListener('mystic-vibe-storefront-data', resolve, { once: true })),
+    new Promise((resolve) => setTimeout(resolve, 2500)),
+  ]);
+}
+
+function cartAvailability(item) {
+  if (window.MV_STOREFRONT_CMS_CONNECTED !== true) {
+    return { known: false, available: true, message: 'Availability will be checked by the store.' };
+  }
+  const product = (window.MV_PRODUCTS || []).find((entry) => entry.slug === item.slug);
+  if (!product || product.published === false || product.unavailable === true) {
+    return { known: true, available: false, stock: 0, message: 'This perfume is no longer available.' };
+  }
+  const stock = Number(product.stock);
+  if (Number.isFinite(stock) && stock < item.quantity) {
+    return {
+      known: true,
+      available: false,
+      stock,
+      message: stock > 0 ? `Only ${stock} left in stock.` : 'Out of stock.',
+    };
+  }
+  return { known: true, available: true, stock: Number.isFinite(stock) ? stock : null, message: 'In stock' };
+}
+
+function renderCheckoutLines(cart, verifiedItems = null) {
+  const lines = document.querySelector('#checkout-lines');
+  if (!lines) return;
+  if (!cart.length) {
+    lines.innerHTML = '<p>Your cart is empty.</p><a class="btn" href="collection.html">Explore perfumes</a>';
+    return;
+  }
+  const verifiedBySlug = new Map((Array.isArray(verifiedItems) ? verifiedItems : []).map((item) => [item.product_slug, item]));
+  lines.innerHTML = cart.map((item) => {
+    const product = localProduct(item.slug);
+    const availability = cartAvailability(item);
+    const verified = verifiedBySlug.get(item.slug);
+    const unavailable = availability.known && !availability.available;
+    const priceText = verified
+      ? rupees(verified.line_total)
+      : unavailable
+        ? 'Unavailable'
+        : rupees(Number(product.price || 0) * item.quantity);
+    const stockText = verified
+      ? 'Price and stock verified'
+      : availability.message;
+    return '<div class="checkout-line' + (unavailable ? ' checkout-line-unavailable' : '') + '">' +
+      '<div class="checkout-line-copy"><strong>' + escapeHtml(product.name) + ' × ' + Number(item.quantity) + '</strong>' +
+      '<small>' + escapeHtml(stockText) + '</small></div>' +
+      '<div class="checkout-line-actions"><strong>' + priceText + '</strong>' +
+      '<button class="btn light checkout-remove" type="button" data-remove-checkout-item="' + escapeHtml(item.slug) + '" aria-label="Remove ' + escapeHtml(product.name) + ' from checkout">Remove</button></div>' +
+      '</div>';
+  }).join('');
+}
+
+function checkoutErrorMessage(cart, error) {
+  const unavailable = cart.map((item) => {
+    const product = localProduct(item.slug);
+    const availability = cartAvailability(item);
+    return availability.known && !availability.available
+      ? product.name + ' (' + availability.message + ')'
+      : null;
+  }).filter(Boolean);
+  if (unavailable.length) {
+    return 'This order cannot be placed yet: ' + unavailable.join('; ') +
+      '. Remove these items here, or update their real stock in Admin, then retry checkout.';
+  }
+  return error?.message || 'Could not validate the coupon or checkout.';
 }
 const stateOptions = [
   'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana',
@@ -71,13 +153,7 @@ async function refreshPreview(candidateCode = checkoutState.coupon) {
     checkoutState.coupon = preview.coupon_code || '';
     checkoutState.verified = true;
 
-    const lines = document.querySelector('#checkout-lines');
-    if (lines) {
-      lines.innerHTML = preview.items.map((item) =>
-        '<div class="checkout-line"><span>' + escapeHtml(item.product_name) + ' × ' + Number(item.quantity) +
-        '</span><strong>' + rupees(item.line_total) + '</strong></div>'
-      ).join('');
-    }
+    renderCheckoutLines(cart, preview.items);
     const subtotalNode = document.querySelector('#checkout-subtotal');
     const shippingNode = document.querySelector('#checkout-shipping');
     const discountRow = document.querySelector('#checkout-discount-row');
@@ -104,9 +180,19 @@ async function refreshPreview(candidateCode = checkoutState.coupon) {
     }
   } catch (error) {
     checkoutState.verified = false;
-    if (previewMessage) previewMessage.textContent = 'Checkout could not be verified. Review the message below and retry.';
+    checkoutState.preview = null;
+    renderCheckoutLines(cart);
+    const subtotalNode = document.querySelector('#checkout-subtotal');
+    const shippingNode = document.querySelector('#checkout-shipping');
+    const discountRow = document.querySelector('#checkout-discount-row');
+    const totalNode = document.querySelector('#checkout-total');
+    if (subtotalNode) subtotalNode.textContent = '—';
+    if (shippingNode) shippingNode.textContent = '—';
+    if (discountRow) discountRow.hidden = true;
+    if (totalNode) totalNode.textContent = '—';
+    if (previewMessage) previewMessage.textContent = 'Checkout is paused until every cart item can be verified. Remove unavailable items or check inventory, then retry.';
     if (feedback) {
-      feedback.textContent = error?.message || 'Could not validate the coupon or checkout.';
+      feedback.textContent = checkoutErrorMessage(cart, error);
       feedback.hidden = false;
     }
     if (candidateCode && checkoutState.coupon !== candidateCode && codeInput) codeInput.value = candidateCode;
@@ -173,6 +259,7 @@ function render() {
         <hr><p>Subtotal <strong id="checkout-subtotal" style="float:right">${rupees(subtotal)}</strong></p><p>Shipping <strong id="checkout-shipping" style="float:right">Free</strong></p><p id="checkout-discount-row" hidden>Discount <strong id="checkout-discount" style="float:right">−₹0</strong></p><h3>Total <span id="checkout-total" style="float:right">${rupees(subtotal)}</span></h3><p id="checkout-preview-message" class="admin-help">Verifying current prices and stock…</p>
       </aside>
     </div></section>`;
+  renderCheckoutLines(cart);
 }
 function showConfirmation(order) {
   main.innerHTML = `
@@ -196,8 +283,31 @@ try {
   shippingSettingsKnown = false;
   console.warn('Shipping settings could not be loaded; the server will provide the final shipping amount.', error?.message || error);
 }
+await waitForStorefrontCatalog();
 render();
 refreshShippingSummary();
+
+document.querySelector('#checkout-lines')?.addEventListener('click', async (event) => {
+  const button = event.target.closest('[data-remove-checkout-item]');
+  if (!button) return;
+  const slug = button.dataset.removeCheckoutItem;
+  const nextCart = readCart().filter((item) => item.slug !== slug);
+  localStorage.setItem('mv_cart', JSON.stringify(nextCart.map((item) => ({ slug: item.slug, qty: item.quantity }))));
+  checkoutState.coupon = '';
+  checkoutState.preview = null;
+  checkoutState.verified = false;
+  const couponInput = document.querySelector('#coupon-code');
+  if (couponInput) couponInput.value = '';
+  if (typeof window.updateCounts === 'function') window.updateCounts();
+  renderCheckoutLines(nextCart);
+  refreshShippingSummary();
+  await refreshPreview(null);
+});
+
+window.addEventListener('mystic-vibe-storefront-data', () => {
+  renderCheckoutLines(readCart(), checkoutState.preview?.items || null);
+});
+
 const form = document.querySelector('#checkout-form');
 if (form) {
   try {
