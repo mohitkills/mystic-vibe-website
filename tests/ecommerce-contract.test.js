@@ -3,9 +3,36 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readdir } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (relative) => readFile(path.join(root, relative), 'utf8');
+
+async function collectJavaScriptFiles(directory) {
+  const found = [];
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const fullPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) found.push(...await collectJavaScriptFiles(fullPath));
+    else if (entry.isFile() && entry.name.endsWith('.js')) found.push(fullPath);
+  }
+  return found;
+}
+
+test('all browser JavaScript modules parse before deployment', async () => {
+  const jsRoot = path.join(root, 'js');
+  const files = await collectJavaScriptFiles(jsRoot);
+  assert.ok(files.length > 0, 'browser JavaScript files must be present');
+  const failures = [];
+  for (const file of files) {
+    const result = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
+    if (result.status !== 0) failures.push({
+      file: path.relative(root, file),
+      output: (result.stderr || result.stdout || 'Unknown parser error').trim(),
+    });
+  }
+  assert.deepEqual(failures, [], 'JavaScript parse errors: ' + JSON.stringify(failures));
+});
 
 test('order migration has one ordered schema and four non-duplicated server functions', async () => {
   const sql = await read('supabase/migrations/20261017100000_ecommerce_orders.sql');
