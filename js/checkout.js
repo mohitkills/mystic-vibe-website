@@ -27,6 +27,26 @@ const stateOptions = [
   'Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Andaman and Nicobar Islands','Chandigarh',
   'Dadra and Nagar Haveli and Daman and Diu','Delhi','Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry',
 ];
+let shippingSettings = { standard_fee: 0, free_shipping_threshold: 0, cod_enabled: true };
+let shippingSettingsKnown = true;
+function refreshShippingSummary() {
+  const cart = readCart();
+  const subtotal = cart.reduce((sum, item) => sum + Number(localProduct(item.slug).price || 0) * item.quantity, 0);
+  const threshold = Number(shippingSettings.free_shipping_threshold || 0);
+  const fee = threshold > 0 && subtotal >= threshold ? 0 : Number(shippingSettings.standard_fee || 0);
+  const summary = document.querySelector('.summary');
+  const shippingText = summary?.querySelector('p strong');
+  const totalText = summary?.querySelector('h3 span');
+  if (shippingText) shippingText.textContent = shippingSettingsKnown ? (fee === 0 ? 'Free' : rupees(fee)) : 'Confirmed by store';
+  if (totalText) totalText.textContent = rupees(subtotal + fee);
+  const cod = document.querySelector('#checkout-form input[name="pay"]');
+  const button = document.querySelector('#place-order');
+  if (cod) cod.disabled = shippingSettings.cod_enabled === false;
+  if (button) button.disabled = cart.length === 0 || shippingSettings.cod_enabled === false;
+  const note = document.querySelector('#checkout-form .payment-options + p');
+  if (note && shippingSettings.cod_enabled === false) note.textContent = 'Cash on Delivery is temporarily unavailable. Please contact customer support.';
+}
+
 function render() {
   const cart = readCart();
   const subtotal = cart.reduce((sum, item) => sum + Number(localProduct(item.slug).price || 0) * item.quantity, 0);
@@ -75,7 +95,19 @@ function showConfirmation(order) {
       <a class="btn light" href="account.html">My account & orders</a><a class="btn light" href="collection.html">Continue shopping</a>
     </div></div></section>`;
 }
+try {
+  const { data, error } = await supabase.from('site_content').select('content_value')
+    .eq('content_key', 'store.shipping').eq('is_published', true).maybeSingle();
+  if (error) throw error;
+  if (data?.content_value && typeof data.content_value === 'object') {
+    shippingSettings = { ...shippingSettings, ...data.content_value };
+  }
+} catch (error) {
+  shippingSettingsKnown = false;
+  console.warn('Shipping settings could not be loaded; the server will provide the final shipping amount.', error?.message || error);
+}
 render();
+refreshShippingSummary();
 const form = document.querySelector('#checkout-form');
 if (form) {
   try {
