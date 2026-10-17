@@ -9,6 +9,9 @@ import(new URL(pagePath('js/auth.js'),location.href)).catch(function(error){cons
 import(new URL(pagePath('js/storefront-sync.js'),location.href)).catch(function(error){console.warn('Mystic Vibe is using its local storefront catalog:',error.message)});
 (function(){
   var page=document.body.dataset.page;
+  document.querySelectorAll('.review-grid').forEach(function(grid){
+    grid.innerHTML='<p class="review-empty">Verified customer reviews will appear here when they are available.</p>';
+  });
   function notice(text){
     var p=document.createElement('p');
     p.className='review-empty';
