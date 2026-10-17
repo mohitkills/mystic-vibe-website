@@ -28,6 +28,7 @@ function renderOrderResult(order) {
       <div class="order-badges"><span class="badge">${escapeHtml(niceStatus(order.order_status))}</span><span class="badge">${escapeHtml(niceStatus(order.payment_status))}</span></div></div>
       ${statusSteps(order.order_status)}
       ${order.carrier || order.tracking_number ? '<div class="tracking-shipment"><h3>Shipment details</h3><p>' + escapeHtml(order.carrier || 'Delivery partner') + (order.tracking_number ? ': ' + escapeHtml(order.tracking_number) : '') + '</p></div>' : ''}
+      ${order.status_note ? '<div class="tracking-shipment"><h3>Store update</h3><p>' + escapeHtml(order.status_note) + '</p></div>' : ''}
       <h3 class="serif">Items</h3>
       <div class="order-items-list">${items.map((item) => '<div class="order-item-line"><div><strong>' + escapeHtml(item.product_name) + '</strong><small>' + escapeHtml(item.size_ml ? item.size_ml + ' ml' : '') + ' × ' + Number(item.quantity || 0) + '</small></div><strong>' + money(item.line_total) + '</strong></div>').join('')}</div>
       <div class="order-total-lines"><p>Subtotal <strong>${money(order.subtotal)}</strong></p><p>Shipping <strong>${Number(order.shipping_fee || 0) === 0 ? 'Free' : money(order.shipping_fee)}</strong></p>${Number(order.discount_amount || 0) > 0 ? '<p>Discount <strong>−' + money(order.discount_amount) + '</strong></p>' : ''}<h3>Total <strong>${money(order.total)}</strong></h3></div>
