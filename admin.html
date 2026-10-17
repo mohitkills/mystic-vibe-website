@@ -204,6 +204,28 @@
       <p class="admin-help">Preview uses the current form values. Unpublished previews are visible only in this signed-in dashboard.</p>
     </dialog>
   </main>
+  <script>
+    // Keep the workspace from displaying an endless "Checking your access" screen
+    // when a browser module or network dependency fails before admin.js can run.
+    (() => {
+      const root = document.documentElement;
+      const message = document.getElementById('gate-message');
+      const login = document.getElementById('login-link');
+      const timer = window.setTimeout(() => {
+        if (root.dataset.adminGateState === 'ready') return;
+        if (message) message.textContent = 'The admin workspace could not finish connecting. Try signing in again. If this keeps happening, a browser module or Supabase connection may be blocked.';
+        if (login) {
+          login.hidden = false;
+          login.href = 'login.html';
+          login.textContent = 'Open Sign In';
+        }
+      }, 10000);
+      window.addEventListener('mystic-vibe-admin-ready', () => {
+        root.dataset.adminGateState = 'ready';
+        window.clearTimeout(timer);
+      });
+    })();
+  </script>
   <script type="module" src="js/admin.js"></script>
 </body>
 </html>
