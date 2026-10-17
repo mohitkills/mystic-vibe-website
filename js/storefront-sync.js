@@ -317,6 +317,7 @@ function applySiteContent(rows) {
 }
 
 async function applyRemoteData({ products, collections, slides, content }) {
+  window.MV_STOREFRONT_CMS_CONNECTED = Array.isArray(products);
   const publishedCollections = Array.isArray(collections) ? collections : (window.MV_COLLECTIONS || []);
   const publishedSlidesSource = Array.isArray(slides) ? slides : (window.MV_HOMEPAGE_SLIDES || []);
   const publishedContent = Array.isArray(content) ? content : null;
