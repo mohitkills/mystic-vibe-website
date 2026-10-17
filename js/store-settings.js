@@ -1,7 +1,7 @@
 const DEFAULT_SHIPPING = { standard_fee: 0, free_shipping_threshold: 0, cod_enabled: true };
 const DEFAULT_CONTACT = { support_email: '', whatsapp_phone: '', instagram_url: '', facebook_url: '' };
 const DEFAULT_COPY = {
-  'home.story.description': 'From the clean clarity of Royal Marine to the velvet depth of Midnight Bleu, each Mystic Vibe fragrance is designed to become part of your story.',
+  'home.featured.description': 'From the clean clarity of Royal Marine to the velvet depth of Midnight Bleu, each Mystic Vibe fragrance is designed to become part of your story.',
   'home.brand.promise': 'Thoughtfully composed, confidently worn. Premium fragrance should be expressive, not out of reach.',
   'home.why.description': 'We make a refined fragrance ritual feel effortless—from the first detail to the final impression.',
   'home.newsletter.description': 'First access to new scents, private offers and curated fragrance stories.',
@@ -37,7 +37,7 @@ export function initializeStoreSettings(supabase) {
   }
   function fillCopy(map) {
     for (const [key, field] of Object.entries({
-      'home.story.description': 'story_description',
+      'home.featured.description': 'story_description',
       'home.brand.promise': 'brand_promise',
       'home.why.description': 'why_description',
       'home.newsletter.description': 'newsletter_description',
@@ -89,7 +89,7 @@ export function initializeStoreSettings(supabase) {
     const button = copyForm.querySelector('button[type="submit"]');
     const values = new FormData(copyForm);
     const fields = {
-      'home.story.description': 'story_description',
+      'home.featured.description': 'story_description',
       'home.brand.promise': 'brand_promise',
       'home.why.description': 'why_description',
       'home.newsletter.description': 'newsletter_description',
