@@ -1,0 +1,128 @@
+import { supabase } from './supabase-client.js';
+
+const main = document.querySelector('main');
+if (!main) throw new Error('Checkout content container is missing.');
+const rupees = (value) => '₹' + Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+})[character]);
+
+function readCart() {
+  try {
+    const rows = JSON.parse(localStorage.getItem('mv_cart') || '[]');
+    if (!Array.isArray(rows)) return [];
+    return rows.map((row) => ({ slug: String(row?.slug || ''), quantity: Number(row?.qty) }))
+      .filter((row) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(row.slug) &&
+        Number.isSafeInteger(row.quantity) && row.quantity >= 1 && row.quantity <= 20);
+  } catch { return []; }
+}
+function localProduct(slug) {
+  return (window.MV_PRODUCTS || window.MV_STATIC_PRODUCTS || []).find((product) => product.slug === slug) ||
+    { slug, name: slug.replace(/-/g, ' '), price: 0, size: '50ML' };
+}
+const stateOptions = [
+  'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana',
+  'Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur',
+  'Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana',
+  'Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Andaman and Nicobar Islands','Chandigarh',
+  'Dadra and Nagar Haveli and Daman and Diu','Delhi','Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry',
+];
+function render() {
+  const cart = readCart();
+  const subtotal = cart.reduce((sum, item) => sum + Number(localProduct(item.slug).price || 0) * item.quantity, 0);
+  main.innerHTML = `
+    <section class="page-hero"><div class="page-title"><span class="eyebrow">Mystic Vibe</span><h1 class="serif">Secure Checkout</h1><p>Enter your delivery details. Final price and stock are verified by the store before the order is placed.</p></div></section>
+    <section class="section"><div class="container split">
+      <form class="panel form-grid" id="checkout-form" novalidate>
+        <h2 class="serif full">Delivery details</h2>
+        <label class="full">Full name<input name="full_name" autocomplete="name" required minlength="2" maxlength="120"></label>
+        <label>Email address<input name="email" type="email" autocomplete="email" required maxlength="254"></label>
+        <label>Mobile number<input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="10-digit Indian mobile" required pattern="(?:\\+91[- ]?)?[6-9][0-9]{9}"></label>
+        <label class="full">Address line 1<input name="address_line1" autocomplete="address-line1" required minlength="5" maxlength="240" placeholder="House / flat, street, area"></label>
+        <label class="full">Address line 2 <span class="admin-help">(optional)</span><input name="address_line2" autocomplete="address-line2" maxlength="240" placeholder="Landmark, locality"></label>
+        <label>City / town<input name="city" autocomplete="address-level2" required minlength="2" maxlength="100"></label>
+        <label>State / UT<select name="state" autocomplete="address-level1" required><option value="">Select state / UT</option>${stateOptions.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('')}</select></label>
+        <label>PIN code<input name="postal_code" autocomplete="postal-code" inputmode="numeric" pattern="[1-9][0-9]{5}" minlength="6" maxlength="6" required placeholder="6-digit PIN"></label>
+        <label>Country<input value="India" disabled aria-label="Country"></label>
+        <label class="full">Delivery instructions <span class="admin-help">(optional)</span><textarea name="customer_notes" rows="3" maxlength="1000" placeholder="Anything the delivery partner should know?"></textarea></label>
+        <input type="hidden" name="country" value="India">
+        <h2 class="serif full">Payment</h2>
+        <div class="payment-options full"><label class="pay-option active"><input type="radio" name="pay" value="cod" checked> Cash on Delivery (COD)</label></div>
+        <p class="admin-help full">Online payments will appear here only after a verified payment gateway and server-side verification are configured.</p>
+        <label class="check-label full"><input type="checkbox" name="accept_terms" required> I agree to the <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a>.</label>
+        <p class="checkout-feedback full" id="checkout-feedback" role="status" aria-live="polite" hidden></p>
+        <button class="btn full" id="place-order" type="submit" ${cart.length ? '' : 'disabled'}>Place COD Order</button>
+        <a class="btn light full" href="cart.html">Back to cart</a>
+      </form>
+      <aside class="panel summary"><h2 class="serif">Your order</h2>
+        ${cart.length ? cart.map((item) => {
+          const product = localProduct(item.slug);
+          return `<div class="checkout-line"><span>${escapeHtml(product.name)} × ${item.quantity}</span><strong>${rupees(Number(product.price || 0) * item.quantity)}</strong></div>`;
+        }).join('') : '<p>Your cart is empty.</p><a class="btn" href="collection.html">Explore perfumes</a>'}
+        <hr><p>Shipping <strong style="float:right">Free</strong></p><h3>Total <span style="float:right">${rupees(subtotal)}</span></h3>
+        <p class="admin-help">Indicative total. The server recalculates prices, checks publication status and reserves stock before confirming your order.</p>
+      </aside>
+    </div></section>`;
+}
+function showConfirmation(order) {
+  main.innerHTML = `
+    <section class="page-hero"><div class="page-title"><span class="eyebrow">Order confirmed</span><h1 class="serif">Thank you for choosing Mystic Vibe.</h1><p>Your Cash on Delivery order has been recorded.</p></div></section>
+    <section class="section"><div class="container"><div class="panel order-confirmation">
+      <span class="eyebrow">Your order number</span><h2 class="serif">${escapeHtml(order.order_number)}</h2>
+      <p>Order total: <strong>${rupees(order.total)}</strong></p><p>Payment: Cash on Delivery · Payment status: Pending</p>
+      <p>Save the order number and use your checkout email to track delivery progress.</p>
+      <a class="btn" href="tracking.html?order=${encodeURIComponent(order.order_number)}">Track this order</a>
+      <a class="btn light" href="account.html">My account & orders</a><a class="btn light" href="collection.html">Continue shopping</a>
+    </div></div></section>`;
+}
+render();
+const form = document.querySelector('#checkout-form');
+if (form) {
+  try {
+    const { data } = await supabase.auth.getUser();
+    if (data?.user) {
+      const user = data.user;
+      form.elements.namedItem('email').value = user.email || '';
+      form.elements.namedItem('full_name').value =
+        [user.user_metadata?.first_name, user.user_metadata?.last_name].filter(Boolean).join(' ');
+    }
+  } catch (error) { console.warn('Could not prefill account details:', error?.message || error); }
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation();
+    const feedback = form.querySelector('#checkout-feedback');
+    const button = form.querySelector('#place-order');
+    if (!form.reportValidity()) return;
+    const cart = readCart();
+    if (!cart.length) { feedback.textContent = 'Your cart is empty. Add a perfume before checking out.'; feedback.hidden = false; return; }
+    const formData = new FormData(form);
+    const customer = Object.fromEntries([
+      'full_name','email','phone','address_line1','address_line2','city','state','postal_code','country',
+    ].map((key) => [key, String(formData.get(key) || '').trim()]));
+    if (!formData.get('accept_terms')) { feedback.textContent = 'Please accept the Terms and Privacy Policy to continue.'; feedback.hidden = false; return; }
+    button.disabled = true; button.textContent = 'Checking stock & placing order…'; feedback.hidden = true;
+    try {
+      const { data, error } = await supabase.rpc('place_order', {
+        p_customer: customer, p_items: cart.map(({ slug, quantity }) => ({ slug, quantity })),
+        p_payment_method: 'cod', p_customer_notes: String(formData.get('customer_notes') || '').trim() || null,
+      });
+      if (error) throw error;
+      const order = Array.isArray(data) ? data[0] : data;
+      if (!order?.order_number || !Number.isFinite(Number(order.total))) {
+        throw new Error('The store did not return a valid order confirmation. Check order history before retrying.');
+      }
+      localStorage.removeItem('mv_cart');
+      if (typeof window.updateCounts === 'function') window.updateCounts();
+      showConfirmation(order);
+    } catch (error) {
+      console.error('Mystic Vibe checkout failed:', error);
+      feedback.textContent = error?.message || 'We could not place your order. Please try again.';
+      feedback.hidden = false; button.disabled = false; button.textContent = 'Place COD Order';
+    }
+  }, true);
+}
+document.addEventListener('change', (event) => {
+  if (event.target.name !== 'pay') return;
+  document.querySelectorAll('.pay-option').forEach((option) => option.classList.remove('active'));
+  event.target.closest('.pay-option')?.classList.add('active');
+});
