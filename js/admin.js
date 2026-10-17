@@ -1082,9 +1082,11 @@ async function initializeAdmin() {
     : []);
   if (failedFeatures.length) {
     failedFeatures.forEach((feature) => console.error('Mystic Vibe admin feature failed to initialize:', feature.label, feature.error));
+    const firstFailure = failedFeatures[0]?.error;
+    const detail = firstFailure?.message ? ' (' + firstFailure.message + ')' : '';
     setStatus('Admin access is verified, but these sections could not load: ' +
       failedFeatures.map((feature) => feature.label).join(', ') +
-      '. Refresh the page or check the browser connection.', true);
+      detail + '. Refresh the page or check the browser connection.', true);
   }
 }
 
