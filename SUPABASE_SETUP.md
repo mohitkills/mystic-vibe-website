@@ -23,9 +23,15 @@ restricted with authentication and Row Level Security policies.
    session after signup. The page asks the user to check email; after the link
    is confirmed, Supabase redirects to the login page and the user can sign in.
    If Confirm Email is disabled, signup may return an active session directly.
-7. For deployment, provision the ignored `js/supabase-config.js` in the
-   deployment workspace before publishing the static files. This project has
-   no build step to inject environment variables.
+7. Vercel builds the public site into `dist/` using the checked-in
+   `vercel.json` and `scripts/build-static.mjs`. In Vercel Project Settings →
+   Environment Variables, set `SUPABASE_URL` and either
+   `SUPABASE_PUBLISHABLE_KEY` (recommended) or the legacy `SUPABASE_ANON_KEY`
+   for the Preview and Production environments. The build creates
+   `dist/js/supabase-config.js` from those values. It does not read or copy the
+   ignored local `js/supabase-config.js` or `.env.local`, and it fails if the
+   URL is not this project's HTTPS URL or the key is not publishable/anon.
+   These browser keys are public by design and rely on RLS for access control.
 
 Never place a `service_role` key, a `sb_secret_` key, database password, or any
 other privileged secret in browser code or a deployed static-site configuration.

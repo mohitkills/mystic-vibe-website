@@ -1,8 +1,8 @@
 import { supabase } from './supabase-client.js';
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from './supabase-config.js';
 import { mergeCatalogBySlug } from './cms-records.js';
+import { storefrontImageReference } from './image-references.js';
 
-const PRODUCT_IMAGE_BUCKET = 'mystic-vibe-images';
 const PRODUCT_IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);
 const privateImagePromises = new Map();
 
@@ -32,68 +32,8 @@ function imageReferenceList(value) {
   return Array.isArray(references) ? references : [];
 }
 
-function safeObjectPath(path) {
-  return typeof path === 'string' && path.length > 0 && path.length <= 1024 &&
-    !/[\\\u0000-\u001f\u007f]/.test(path) && !path.startsWith('/') &&
-    !path.split('/').some((part) => !part || part === '.' || part === '..');
-}
-
-function privateImageReference(reference, allowedBucket = PRODUCT_IMAGE_BUCKET) {
-  const value = String(reference || '').trim();
-  if (!value) return null;
-
-  let bucket = '';
-  let path = '';
-  if (/^https:\/\//i.test(value)) {
-    let url;
-    let projectOrigin;
-    try {
-      url = new URL(value);
-      projectOrigin = new URL(SUPABASE_URL).origin;
-    } catch (error) {
-      return null;
-    }
-    if (url.origin !== projectOrigin || url.username || url.password) return null;
-    const object = url.pathname.match(/^\/storage\/v1\/object\/(?:public|sign|authenticated)\/([^/]+)\/(.+)$/i);
-    if (!object) return null;
-    try {
-      bucket = decodeURIComponent(object[1]);
-      path = object[2].split('/').map((part) => decodeURIComponent(part)).join('/');
-    } catch (error) {
-      return null;
-    }
-  } else {
-    const separator = value.indexOf('/');
-    const firstPart = separator > 0 ? value.slice(0, separator) : '';
-    if (firstPart === 'mystic-vibe-media') return null;
-    bucket = PRODUCT_IMAGE_BUCKET;
-    path = firstPart === PRODUCT_IMAGE_BUCKET ? value.slice(separator + 1) : value;
-  }
-
-  return bucket === allowedBucket && safeObjectPath(path) ? { bucket, path } : null;
-}
-
-function storefrontImageReference(reference) {
-  if (typeof reference !== 'string') return null;
-  const value = reference.trim();
-  if (/^(?:\.\.\/|\/)?assets\/[\w./-]+\.(?:avif|gif|jpe?g|png|svg|webp)$/i.test(value)) {
-    const localPath = value.replace(/^(?:\.\.\/|\/)+/, '');
-    return localPath.split('/').some((part) => part === '.' || part === '..') ? null : { kind: 'url', url: localPath };
-  }
-  const privateReference = privateImageReference(value);
-  if (privateReference) return { kind: 'private', ...privateReference };
-  if (!/^https:\/\//i.test(value) || /[?&](?:token|signature|expires)=/i.test(value)) return null;
-  try {
-    const url = new URL(value);
-    if (url.username || url.password || /\.supabase\.(?:co|in)$/i.test(url.hostname) || /\/storage\/v1\/object\//i.test(url.pathname)) return null;
-    return { kind: 'url', url: url.href };
-  } catch (error) {
-    return null;
-  }
-}
-
 function storefrontImageReferences(value) {
-  return imageReferenceList(value).map(storefrontImageReference);
+  return imageReferenceList(value).map((reference) => storefrontImageReference(reference, SUPABASE_URL));
 }
 
 function fallbackImage(product, index) {
@@ -124,13 +64,23 @@ async function fetchPrivateProductImage(slug, index, reference) {
         headers: { apikey: SUPABASE_PUBLISHABLE_KEY, accept: 'image/avif,image/webp,image/png,image/jpeg' },
         signal: controller.signal,
       });
-      if (!response.ok) return null;
+      if (!response.ok) {
+        console.warn(`Mystic Vibe product image unavailable for ${slug} image ${index + 1}: HTTP ${response.status}.`);
+        return null;
+      }
       const contentType = (response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
-      if (!PRODUCT_IMAGE_MIME_TYPES.has(contentType)) return null;
+      if (!PRODUCT_IMAGE_MIME_TYPES.has(contentType)) {
+        console.warn(`Mystic Vibe product image unavailable for ${slug} image ${index + 1}: unsupported content type.`);
+        return null;
+      }
       const image = await response.blob();
-      if (!image.size || image.size > 5 * 1024 * 1024) return null;
+      if (!image.size || image.size > 5 * 1024 * 1024) {
+        console.warn(`Mystic Vibe product image unavailable for ${slug} image ${index + 1}: invalid image size.`);
+        return null;
+      }
       return URL.createObjectURL(image);
-    } catch (error) {
+    } catch {
+      console.warn(`Mystic Vibe product image request failed for ${slug} image ${index + 1}; local artwork will be used.`);
       return null;
     } finally {
       clearTimeout(timeout);
@@ -155,13 +105,23 @@ async function fetchPrivateSlideImage(slide, reference) {
         headers: { apikey: SUPABASE_PUBLISHABLE_KEY, accept: 'image/avif,image/webp,image/png,image/jpeg' },
         signal: controller.signal,
       });
-      if (!response.ok) return null;
+      if (!response.ok) {
+        console.warn(`Mystic Vibe homepage slide image unavailable: HTTP ${response.status}.`);
+        return null;
+      }
       const contentType = (response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
-      if (!PRODUCT_IMAGE_MIME_TYPES.has(contentType)) return null;
+      if (!PRODUCT_IMAGE_MIME_TYPES.has(contentType)) {
+        console.warn('Mystic Vibe homepage slide image unavailable: unsupported content type.');
+        return null;
+      }
       const image = await response.blob();
-      if (!image.size || image.size > 5 * 1024 * 1024) return null;
+      if (!image.size || image.size > 5 * 1024 * 1024) {
+        console.warn('Mystic Vibe homepage slide image unavailable: invalid image size.');
+        return null;
+      }
       return URL.createObjectURL(image);
     } catch {
+      console.warn('Mystic Vibe homepage slide image request failed; local artwork will be used.');
       return null;
     } finally {
       clearTimeout(timeout);
@@ -173,11 +133,16 @@ async function fetchPrivateSlideImage(slide, reference) {
 
 async function hydrateSlideImages(slides) {
   return Promise.all(slides.map(async (slide) => {
-    const reference = storefrontImageReference(slide.image_url);
-    if (reference?.kind === 'url') return { ...slide, display_image_url: reference.url };
+    const reference = storefrontImageReference(slide.image_url, SUPABASE_URL);
+    if (reference?.kind === 'url') {
+      if (reference.legacyLocalFile) console.warn('Mystic Vibe normalized a legacy local-file slide image to a same-site asset.');
+      return { ...slide, display_image_url: reference.url };
+    }
     if (reference?.kind === 'private' && reference.bucket === 'mystic-vibe-images') {
       const deliveredImage = await fetchPrivateSlideImage(slide, reference);
       if (deliveredImage) return { ...slide, display_image_url: deliveredImage };
+    } else if (slide.image_url) {
+      console.warn('Mystic Vibe homepage slide image reference is unsupported; local artwork will be used.');
     }
     return { ...slide, display_image_url: 'assets/images/hero-royal-marine.png' };
   }));
@@ -188,10 +153,15 @@ async function hydrateProductImages(products, imageSlotsBySlug) {
     const slots = imageSlotsBySlug.get(product.slug);
     if (!slots?.length) return;
     const images = await Promise.all(slots.map(async (slot, index) => {
-      if (slot?.kind === 'url') return slot.url;
+      if (slot?.kind === 'url') {
+        if (slot.legacyLocalFile) console.warn('Mystic Vibe normalized a legacy local-file product image to a same-site asset.');
+        return slot.url;
+      }
       if (slot?.kind === 'private') {
         const deliveredImage = await fetchPrivateProductImage(product.slug, index, slot);
         if (deliveredImage) return deliveredImage;
+      } else {
+        console.warn(`Mystic Vibe product image reference is unsupported for ${product.slug} image ${index + 1}; local artwork will be used.`);
       }
       return fallbackImage(product, index);
     }));
