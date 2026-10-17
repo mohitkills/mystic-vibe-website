@@ -376,519 +376,6 @@ $function$;
 revoke all on function public.place_order(jsonb, jsonb, text, text, text) from public, anon, authenticated;
 grant execute on function public.place_order(jsonb, jsonb, text, text, text) to anon, authenticated;
 
-
-create or replace function public.preview_checkout(
-  p_items jsonb,
-  p_email text,
-  p_coupon_code text default null
-)
-returns jsonb
-language plpgsql
-security definer
-set search_path = ''
-as $function$
-declare
-  v_email text := pg_catalog.lower(pg_catalog.btrim(coalesce(p_email, '')));
-  v_coupon_code text := nullif(pg_catalog.upper(pg_catalog.btrim(coalesce(p_coupon_code, ''))), '');
-  v_coupon public.coupons%rowtype;
-  v_item jsonb;
-  v_slug text;
-  v_quantity integer;
-  v_product record;
-  v_subtotal numeric(12,2) := 0;
-  v_shipping_settings jsonb := '{}'::jsonb;
-  v_standard_shipping numeric(12,2) := 0;
-  v_free_threshold numeric(12,2) := 0;
-  v_shipping_fee numeric(12,2) := 0;
-  v_discount_amount numeric(12,2) := 0;
-  v_cod_enabled boolean := true;
-  v_items jsonb := '[]'::jsonb;
-begin
-  if v_email !~* '^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}p_order_number text, p_email text)
-returns jsonb
-language plpgsql
-security definer
-set search_path = ''
-as $function$
-declare
-  v_result jsonb;
-begin
-  if pg_catalog.length(pg_catalog.btrim(coalesce(p_order_number, ''))) < 8
-     or pg_catalog.length(pg_catalog.btrim(coalesce(p_order_number, ''))) > 40
-     or pg_catalog.length(pg_catalog.btrim(coalesce(p_email, ''))) > 254 then
-    return null;
-  end if;
-
-  select pg_catalog.jsonb_build_object(
-    'order_number', o.order_number,
-    'created_at', o.created_at,
-    'order_status', o.order_status,
-    'payment_status', o.payment_status,
-    'payment_method', o.payment_method,
-    'subtotal', o.subtotal,
-    'shipping_fee', o.shipping_fee,
-    'discount_amount', o.discount_amount,
-    'coupon_code', o.coupon_code,
-    'total', o.total,
-    'carrier', o.carrier,
-    'tracking_number', o.tracking_number,
-    'status_note', o.status_note,
-    'items', coalesce((
-      select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
-        'product_name', i.product_name,
-        'product_slug', i.product_slug,
-        'size_ml', i.size_ml,
-        'image_url', i.image_url,
-        'quantity', i.quantity,
-        'unit_price', i.unit_price,
-        'line_total', i.line_total
-      ) order by i.created_at)
-      from public.order_items i where i.order_id = o.id
-    ), '[]'::jsonb)
-  )
-  into v_result
-  from public.orders o
-  where pg_catalog.upper(o.order_number) = pg_catalog.upper(pg_catalog.btrim(p_order_number))
-    and pg_catalog.lower(o.email) = pg_catalog.lower(pg_catalog.btrim(p_email))
-  limit 1;
-
-  return v_result;
-end;
-$function$;
-
-revoke all on function public.lookup_order(text, text) from public, anon, authenticated;
-grant execute on function public.lookup_order(text, text) to anon, authenticated;
-
-create or replace function public.admin_update_order(
-  p_order_id uuid,
-  p_order_status text,
-  p_payment_status text,
-  p_carrier text default null,
-  p_tracking_number text default null,
-  p_status_note text default null
-)
-returns jsonb
-language plpgsql
-security definer
-set search_path = ''
-as $function$
-declare
-  v_order public.orders%rowtype;
-  v_item record;
-  v_carrier text := nullif(pg_catalog.left(pg_catalog.btrim(coalesce(p_carrier, '')), 120), '');
-  v_tracking text := nullif(pg_catalog.left(pg_catalog.btrim(coalesce(p_tracking_number, '')), 180), '');
-  v_note text := nullif(pg_catalog.left(pg_catalog.btrim(coalesce(p_status_note, '')), 1000), '');
-begin
-  if not coalesce(private.is_admin(), false) then
-    raise exception 'Administrator access is required.' using errcode = '42501';
-  end if;
-  if p_order_status not in ('pending','confirmed','processing','shipped','delivered','cancelled','returned','refunded') then
-    raise exception 'Invalid order status.' using errcode = '22023';
-  end if;
-  if p_payment_status not in ('pending','paid','failed','refunded','cod_collected') then
-    raise exception 'Invalid payment status.' using errcode = '22023';
-  end if;
-  if pg_catalog.length(coalesce(p_carrier, '')) > 120
-     or pg_catalog.length(coalesce(p_tracking_number, '')) > 180
-     or pg_catalog.length(coalesce(p_status_note, '')) > 1000 then
-    raise exception 'One or more order fields exceed the allowed length.' using errcode = '22023';
-  end if;
-
-  select * into v_order from public.orders where id = p_order_id for update;
-  if not found then raise exception 'Order not found.' using errcode = 'P0002'; end if;
-
-  if v_order.order_status = 'cancelled' and p_order_status <> 'cancelled' then
-    raise exception 'A cancelled order cannot be reopened from this screen.' using errcode = '22023';
-  end if;
-  if p_order_status = 'cancelled' and v_order.order_status in ('shipped','delivered','returned','refunded') then
-    raise exception 'An order that has shipped or completed cannot be cancelled. Use the return/refund process.' using errcode = '22023';
-  end if;
-  if v_order.order_status in ('returned','refunded') and p_order_status not in ('returned','refunded') then
-    raise exception 'A returned or refunded order cannot be moved back to active fulfilment.' using errcode = '22023';
-  end if;
-
-  if p_order_status = 'cancelled' and v_order.order_status <> 'cancelled' then
-    for v_item in
-      select product_slug, pg_catalog.sum(quantity)::integer as quantity
-      from public.order_items where order_id = p_order_id group by product_slug
-    loop
-      update public.products
-      set stock = coalesce(stock, 0) + v_item.quantity, updated_at = pg_catalog.now()
-      where slug = v_item.product_slug;
-    end loop;
-  end if;
-
-  update public.orders
-  set order_status = p_order_status, payment_status = p_payment_status,
-      carrier = v_carrier, tracking_number = v_tracking, status_note = v_note,
-      updated_at = pg_catalog.now()
-  where id = p_order_id
-  returning * into v_order;
-
-  return pg_catalog.jsonb_build_object('id', v_order.id, 'order_number', v_order.order_number,
-    'order_status', v_order.order_status, 'payment_status', v_order.payment_status, 'updated_at', v_order.updated_at);
-end;
-$function$;
-
-revoke all on function public.admin_update_order(uuid, text, text, text, text, text) from public, anon, authenticated;
-grant execute on function public.admin_update_order(uuid, text, text, text, text, text) to authenticated;
-
-commit;
- or pg_catalog.length(v_email) > 254 then
-    raise exception 'Enter a valid email to calculate checkout totals.' using errcode = '22023';
-  end if;
-  if pg_catalog.jsonb_typeof(p_items) is distinct from 'array'
-     or pg_catalog.jsonb_array_length(p_items) < 1
-     or pg_catalog.jsonb_array_length(p_items) > 25 then
-    raise exception 'Your cart is empty or invalid.' using errcode = '22023';
-  end if;
-
-  select c.content_value into v_shipping_settings
-  from public.site_content c
-  where c.content_key = 'store.shipping' and c.is_published is true
-  limit 1;
-  if pg_catalog.jsonb_typeof(v_shipping_settings) = 'object' then
-    if pg_catalog.jsonb_typeof(v_shipping_settings -> 'standard_fee') = 'number' then
-      v_standard_shipping := (v_shipping_settings ->> 'standard_fee')::numeric;
-    end if;
-    if pg_catalog.jsonb_typeof(v_shipping_settings -> 'free_shipping_threshold') = 'number' then
-      v_free_threshold := (v_shipping_settings ->> 'free_shipping_threshold')::numeric;
-    end if;
-    if pg_catalog.jsonb_typeof(v_shipping_settings -> 'cod_enabled') = 'boolean' then
-      v_cod_enabled := (v_shipping_settings ->> 'cod_enabled')::boolean;
-    end if;
-  end if;
-
-  for v_item in select line.value from pg_catalog.jsonb_array_elements(p_items) as line(value)
-    order by line.value ->> 'slug'
-  loop
-    v_slug := pg_catalog.btrim(coalesce(v_item ->> 'slug', ''));
-    if v_slug !~ '^[a-z0-9]+(-[a-z0-9]+)*p_order_number text, p_email text)
-returns jsonb
-language plpgsql
-security definer
-set search_path = ''
-as $function$
-declare
-  v_result jsonb;
-begin
-  if pg_catalog.length(pg_catalog.btrim(coalesce(p_order_number, ''))) < 8
-     or pg_catalog.length(pg_catalog.btrim(coalesce(p_order_number, ''))) > 40
-     or pg_catalog.length(pg_catalog.btrim(coalesce(p_email, ''))) > 254 then
-    return null;
-  end if;
-
-  select pg_catalog.jsonb_build_object(
-    'order_number', o.order_number,
-    'created_at', o.created_at,
-    'order_status', o.order_status,
-    'payment_status', o.payment_status,
-    'payment_method', o.payment_method,
-    'subtotal', o.subtotal,
-    'shipping_fee', o.shipping_fee,
-    'discount_amount', o.discount_amount,
-    'coupon_code', o.coupon_code,
-    'total', o.total,
-    'carrier', o.carrier,
-    'tracking_number', o.tracking_number,
-    'status_note', o.status_note,
-    'items', coalesce((
-      select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
-        'product_name', i.product_name,
-        'product_slug', i.product_slug,
-        'size_ml', i.size_ml,
-        'image_url', i.image_url,
-        'quantity', i.quantity,
-        'unit_price', i.unit_price,
-        'line_total', i.line_total
-      ) order by i.created_at)
-      from public.order_items i where i.order_id = o.id
-    ), '[]'::jsonb)
-  )
-  into v_result
-  from public.orders o
-  where pg_catalog.upper(o.order_number) = pg_catalog.upper(pg_catalog.btrim(p_order_number))
-    and pg_catalog.lower(o.email) = pg_catalog.lower(pg_catalog.btrim(p_email))
-  limit 1;
-
-  return v_result;
-end;
-$function$;
-
-revoke all on function public.lookup_order(text, text) from public, anon, authenticated;
-grant execute on function public.lookup_order(text, text) to anon, authenticated;
-
-create or replace function public.admin_update_order(
-  p_order_id uuid,
-  p_order_status text,
-  p_payment_status text,
-  p_carrier text default null,
-  p_tracking_number text default null,
-  p_status_note text default null
-)
-returns jsonb
-language plpgsql
-security definer
-set search_path = ''
-as $function$
-declare
-  v_order public.orders%rowtype;
-  v_item record;
-  v_carrier text := nullif(pg_catalog.left(pg_catalog.btrim(coalesce(p_carrier, '')), 120), '');
-  v_tracking text := nullif(pg_catalog.left(pg_catalog.btrim(coalesce(p_tracking_number, '')), 180), '');
-  v_note text := nullif(pg_catalog.left(pg_catalog.btrim(coalesce(p_status_note, '')), 1000), '');
-begin
-  if not coalesce(private.is_admin(), false) then
-    raise exception 'Administrator access is required.' using errcode = '42501';
-  end if;
-  if p_order_status not in ('pending','confirmed','processing','shipped','delivered','cancelled','returned','refunded') then
-    raise exception 'Invalid order status.' using errcode = '22023';
-  end if;
-  if p_payment_status not in ('pending','paid','failed','refunded','cod_collected') then
-    raise exception 'Invalid payment status.' using errcode = '22023';
-  end if;
-  if pg_catalog.length(coalesce(p_carrier, '')) > 120
-     or pg_catalog.length(coalesce(p_tracking_number, '')) > 180
-     or pg_catalog.length(coalesce(p_status_note, '')) > 1000 then
-    raise exception 'One or more order fields exceed the allowed length.' using errcode = '22023';
-  end if;
-
-  select * into v_order from public.orders where id = p_order_id for update;
-  if not found then raise exception 'Order not found.' using errcode = 'P0002'; end if;
-
-  if v_order.order_status = 'cancelled' and p_order_status <> 'cancelled' then
-    raise exception 'A cancelled order cannot be reopened from this screen.' using errcode = '22023';
-  end if;
-  if p_order_status = 'cancelled' and v_order.order_status in ('shipped','delivered','returned','refunded') then
-    raise exception 'An order that has shipped or completed cannot be cancelled. Use the return/refund process.' using errcode = '22023';
-  end if;
-  if v_order.order_status in ('returned','refunded') and p_order_status not in ('returned','refunded') then
-    raise exception 'A returned or refunded order cannot be moved back to active fulfilment.' using errcode = '22023';
-  end if;
-
-  if p_order_status = 'cancelled' and v_order.order_status <> 'cancelled' then
-    for v_item in
-      select product_slug, pg_catalog.sum(quantity)::integer as quantity
-      from public.order_items where order_id = p_order_id group by product_slug
-    loop
-      update public.products
-      set stock = coalesce(stock, 0) + v_item.quantity, updated_at = pg_catalog.now()
-      where slug = v_item.product_slug;
-    end loop;
-  end if;
-
-  update public.orders
-  set order_status = p_order_status, payment_status = p_payment_status,
-      carrier = v_carrier, tracking_number = v_tracking, status_note = v_note,
-      updated_at = pg_catalog.now()
-  where id = p_order_id
-  returning * into v_order;
-
-  return pg_catalog.jsonb_build_object('id', v_order.id, 'order_number', v_order.order_number,
-    'order_status', v_order.order_status, 'payment_status', v_order.payment_status, 'updated_at', v_order.updated_at);
-end;
-$function$;
-
-revoke all on function public.admin_update_order(uuid, text, text, text, text, text) from public, anon, authenticated;
-grant execute on function public.admin_update_order(uuid, text, text, text, text, text) to authenticated;
-
-commit;
-
-      or coalesce(v_item ->> 'quantity', '') !~ '^[1-9][0-9]{0,1}p_order_number text, p_email text)
-returns jsonb
-language plpgsql
-security definer
-set search_path = ''
-as $function$
-declare
-  v_result jsonb;
-begin
-  if pg_catalog.length(pg_catalog.btrim(coalesce(p_order_number, ''))) < 8
-     or pg_catalog.length(pg_catalog.btrim(coalesce(p_order_number, ''))) > 40
-     or pg_catalog.length(pg_catalog.btrim(coalesce(p_email, ''))) > 254 then
-    return null;
-  end if;
-
-  select pg_catalog.jsonb_build_object(
-    'order_number', o.order_number,
-    'created_at', o.created_at,
-    'order_status', o.order_status,
-    'payment_status', o.payment_status,
-    'payment_method', o.payment_method,
-    'subtotal', o.subtotal,
-    'shipping_fee', o.shipping_fee,
-    'discount_amount', o.discount_amount,
-    'coupon_code', o.coupon_code,
-    'total', o.total,
-    'carrier', o.carrier,
-    'tracking_number', o.tracking_number,
-    'status_note', o.status_note,
-    'items', coalesce((
-      select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
-        'product_name', i.product_name,
-        'product_slug', i.product_slug,
-        'size_ml', i.size_ml,
-        'image_url', i.image_url,
-        'quantity', i.quantity,
-        'unit_price', i.unit_price,
-        'line_total', i.line_total
-      ) order by i.created_at)
-      from public.order_items i where i.order_id = o.id
-    ), '[]'::jsonb)
-  )
-  into v_result
-  from public.orders o
-  where pg_catalog.upper(o.order_number) = pg_catalog.upper(pg_catalog.btrim(p_order_number))
-    and pg_catalog.lower(o.email) = pg_catalog.lower(pg_catalog.btrim(p_email))
-  limit 1;
-
-  return v_result;
-end;
-$function$;
-
-revoke all on function public.lookup_order(text, text) from public, anon, authenticated;
-grant execute on function public.lookup_order(text, text) to anon, authenticated;
-
-create or replace function public.admin_update_order(
-  p_order_id uuid,
-  p_order_status text,
-  p_payment_status text,
-  p_carrier text default null,
-  p_tracking_number text default null,
-  p_status_note text default null
-)
-returns jsonb
-language plpgsql
-security definer
-set search_path = ''
-as $function$
-declare
-  v_order public.orders%rowtype;
-  v_item record;
-  v_carrier text := nullif(pg_catalog.left(pg_catalog.btrim(coalesce(p_carrier, '')), 120), '');
-  v_tracking text := nullif(pg_catalog.left(pg_catalog.btrim(coalesce(p_tracking_number, '')), 180), '');
-  v_note text := nullif(pg_catalog.left(pg_catalog.btrim(coalesce(p_status_note, '')), 1000), '');
-begin
-  if not coalesce(private.is_admin(), false) then
-    raise exception 'Administrator access is required.' using errcode = '42501';
-  end if;
-  if p_order_status not in ('pending','confirmed','processing','shipped','delivered','cancelled','returned','refunded') then
-    raise exception 'Invalid order status.' using errcode = '22023';
-  end if;
-  if p_payment_status not in ('pending','paid','failed','refunded','cod_collected') then
-    raise exception 'Invalid payment status.' using errcode = '22023';
-  end if;
-  if pg_catalog.length(coalesce(p_carrier, '')) > 120
-     or pg_catalog.length(coalesce(p_tracking_number, '')) > 180
-     or pg_catalog.length(coalesce(p_status_note, '')) > 1000 then
-    raise exception 'One or more order fields exceed the allowed length.' using errcode = '22023';
-  end if;
-
-  select * into v_order from public.orders where id = p_order_id for update;
-  if not found then raise exception 'Order not found.' using errcode = 'P0002'; end if;
-
-  if v_order.order_status = 'cancelled' and p_order_status <> 'cancelled' then
-    raise exception 'A cancelled order cannot be reopened from this screen.' using errcode = '22023';
-  end if;
-  if p_order_status = 'cancelled' and v_order.order_status in ('shipped','delivered','returned','refunded') then
-    raise exception 'An order that has shipped or completed cannot be cancelled. Use the return/refund process.' using errcode = '22023';
-  end if;
-  if v_order.order_status in ('returned','refunded') and p_order_status not in ('returned','refunded') then
-    raise exception 'A returned or refunded order cannot be moved back to active fulfilment.' using errcode = '22023';
-  end if;
-
-  if p_order_status = 'cancelled' and v_order.order_status <> 'cancelled' then
-    for v_item in
-      select product_slug, pg_catalog.sum(quantity)::integer as quantity
-      from public.order_items where order_id = p_order_id group by product_slug
-    loop
-      update public.products
-      set stock = coalesce(stock, 0) + v_item.quantity, updated_at = pg_catalog.now()
-      where slug = v_item.product_slug;
-    end loop;
-  end if;
-
-  update public.orders
-  set order_status = p_order_status, payment_status = p_payment_status,
-      carrier = v_carrier, tracking_number = v_tracking, status_note = v_note,
-      updated_at = pg_catalog.now()
-  where id = p_order_id
-  returning * into v_order;
-
-  return pg_catalog.jsonb_build_object('id', v_order.id, 'order_number', v_order.order_number,
-    'order_status', v_order.order_status, 'payment_status', v_order.payment_status, 'updated_at', v_order.updated_at);
-end;
-$function$;
-
-revoke all on function public.admin_update_order(uuid, text, text, text, text, text) from public, anon, authenticated;
-grant execute on function public.admin_update_order(uuid, text, text, text, text, text) to authenticated;
-
-commit;
- then
-      raise exception 'A product or quantity in your cart is invalid.' using errcode = '22023';
-    end if;
-    v_quantity := (v_item ->> 'quantity')::integer;
-    if v_quantity < 1 or v_quantity > 20 then
-      raise exception 'Quantity must be between 1 and 20 per product.' using errcode = '22023';
-    end if;
-
-    select p.id, p.name, p.slug, p.sku, p.size_ml, p.price, p.stock
-      into v_product
-      from public.products p
-      where p.slug = v_slug and p.is_published is true;
-    if not found then raise exception 'A product in your cart is no longer available.' using errcode = 'P0001'; end if;
-    if coalesce(v_product.stock, 0) < v_quantity then
-      raise exception 'Not enough stock for %. Available quantity: %.', v_product.name, coalesce(v_product.stock, 0) using errcode = 'P0001';
-    end if;
-
-    v_subtotal := v_subtotal + pg_catalog.round(v_product.price::numeric * v_quantity, 2);
-    v_items := v_items || pg_catalog.jsonb_build_array(pg_catalog.jsonb_build_object(
-      'product_slug', v_product.slug,
-      'product_name', v_product.name,
-      'sku', v_product.sku,
-      'size_ml', v_product.size_ml,
-      'quantity', v_quantity,
-      'unit_price', v_product.price,
-      'line_total', pg_catalog.round(v_product.price::numeric * v_quantity, 2)
-    ));
-  end loop;
-
-  if v_coupon_code is not null then
-    select * into v_coupon from public.coupons where code = v_coupon_code;
-    if not found or not v_coupon.is_active then raise exception 'This coupon code is invalid or inactive.' using errcode = 'P0001'; end if;
-    if v_coupon.starts_at is not null and v_coupon.starts_at > pg_catalog.now() then raise exception 'This coupon is not active yet.' using errcode = 'P0001'; end if;
-    if v_coupon.ends_at is not null and v_coupon.ends_at <= pg_catalog.now() then raise exception 'This coupon has expired.' using errcode = 'P0001'; end if;
-    if v_coupon.usage_limit is not null and v_coupon.usage_count >= v_coupon.usage_limit then raise exception 'This coupon has reached its usage limit.' using errcode = 'P0001'; end if;
-    if v_subtotal < v_coupon.minimum_order_value then raise exception 'This coupon requires a minimum cart value of ₹%.' , v_coupon.minimum_order_value using errcode = 'P0001'; end if;
-    if v_coupon.per_customer_limit > 0 and (
-      select pg_catalog.count(*) from public.coupon_redemptions cr
-      where cr.coupon_id = v_coupon.id and pg_catalog.lower(cr.email) = v_email
-    ) >= v_coupon.per_customer_limit then
-      raise exception 'This coupon has already reached its usage limit for this email.' using errcode = 'P0001';
-    end if;
-    if v_coupon.discount_type = 'percent' then
-      v_discount_amount := pg_catalog.round(v_subtotal * v_coupon.discount_value / 100, 2);
-      if v_coupon.maximum_discount is not null then v_discount_amount := least(v_discount_amount, v_coupon.maximum_discount); end if;
-    else
-      v_discount_amount := v_coupon.discount_value;
-    end if;
-    v_discount_amount := least(v_subtotal, greatest(0, v_discount_amount));
-  end if;
-
-  v_shipping_fee := case when v_free_threshold > 0 and v_subtotal >= v_free_threshold then 0 else v_standard_shipping end;
-
-  return pg_catalog.jsonb_build_object(
-    'items', v_items, 'subtotal', v_subtotal, 'shipping_fee', v_shipping_fee,
-    'discount_amount', v_discount_amount, 'coupon_code', v_coupon_code,
-    'total', greatest(0, v_subtotal + v_shipping_fee - v_discount_amount),
-    'currency', 'INR', 'cod_enabled', v_cod_enabled
-  );
-end;
-$function$;
-
-revoke all on function public.preview_checkout(jsonb, text, text) from public, anon, authenticated;
-grant execute on function public.preview_checkout(jsonb, text, text) to anon, authenticated;
-
 create or replace function public.lookup_order(p_order_number text, p_email text)
 returns jsonb
 language plpgsql
@@ -1017,5 +504,84 @@ $function$;
 
 revoke all on function public.admin_update_order(uuid, text, text, text, text, text) from public, anon, authenticated;
 grant execute on function public.admin_update_order(uuid, text, text, text, text, text) to authenticated;
+
+
+create or replace function public.preview_checkout(p_items jsonb, p_email text, p_coupon_code text default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  v_email text := pg_catalog.lower(pg_catalog.btrim(coalesce(p_email,'')));
+  v_code text := nullif(pg_catalog.upper(pg_catalog.btrim(coalesce(p_coupon_code,''))),'');
+  v_coupon public.coupons%rowtype;
+  v_item jsonb;
+  v_slug text;
+  v_qty integer;
+  v_product record;
+  v_subtotal numeric(12,2) := 0;
+  v_discount numeric(12,2) := 0;
+  v_ship numeric(12,2) := 0;
+  v_fee numeric(12,2) := 0;
+  v_threshold numeric(12,2) := 0;
+  v_settings jsonb := '{}'::jsonb;
+  v_cod boolean := true;
+  v_lines jsonb := '[]'::jsonb;
+begin
+  if v_code is not null and (v_email !~* '^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$' or pg_catalog.length(v_email)>254) then
+    raise exception 'Enter the checkout email before applying a coupon.' using errcode='22023';
+  end if;
+  if pg_catalog.jsonb_typeof(p_items) is distinct from 'array' or pg_catalog.jsonb_array_length(p_items)<1 or pg_catalog.jsonb_array_length(p_items)>25 then
+    raise exception 'Your cart is empty or invalid.' using errcode='22023';
+  end if;
+  select c.content_value into v_settings from public.site_content c where c.content_key='store.shipping' and c.is_published is true limit 1;
+  if pg_catalog.jsonb_typeof(v_settings)='object' then
+    if pg_catalog.jsonb_typeof(v_settings->'standard_fee')='number' then v_fee := (v_settings->>'standard_fee')::numeric; end if;
+    if pg_catalog.jsonb_typeof(v_settings->'free_shipping_threshold')='number' then v_threshold := (v_settings->>'free_shipping_threshold')::numeric; end if;
+    if pg_catalog.jsonb_typeof(v_settings->'cod_enabled')='boolean' then v_cod := (v_settings->>'cod_enabled')::boolean; end if;
+  end if;
+  for v_item in select line.value from pg_catalog.jsonb_array_elements(p_items) as line(value) order by line.value->>'slug'
+  loop
+    v_slug := pg_catalog.btrim(coalesce(v_item->>'slug',''));
+    if v_slug !~ '^[a-z0-9]+(-[a-z0-9]+)*$' or coalesce(v_item->>'quantity','') !~ '^[1-9][0-9]{0,1}$' then
+      raise exception 'A product or quantity in your cart is invalid.' using errcode='22023';
+    end if;
+    v_qty := (v_item->>'quantity')::integer;
+    if v_qty<1 or v_qty>20 then raise exception 'Quantity must be between 1 and 20.' using errcode='22023'; end if;
+    select p.id,p.name,p.slug,p.sku,p.size_ml,p.price,p.stock into v_product from public.products p where p.slug=v_slug and p.is_published is true;
+    if not found then raise exception 'A product in your cart is no longer available.' using errcode='P0001'; end if;
+    if coalesce(v_product.stock,0)<v_qty then raise exception 'Not enough stock for %. Available: %.',v_product.name,coalesce(v_product.stock,0) using errcode='P0001'; end if;
+    v_subtotal := v_subtotal + pg_catalog.round(v_product.price::numeric*v_qty,2);
+    v_lines := v_lines || pg_catalog.jsonb_build_array(pg_catalog.jsonb_build_object(
+      'product_slug',v_product.slug,'product_name',v_product.name,'sku',v_product.sku,'size_ml',v_product.size_ml,
+      'quantity',v_qty,'unit_price',v_product.price,'line_total',pg_catalog.round(v_product.price::numeric*v_qty,2)));
+  end loop;
+  if v_code is not null then
+    select * into v_coupon from public.coupons where code=v_code;
+    if not found or not v_coupon.is_active then raise exception 'This coupon code is invalid or inactive.' using errcode='P0001'; end if;
+    if v_coupon.starts_at is not null and v_coupon.starts_at>pg_catalog.now() then raise exception 'This coupon is not active yet.' using errcode='P0001'; end if;
+    if v_coupon.ends_at is not null and v_coupon.ends_at<=pg_catalog.now() then raise exception 'This coupon has expired.' using errcode='P0001'; end if;
+    if v_coupon.usage_limit is not null and v_coupon.usage_count>=v_coupon.usage_limit then raise exception 'This coupon has reached its usage limit.' using errcode='P0001'; end if;
+    if v_subtotal<v_coupon.minimum_order_value then raise exception 'This coupon requires a minimum cart value of ₹%.' ,v_coupon.minimum_order_value using errcode='P0001'; end if;
+    if v_coupon.per_customer_limit>0 and (select pg_catalog.count(*) from public.coupon_redemptions cr where cr.coupon_id=v_coupon.id and pg_catalog.lower(cr.email)=v_email)>=v_coupon.per_customer_limit then
+      raise exception 'This coupon has already reached its usage limit for this email.' using errcode='P0001';
+    end if;
+    if v_coupon.discount_type='percent' then
+      v_discount := pg_catalog.round(v_subtotal*v_coupon.discount_value/100,2);
+      if v_coupon.maximum_discount is not null then v_discount := least(v_discount,v_coupon.maximum_discount); end if;
+    else v_discount := v_coupon.discount_value;
+    end if;
+    v_discount := least(v_subtotal,greatest(0,v_discount));
+  end if;
+  v_ship := case when v_threshold>0 and v_subtotal>=v_threshold then 0 else v_fee end;
+  return pg_catalog.jsonb_build_object('items',v_lines,'subtotal',v_subtotal,'shipping_fee',v_ship,
+    'discount_amount',v_discount,'coupon_code',v_code,'total',greatest(0,v_subtotal+v_ship-v_discount),'currency','INR','cod_enabled',v_cod);
+end;
+$function$;
+
+revoke all on function public.preview_checkout(jsonb,text,text) from public,anon,authenticated;
+grant execute on function public.preview_checkout(jsonb,text,text) to anon,authenticated;
+
 
 commit;
