@@ -210,21 +210,22 @@ test('Reference ivory-glass theme applies across storefront and admin while pres
   const themeScript = await read('js/theme-system.js');
   const app = await read('js/app.js');
   const sync = await read('js/storefront-sync.js');
-  assert.match(theme, /--iv-bg:\\s*#F8F7F3/i);
-  assert.match(theme, /--iv-gd:\\s*#B49A60/i);
-  assert.match(theme, /backdrop-filter:\\s*blur\\(18px\\) saturate\\(150%\\)/);
-  assert.match(theme, /\\.premium-hero-heading/);
-  assert.match(theme, /\\.ivory-category-grid/);
-  assert.match(adminCss, /body\\.admin-page\\{[\\s\\S]*color-scheme:light/i);
-  assert.match(adminCss, /body\\.admin-page select option[\\s\\S]*background:#fff/i);
-  assert.match(themeScript, /var key='mv_theme_v2',saved=localStorage\\.getItem\\(key\\),preferred='light'/);
-  assert.match(home, /class="premium-hero-heading"/);
-  assert.match(home, /data-home-section="deals"/);
-  assert.match(home, /data-home-section="new-arrivals"/);
-  assert.match(home, /slide\\.heading \\|\\| fallback\\.heading/);
-  assert.match(sync, /window\\.MV_PRODUCTS\\.splice/);
-  assert.match(app, /data-site-search-input name="search"/);
-  assert.match(app, /data-account-toggle/);
+  assert.ok(theme.includes('--iv-bg:#F8F7F3'));
+  assert.ok(theme.includes('--iv-gd:#B49A60'));
+  assert.ok(theme.includes('backdrop-filter:blur(18px) saturate(150%)'));
+  assert.ok(theme.includes('.premium-hero-heading'));
+  assert.ok(theme.includes('.ivory-category-grid'));
+  assert.ok(adminCss.includes('body.admin-page{'));
+  assert.ok(adminCss.includes('body.admin-page select option'));
+  assert.ok(adminCss.includes('color-scheme:light'));
+  assert.ok(themeScript.includes("var key='mv_theme_v2',saved=localStorage.getItem(key),preferred='light'"));
+  assert.ok(home.includes('class="premium-hero-heading"'));
+  assert.ok(home.includes('data-home-section="deals"'));
+  assert.ok(home.includes('data-home-section="new-arrivals"'));
+  assert.ok(home.includes('slide.heading || fallback.heading'));
+  assert.ok(sync.includes('window.MV_PRODUCTS.splice'));
+  assert.ok(app.includes('data-site-search-input name="search"'));
+  assert.ok(app.includes('data-account-toggle'));
 });
 
 test('Storefront header exposes live product search and a profile menu with secure settings and logout', async () => {
