@@ -429,7 +429,7 @@ test('Product cards match the compact retail reference while preserving cart, wi
   assert.ok(card.includes('product-card-bestseller'));
   assert.ok(card.includes('product-card-discount'));
   assert.ok(card.includes('discountPercent'));
-  assert.ok(card.includes('p.mrp>priceValue'));
+  assert.ok(card.includes('mrpValue>priceValue'));
   assert.ok(card.includes('product-card-kicker'));
   assert.ok(card.includes('product-card-price-original'));
   assert.ok(card.includes('data-add='));
