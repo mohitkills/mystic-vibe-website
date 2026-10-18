@@ -316,8 +316,42 @@
   createControls();
   // Initialize a working fallback carousel immediately; published CMS slides replace it once loaded.
   showFallback();
+  // Mouse drag and touch swipe work directly on the image area. Vertical touch
+  // scrolling remains native; only a clear horizontal gesture changes slides.
+  var slideGesture=null;
+  var swipeThreshold=44;
+  media.style.touchAction='pan-y';
+  media.querySelectorAll('img').forEach(function(image){image.draggable=false;});
+  media.addEventListener('dragstart',function(event){event.preventDefault();});
+  media.addEventListener('pointerdown',function(event){
+    if(!event.isPrimary) return;
+    if(event.pointerType==='mouse' && event.button!==0) return;
+    slideGesture={pointerId:event.pointerId,startX:event.clientX,startY:event.clientY};
+    if(event.pointerType==='mouse') hero.classList.add('is-dragging');
+    if(typeof media.setPointerCapture==='function'){
+      try{media.setPointerCapture(event.pointerId);}catch(error){}
+    }
+  });
+  media.addEventListener('pointerup',function(event){
+    if(!slideGesture || event.pointerId!==slideGesture.pointerId) return;
+    var deltaX=event.clientX-slideGesture.startX;
+    var deltaY=event.clientY-slideGesture.startY;
+    slideGesture=null;
+    hero.classList.remove('is-dragging');
+    if(Math.abs(deltaX)<swipeThreshold || Math.abs(deltaX)<Math.abs(deltaY)*1.15) return;
+    if(slides.length<2) return;
+    stop();
+    show(active+(deltaX<0?1:-1));
+    start();
+  });
+  function cancelSlideGesture(event){
+    if(slideGesture && event.pointerId===slideGesture.pointerId) slideGesture=null;
+    hero.classList.remove('is-dragging');
+  }
+  media.addEventListener('pointercancel',cancelSlideGesture);
+  media.addEventListener('lostpointercapture',cancelSlideGesture);
   hero.addEventListener('mouseenter',function(){pointerInside=true;stop();});
-  hero.addEventListener('mouseleave',function(){pointerInside=false;start();});
+  hero.addEventListener('mouseleave',function(){pointerInside=false;hero.classList.remove('is-dragging');start();});
   hero.addEventListener('focusin',function(){focusInside=true;stop();});
   hero.addEventListener('focusout',function(){focusInside=false;start();});
   document.addEventListener('visibilitychange',function(){if(document.hidden) stop(); else start();});

@@ -305,6 +305,22 @@ test('Global glass background and category tiles match the beige-mint-lavender r
   assert.ok(adminCss.includes('#E9E6F1'));
 });
 
+test('Hero slider supports mouse drag and touch swipe with compact controls', async () => {
+  const home = await read('js/premium-home.js');
+  const css = await read('css/theme-system.css');
+  assert.ok(home.includes("media.addEventListener('pointerdown'"));
+  assert.ok(home.includes("media.addEventListener('pointerup'"));
+  assert.ok(home.includes("media.addEventListener('pointercancel'"));
+  assert.ok(home.includes("var swipeThreshold=44"));
+  assert.ok(home.includes("show(active+(deltaX<0?1:-1))"));
+  assert.ok(home.includes("media.style.touchAction='pan-y'"));
+  assert.ok(css.includes('flex: 0 0 28px !important'));
+  assert.ok(css.includes('width: 28px !important'));
+  assert.ok(css.includes('.premium-slide-controls .premium-slide-dot::before'));
+  assert.ok(css.includes('width: 15px'));
+  assert.ok(css.includes('cursor: grabbing'));
+});
+
 test('Hero carousel is reduced to half height on desktop and mobile with controls retained', async () => {
   const css = await read('css/theme-system.css');
   assert.ok(css.includes('min-height: clamp(280px, calc(50svh - 90px), 380px) !important'));

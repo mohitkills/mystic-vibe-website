@@ -997,3 +997,116 @@ body:not([data-theme="dark"]) .whatsapp-float[hidden] { display: none !important
     min-height: 140px !important;
   }
 }
+
+
+/* Compact premium slider controls for desktop and mobile; preserve clear tap targets. */
+body:not([data-theme="dark"]) .premium-slide-controls {
+  gap: 5px !important;
+  padding: 4px 6px !important;
+  min-height: 0 !important;
+  border-radius: 999px !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-arrow {
+  display: grid !important;
+  place-items: center !important;
+  flex: 0 0 28px !important;
+  width: 28px !important;
+  min-width: 28px !important;
+  max-width: 28px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 17px !important;
+  line-height: 1 !important;
+}
+body:not([data-theme="dark"]) .premium-slide-dots {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot {
+  position: relative !important;
+  display: grid !important;
+  place-items: center !important;
+  flex: 0 0 13px !important;
+  width: 13px !important;
+  min-width: 13px !important;
+  max-width: 13px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot::before {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(25,25,25,.28);
+  transition: width .18s ease, border-radius .18s ease, background .18s ease;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot[aria-current="true"] {
+  width: 17px !important;
+  min-width: 17px !important;
+  max-width: 17px !important;
+  background: transparent !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot[aria-current="true"]::before {
+  width: 15px;
+  height: 6px;
+  border-radius: 999px;
+  background: #B49A60;
+}
+body:not([data-theme="dark"]) .premium-hero-media {
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+body:not([data-theme="dark"]) .premium-hero-media img {
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+}
+body:not([data-theme="dark"]) .premium-hero.is-dragging .premium-hero-media {
+  cursor: grabbing;
+}
+@media (max-width: 760px) {
+  body:not([data-theme="dark"]) .premium-slide-controls {
+    bottom: 8px !important;
+    padding: 3px 5px !important;
+  }
+  body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-arrow {
+    flex-basis: 26px !important;
+    width: 26px !important;
+    min-width: 26px !important;
+    max-width: 26px !important;
+    height: 26px !important;
+    min-height: 26px !important;
+    max-height: 26px !important;
+  }
+  body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot {
+    height: 26px !important;
+    min-height: 26px !important;
+    max-height: 26px !important;
+  }
+  body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot[aria-current="true"] {
+    height: 26px !important;
+    min-height: 26px !important;
+    max-height: 26px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot::before {
+    transition: none !important;
+  }
+}
