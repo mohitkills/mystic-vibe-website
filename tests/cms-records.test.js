@@ -70,6 +70,37 @@ test('slide payload validates required copy and integer order while preserving t
   assert.throws(() => buildSlidePayload({ heading: 'Valid', sort_order: '1.5' }, null, 'https://mystic-vibe.example'), /whole number/);
 });
 
+test('hero slides persist one configurable CTA and an allowed transition style', () => {
+  const payload = buildSlidePayload({
+    heading: 'Royal Marine launch',
+    cta_text: 'Buy Now',
+    cta_link: '/products/royal-marine.html',
+    image_url: 'mystic-vibe-images/slides/royal-marine.webp',
+    sort_order: '2',
+    transition_style: 'slide-left',
+    is_published: true,
+  }, null, 'https://mystic-vibe.example', 'https://project.supabase.co');
+
+  assert.equal(payload.heading, 'Royal Marine launch');
+  assert.equal(payload.cta_text, 'Buy Now');
+  assert.equal(payload.cta_link, '/products/royal-marine.html');
+  assert.equal(payload.image_url, 'mystic-vibe-images/slides/royal-marine.webp');
+  assert.equal(payload.transition_style, 'slide-left');
+  assert.equal(payload.subtitle, '');
+  assert.throws(() => buildSlidePayload({
+    heading: 'Missing image', cta_text: 'Explore', cta_link: '/collection.html',
+    transition_style: 'fade', is_published: true,
+  }, null, 'https://mystic-vibe.example', 'https://project.supabase.co'), /Upload a hero image/);
+  assert.throws(() => buildSlidePayload({
+    heading: 'Unknown animation', image_url: 'assets/images/hero-royal-marine.png',
+    transition_style: 'spin', is_published: false,
+  }, null, 'https://mystic-vibe.example'), /supported hero transition/);
+  assert.throws(() => buildSlidePayload({
+    heading: 'Too long', cta_text: 'X'.repeat(41), image_url: 'assets/images/hero-royal-marine.png',
+    transition_style: 'fade', is_published: false,
+  }, null, 'https://mystic-vibe.example'), /40 characters or fewer/);
+});
+
 test('persistent image references normalize private paths and reject temporary signed or blob URLs', () => {
   assert.equal(normalizePersistentImageReference('../assets/images/bottle.png'), 'assets/images/bottle.png');
   assert.equal(normalizePersistentImageReference('products/hero.png'), 'mystic-vibe-images/products/hero.png');
