@@ -210,6 +210,19 @@ function toStorefrontProduct(row, collectionNames) {
     product.notes = htmlText(notesText(row.fragrance_notes));
   }
   if (typeof row.is_featured === 'boolean') product.best = row.is_featured;
+  if (typeof row.storefront_category === 'string' && row.storefront_category.trim()) {
+    product.storefront_category = row.storefront_category;
+    product.storefront_category_label = ({
+      deals: 'Crazy Deals',
+      bestsellers: 'Bestsellers',
+      perfumes: 'Perfumes',
+      'fresh-aquatic': 'Fresh & Aquatic',
+      'woody-amber': 'Woody & Amber',
+      'fruity-floral': 'Fruity & Floral',
+      'new-arrivals': 'New Arrivals',
+      'gift-sets': 'Gift Sets',
+    })[row.storefront_category] || 'Perfumes';
+  }
   if (row.collection_id) {
     product.collection_id = row.collection_id;
     const collectionName = collectionNames.get(row.collection_id);

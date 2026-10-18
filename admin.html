@@ -57,12 +57,22 @@
 
       <section class="admin-panel active" data-panel="products">
         <div class="admin-panel-heading product-panel-heading"><div><span class="eyebrow">Inventory</span><h2 class="serif">Products</h2></div><div class="product-heading-actions"><button class="btn light" type="button" data-reset-form="product-form">New product</button><button class="btn product-save-primary" type="submit" form="product-form">Save Product</button></div></div>
-        <div class="product-list-tools" role="search"><label>Search products<input id="product-search" type="search" placeholder="Name, slug, SKU or notes"></label><label>Collection<select id="product-filter-collection"><option value="">All collections</option></select></label><label>Publication<select id="product-filter-status"><option value="">All products</option><option value="published">Published</option><option value="draft">Draft</option></select></label><label>Sort by<select id="product-sort"><option value="name">Name</option><option value="collection">Collection</option><option value="price">Price</option><option value="publication">Publication status</option></select></label></div>
+        <div class="product-list-tools" role="search"><label>Search products<input id="product-search" type="search" placeholder="Name, slug, SKU or notes"></label><label>Category<select id="product-filter-category"><option value="">All categories</option><option value="deals">Crazy Deals</option><option value="bestsellers">Bestsellers</option><option value="perfumes">Perfumes</option><option value="fresh-aquatic">Fresh &amp; Aquatic</option><option value="woody-amber">Woody &amp; Amber</option><option value="fruity-floral">Fruity &amp; Floral</option><option value="new-arrivals">New Arrivals</option><option value="gift-sets">Gift Sets</option></select></label><label>Collection<select id="product-filter-collection"><option value="">All collections</option></select></label><label>Publication<select id="product-filter-status"><option value="">All products</option><option value="published">Published</option><option value="draft">Draft</option></select></label><label>Sort by<select id="product-sort"><option value="name">Name</option><option value="category">Category</option><option value="collection">Collection</option><option value="price">Price</option><option value="publication">Publication status</option></select></label></div>
         <form id="product-form" class="panel admin-form">
           <input type="hidden" name="id">
           <label>Product name<input name="name" required maxlength="180"></label>
           <label>Slug<input name="slug" required maxlength="180" pattern="[a-z0-9]+(?:-[a-z0-9]+)*"></label>
-          <label>Collection<select name="collection_id"><option value="">No collection</option></select></label>
+          <label>Storefront category<select name="storefront_category" required>
+            <option value="perfumes" selected>Perfumes</option>
+            <option value="deals">Crazy Deals</option>
+            <option value="bestsellers">Bestsellers</option>
+            <option value="fresh-aquatic">Fresh &amp; Aquatic</option>
+            <option value="woody-amber">Woody &amp; Amber</option>
+            <option value="fruity-floral">Fruity &amp; Floral</option>
+            <option value="new-arrivals">New Arrivals</option>
+            <option value="gift-sets">Gift Sets</option>
+          </select><small>Choose where this product should appear in the storefront menu. Shop All includes every published product.</small></label>
+          <label>Collection (optional)<select name="collection_id"><option value="">No collection</option></select></label>
           <label>SKU<input name="sku" maxlength="100"></label>
           <label class="wide">Tagline<input name="tagline" maxlength="240"></label>
           <label class="wide">Description<textarea name="description" rows="3"></textarea></label>
@@ -88,7 +98,7 @@
 
       <section class="admin-panel" data-panel="collections" hidden>
         <div class="admin-panel-heading"><div><span class="eyebrow">Catalog taxonomy</span><h2 class="serif">Collections</h2></div><div><button class="btn light" type="button" id="seed-collections">Add missing fragrance categories</button><button class="btn light" type="button" data-reset-form="collection-form">New collection</button></div></div>
-        <p class="admin-help">Suggested categories follow the fragrance families in the existing catalog. Product assignments are managed in the Products form. A collection with assigned products cannot be deleted; reassign those products first.</p>
+        <p class="admin-help">Storefront Category in the Products form controls the top navigation groups (Crazy Deals, Bestsellers, Perfumes, Fresh &amp; Aquatic, Woody &amp; Amber, Fruity &amp; Floral, New Arrivals and Gift Sets). Collections below are optional extra groupings. A collection with assigned products cannot be deleted; reassign those products first.</p>
         <form id="collection-form" class="panel admin-form">
           <input type="hidden" name="id">
           <label>Collection name<input name="name" required maxlength="180"></label>

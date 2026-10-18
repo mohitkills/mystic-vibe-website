@@ -16,6 +16,17 @@ const signOutButton = document.querySelector('#sign-out');
 const bucketIds = ['mystic-vibe-images', 'mystic-vibe-media'];
 const imageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
 const mediaTypes = [...imageTypes, 'video/mp4'];
+const storefrontCategories = [
+  { value: 'deals', label: 'Crazy Deals' },
+  { value: 'bestsellers', label: 'Bestsellers' },
+  { value: 'perfumes', label: 'Perfumes' },
+  { value: 'fresh-aquatic', label: 'Fresh & Aquatic' },
+  { value: 'woody-amber', label: 'Woody & Amber' },
+  { value: 'fruity-floral', label: 'Fruity & Floral' },
+  { value: 'new-arrivals', label: 'New Arrivals' },
+  { value: 'gift-sets', label: 'Gift Sets' },
+];
+const storefrontCategoryLabels = new Map(storefrontCategories.map(({ value, label }) => [value, label]));
 let products = [];
 let collections = [];
 let slides = [];
@@ -230,14 +241,16 @@ async function renderProducts() {
   container.replaceChildren();
   if (!products.length) return emptyMessage(container, 'No products are available yet.');
   const search = document.querySelector('#product-search').value.trim().toLowerCase();
+  const categoryFilter = document.querySelector('#product-filter-category').value;
   const collectionFilter = document.querySelector('#product-filter-collection').value;
   const statusFilter = document.querySelector('#product-filter-status').value;
   const sortBy = document.querySelector('#product-sort').value;
   const collectionById = new Map(collections.map((collection) => [collection.id, collection.name]));
   let visibleProducts = products.filter((product) => {
-    const searchable = [product.name, product.slug, product.sku, product.fragrance_family, product.fragrance_notes]
+    const searchable = [product.name, product.slug, product.sku, product.fragrance_family, product.fragrance_notes, storefrontCategoryLabels.get(product.storefront_category)]
       .filter(Boolean).join(' ').toLowerCase();
     if (search && !searchable.includes(search)) return false;
+    if (categoryFilter && product.storefront_category !== categoryFilter) return false;
     if (collectionFilter && product.collection_id !== collectionFilter) return false;
     if (statusFilter === 'published' && !product.is_published) return false;
     if (statusFilter === 'draft' && product.is_published) return false;
@@ -245,7 +258,8 @@ async function renderProducts() {
   });
   visibleProducts = [...visibleProducts].sort((left, right) => {
     if (sortBy === 'price') return Number(left.price || 0) - Number(right.price || 0);
-    if (sortBy === 'collection') return String(collectionById.get(left.collection_id) || '').localeCompare(collectionById.get(right.collection_id) || '') || left.name.localeCompare(right.name);
+    if (sortBy === 'category') return String(storefrontCategoryLabels.get(left.storefront_category) || '').localeCompare(String(storefrontCategoryLabels.get(right.storefront_category) || '')) || left.name.localeCompare(right.name);
+    if (sortBy === 'collection') return String(collectionById.get(left.collection_id) || '').localeCompare(String(collectionById.get(right.collection_id) || '')) || left.name.localeCompare(right.name);
     if (sortBy === 'publication') return Number(right.is_published) - Number(left.is_published) || left.name.localeCompare(right.name);
     return String(left.name || '').localeCompare(String(right.name || ''));
   });
@@ -253,7 +267,7 @@ async function renderProducts() {
   for (const product of visibleProducts) {
     const image = parseImagePaths(product.image_urls)[0] || '';
     const imageUrl = image ? await signedImageUrl(image) : '';
-    appendRecord(container, product.name, `${product.slug} · ${product.is_published ? 'Published' : 'Draft'} · Stock ${product.stock}`, product.id, [
+    appendRecord(container, product.name, `${product.slug} · ${storefrontCategoryLabels.get(product.storefront_category) || 'Perfumes'} · ${product.is_published ? 'Published' : 'Draft'} · Stock ${product.stock}`, product.id, [
       { label: 'Edit', action: 'edit-product' },
       { label: 'Duplicate', action: 'duplicate-product' },
       { label: product.is_published ? 'Unpublish' : 'Publish', action: 'toggle-product' },
@@ -600,6 +614,7 @@ async function saveProduct(event) {
     const payload = {
       name: formValue(form, 'name'),
       slug,
+      storefront_category: formValue(form, 'storefront_category') || 'perfumes',
       collection_id: collectionId || null,
       sku: sku || null,
       tagline: formValue(form, 'tagline'),
@@ -616,6 +631,7 @@ async function saveProduct(event) {
       is_published: form.elements.namedItem('is_published').checked,
     };
     if (!payload.name || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(payload.slug)) throw new Error('Enter a product name and a valid lowercase slug.');
+    if (!storefrontCategoryLabels.has(payload.storefront_category)) throw new Error('Choose a valid storefront category.');
     if (!Number.isSafeInteger(payload.size_ml) || payload.size_ml < 1) throw new Error('Product size must be a positive whole number of milliliters.');
     if (![payload.price, payload.mrp].every((value) => Number.isFinite(value) && value >= 0)) throw new Error('Price and MRP must be valid non-negative amounts.');
     if (payload.price > payload.mrp) throw new Error('Sale price cannot be higher than MRP.');

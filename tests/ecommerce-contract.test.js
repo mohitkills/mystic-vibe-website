@@ -177,6 +177,32 @@ test('legacy page guards do not suppress the live checkout, tracking and newslet
   assert.ok(account.includes('event.stopImmediatePropagation()'), 'tracking handles its own submit without bubbling to legacy handlers');
   assert.ok(newsletter.includes('event.stopPropagation()'), 'newsletter handles its own submit without legacy override');
 });
+test('Admin product categories save through Supabase and power the storefront category navigation', async () => {
+  const html = await read('admin.html');
+  const admin = await read('js/admin.js');
+  const sync = await read('js/storefront-sync.js');
+  const app = await read('js/app.js');
+  const migration = await read('supabase/migrations/20261018075000_storefront_product_categories.sql');
+
+  assert.match(html, /select name="storefront_category" required/);
+  for (const category of ['deals', 'bestsellers', 'perfumes', 'fresh-aquatic', 'woody-amber', 'fruity-floral', 'new-arrivals', 'gift-sets']) {
+    assert.match(html, new RegExp('value="' + category + '"'));
+    assert.match(migration, new RegExp("'" + category + "'"));
+  }
+  assert.match(html, /id="product-filter-category"/);
+  assert.match(admin, /storefront_category: formValue\(form, 'storefront_category'\)/);
+  assert.match(admin, /product\.storefront_category !== categoryFilter/);
+  assert.match(sync, /product\.storefront_category = row\.storefront_category/);
+  assert.match(sync, /product\.storefront_category_label/);
+  assert.match(app, /p\.storefront_category===filter/);
+  assert.match(app, /p\.storefront_category==='deals'/);
+  assert.match(app, /p\.storefront_category==='bestsellers'/);
+  assert.match(app, /p\.storefront_category==='new-arrivals'/);
+  assert.match(migration, /add column if not exists storefront_category text/i);
+  assert.match(migration, /update public\.products[\s\S]*fragrance_family/i);
+  assert.match(migration, /storefront_category_check/);
+});
+
 test('homepage has exactly one image-first hero, one configurable CTA and animated buffered slides', async () => {
   const premium = await read('js/premium-home.js');
   const sync = await read('js/storefront-sync.js');
