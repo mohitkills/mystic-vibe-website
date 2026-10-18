@@ -30,3 +30,30 @@
   opacity: .62;
   cursor: not-allowed;
 }
+
+/* Admin Studio — matching bright ivory glass visual language */
+body.admin-page{--iv-bg:#F8F7F3;--iv-tx:#191919;--iv-mu:#77736D;--iv-gd:#B49A60;min-height:100vh;color-scheme:light;color:#191919!important;background:radial-gradient(42% 36% at 6% 8%,rgba(232,220,192,.28),transparent 80%),radial-gradient(40% 36% at 93% 30%,rgba(220,216,240,.2),transparent 80%),#F8F7F3!important}
+body.admin-page .admin-topbar{background:rgba(255,255,255,.8)!important;border-bottom:1px solid rgba(25,25,25,.08)!important;box-shadow:0 8px 28px rgba(70,55,25,.05)!important;color:#191919!important;backdrop-filter:blur(18px) saturate(150%)!important}
+body.admin-page .admin-brand,body.admin-page .admin-brand .serif,body.admin-page .admin-topbar a{color:#191919!important}
+body.admin-page .admin-main,body.admin-page .admin-heading{color:#191919!important}
+body.admin-page .admin-gate,body.admin-page .panel,body.admin-page .admin-summary-card,body.admin-page .admin-summary-recent,body.admin-page .admin-record,body.admin-page .admin-form,body.admin-page .admin-tabs,body.admin-page .admin-table-wrap{border:1px solid rgba(255,255,255,.86)!important;border-radius:18px!important;background:rgba(255,255,255,.7)!important;box-shadow:0 14px 44px rgba(70,55,25,.07)!important;color:#191919!important;backdrop-filter:blur(16px) saturate(145%)}
+body.admin-page .admin-heading h1,body.admin-page .admin-panel-heading h2,body.admin-page .admin-panel-heading h3,body.admin-page .admin-summary-recent h2,body.admin-page .admin-gate h1{color:#191919!important}
+body.admin-page .admin-heading>p,body.admin-page .admin-help,body.admin-page .admin-gate p,body.admin-page .admin-record span,body.admin-page .admin-summary-card small{color:#77736D!important}
+body.admin-page .admin-tabs{gap:6px;padding:8px}
+body.admin-page .admin-tabs button,body.admin-page .admin-quick-links button,body.admin-page .admin-summary-card button{border:1px solid rgba(25,25,25,.1)!important;border-radius:999px!important;background:rgba(255,255,255,.68)!important;color:#33302b!important}
+body.admin-page .admin-tabs button.active,body.admin-page .admin-tabs button[aria-selected="true"]{background:#191919!important;border-color:#191919!important;color:#fff!important}
+body.admin-page input,body.admin-page textarea,body.admin-page select{border:1px solid rgba(25,25,25,.12)!important;border-radius:11px!important;background:rgba(255,255,255,.87)!important;color:#191919!important;color-scheme:light!important}
+body.admin-page input::placeholder,body.admin-page textarea::placeholder{color:#77736D!important}
+body.admin-page select option,body.admin-page select optgroup,body.admin-page datalist option{color:#191919!important;background:#fff!important}
+body.admin-page input:focus,body.admin-page textarea:focus,body.admin-page select:focus{outline:2px solid rgba(180,154,96,.7)!important;outline-offset:1px;box-shadow:0 0 0 3px rgba(180,154,96,.12)!important}
+body.admin-page .btn,body.admin-page button.btn{border-radius:999px!important;border:1px solid #191919!important;background:#191919!important;color:#fff!important}
+body.admin-page .btn:hover,body.admin-page button.btn:hover{background:#B49A60!important;border-color:#B49A60!important;color:#191919!important}
+body.admin-page .btn.light,body.admin-page .btn.light:hover{background:rgba(255,255,255,.75)!important;border-color:rgba(25,25,25,.22)!important;color:#191919!important}
+body.admin-page .product-panel-heading{background:rgba(248,247,243,.95)!important;border-bottom:1px solid rgba(25,25,25,.1)!important;backdrop-filter:blur(16px)!important}
+body.admin-page .product-image-preview,body.admin-page .slide-preview-stage,body.admin-page .media-library-item{border-color:rgba(25,25,25,.1)!important;background:rgba(255,255,255,.77)!important}
+body.admin-page .admin-summary-card>span{color:#77736D!important}
+body.admin-page .admin-summary-card>strong{color:#191919!important}
+body.admin-page .admin-record-actions button{border:1px solid rgba(25,25,25,.12);border-radius:999px;background:rgba(255,255,255,.84);color:#191919}
+body.admin-page .admin-record-actions button:hover{border-color:rgba(180,154,96,.65);background:rgba(180,154,96,.13)}
+body.admin-page .admin-status:not(:empty){color:#5b744b!important}
+body.admin-page .admin-status.error,body.admin-page .error{color:#a33a3a!important}

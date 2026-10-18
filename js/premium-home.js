@@ -6,11 +6,22 @@
   var cardList=function(items){return items.map(function(p){return productCard(p)}).join('')};
   root.innerHTML=''
   +'<section class="premium-hero" aria-label="Mystic Vibe signature fragrance">'
-  +'<div class="premium-hero-media"><img class="premium-hero-image is-active" src="assets/images/hero-royal-marine.png" alt="Royal Marine fragrance by Mystic Vibe against a midnight ocean"></div>'
-  +'<div class="premium-hero-content"><div class="premium-hero-actions"><a class="btn" href="collection.html">Explore</a></div></div>'
+  +'<div class="premium-hero-media"><img class="premium-hero-image is-active" src="assets/images/hero-royal-marine.png" alt="Mystic Vibe signature fragrance" fetchpriority="high"></div>'
+  +'<div class="premium-hero-content"><span class="eyebrow premium-hero-kicker">THE ART OF FRAGRANCE</span><h1 class="serif premium-hero-heading">Find your signature scent.</h1><p class="premium-hero-description">Accessible luxury fragrances with character, crafted for the moments that become your story.</p><div class="premium-hero-actions"><a class="btn" href="collection.html">Explore</a></div></div>'
   +'</section>'
   +'<section class="signature-strip"><div class="container"><div class="signature-stat"><b>09</b>Signature fragrances</div><div class="signature-stat"><b>50ML</b>Every bottle</div><div class="signature-stat"><b>India</b>Crafted with intent</div><div class="signature-stat"><b>₹499</b>Accessible luxury</div></div></section>'
+  +'<section class="section ivory-category-section" id="categories"><div class="container"><div class="section-head"><div><span class="eyebrow">Explore the collection</span><h2 class="serif">Shop by category</h2></div><p>Start with the mood you want to wear today. Find a fragrance that feels like you.</p></div><div class="ivory-category-grid">'
+  +'<a class="ivory-category-card" href="collection.html?filter=all"><span class="ivory-category-index">01 / THE EDIT</span><h3 class="serif">Shop All</h3><p>Explore every signature fragrance.</p><span class="ivory-category-arrow" aria-hidden="true">↗</span></a>'
+  +'<a class="ivory-category-card" href="collection.html?filter=bestsellers"><span class="ivory-category-index">02 / MOST LOVED</span><h3 class="serif">Bestsellers</h3><p>Discover scents that stand out.</p><span class="ivory-category-arrow" aria-hidden="true">↗</span></a>'
+  +'<a class="ivory-category-card" href="collection.html?filter=fresh-aquatic"><span class="ivory-category-index">03 / THE FEELING</span><h3 class="serif">Fresh &amp; Aquatic</h3><p>Clean, cool and effortlessly airy.</p><span class="ivory-category-arrow" aria-hidden="true">↗</span></a>'
+  +'<a class="ivory-category-card" href="collection.html?filter=woody-amber"><span class="ivory-category-index">04 / THE FEELING</span><h3 class="serif">Woody &amp; Amber</h3><p>Warm, deep and quietly confident.</p><span class="ivory-category-arrow" aria-hidden="true">↗</span></a>'
+  +'<a class="ivory-category-card" href="collection.html?filter=fruity-floral"><span class="ivory-category-index">05 / THE FEELING</span><h3 class="serif">Fruity &amp; Floral</h3><p>Bright, soft and full of character.</p><span class="ivory-category-arrow" aria-hidden="true">↗</span></a>'
+  +'<a class="ivory-category-card" href="collection.html?filter=new-arrivals"><span class="ivory-category-index">06 / JUST LANDED</span><h3 class="serif">New Arrivals</h3><p>Meet the latest additions to the edit.</p><span class="ivory-category-arrow" aria-hidden="true">↗</span></a>'
+  +'</div></div></section>'
   +'<section class="section" id="signatures"><div class="container"><div class="section-head"><div><span class="eyebrow">The Edit</span><h2 class="serif">Wear what<br>you want remembered.</h2></div><p>Fragrance is personal. Explore our most-loved compositions, created for the rituals, rooms and moments that matter.</p></div><div class="grid product-grid">'+cardList(catalog)+'</div><div class="home-shop-all"><a class="btn light" href="collection.html">View All Perfumes</a></div></div></section>'
+  +'<section class="section ivory-data-section" id="home-deals" data-home-section="deals" hidden><div class="container"><div class="section-head"><div><span class="eyebrow">Considered finds</span><h2 class="serif">Crazy Deals</h2></div><p>Discover selected fragrances available at special prices.</p></div><div class="grid product-grid" data-home-product-grid="deals">'+cardList(typeof catalogFilterProducts==='function'?catalogFilterProducts(catalog,'deals').slice(0,4):[])+'</div><div class="home-shop-all"><a class="btn light" href="collection.html?filter=deals">Explore Crazy Deals</a></div></div></section>'
+  +'<section class="section ivory-family-section" id="families"><div class="container"><div class="section-head"><div><span class="eyebrow">Scent, by feeling</span><h2 class="serif">Find your fragrance family</h2></div><p>Every scent has a character. Choose a direction and discover the notes that speak to you.</p></div><div class="ivory-family-grid"><a class="ivory-family-card" href="collection.html?filter=fresh-aquatic"><span class="ivory-family-mark">01</span><div><h3 class="serif">Fresh &amp; Aquatic</h3><p>Clean, cool and open-air fresh.</p></div><span class="ivory-category-arrow" aria-hidden="true">↗</span></a><a class="ivory-family-card" href="collection.html?filter=woody-amber"><span class="ivory-family-mark">02</span><div><h3 class="serif">Woody &amp; Amber</h3><p>Warm, deep and grounded.</p></div><span class="ivory-category-arrow" aria-hidden="true">↗</span></a><a class="ivory-family-card" href="collection.html?filter=fruity-floral"><span class="ivory-family-mark">03</span><div><h3 class="serif">Fruity &amp; Floral</h3><p>Bright, soft and expressive.</p></div><span class="ivory-category-arrow" aria-hidden="true">↗</span></a></div></div></section>'
+  +'<section class="section ivory-data-section" id="new" data-home-section="new-arrivals" hidden><div class="container"><div class="section-head"><div><span class="eyebrow">Fresh on the shelf</span><h2 class="serif">New arrivals</h2></div><p>Meet the latest additions to your fragrance wardrobe.</p></div><div class="grid product-grid" data-home-product-grid="new-arrivals">'+cardList(typeof catalogFilterProducts==='function'?catalogFilterProducts(catalog,'new-arrivals').slice(0,4):[])+'</div></div></section>'
   +'<section class="discovery-band"><div class="discovery-inner"><div class="discovery-number"><img src="assets/images/mystic-vibe-logo.png" alt="" aria-hidden="true"></div><div><span class="eyebrow">A modern ritual</span><h2 class="serif">Made to move<br>with your mood.</h2><p data-site-content="home.story.description">From the clean clarity of Royal Marine to the velvet depth of Midnight Bleu, each Mystic Vibe fragrance is designed to become part of your story.</p><a class="btn light" href="about.html">Our Story</a></div></div></section>'
   +'<section class="section story-band"><div class="container"><div><span class="eyebrow">The Mystic Standard</span><h2 class="serif">A presence<br>that lingers.</h2></div><div class="story-panel"><p data-site-content="home.brand.promise">Thoughtfully composed, confidently worn. Premium fragrance should be expressive, not out of reach.</p><a class="btn" href="collection.html">Find Your Signature</a></div></div></section>'
   +'<section class="section"><div class="container"><div class="section-head"><div><span class="eyebrow">The Essentials</span><h2 class="serif">Why Mystic Vibe</h2></div><p data-site-content="home.why.description">We make a refined fragrance ritual feel effortless—from the first detail to the final impression.</p></div><div class="grid feature-grid"><div class="feature card"><strong>Lasting<br>character</strong></div><div class="feature card"><strong>Premium<br>presentation</strong></div><div class="feature card"><strong>Made in<br>India</strong></div><div class="feature card"><strong>Considered<br>compositions</strong></div><div class="feature card"><strong>Luxury made<br>accessible</strong></div></div></div></section>'
@@ -30,11 +41,14 @@
   var action=hero.querySelector('.premium-hero-actions a');
   if(!media || !initialImage || !action) return;
 
+  var headingNode=hero.querySelector('.premium-hero-heading');
+  var descriptionNode=hero.querySelector('.premium-hero-description');
   var fallback={
     cta_text:action.textContent.trim() || 'Explore',
     cta_link:action.getAttribute('href') || 'collection.html',
     display_image_url:initialImage.getAttribute('src') || 'assets/images/hero-royal-marine.png',
-    heading:initialImage.getAttribute('alt') || 'Mystic Vibe signature fragrance'
+    heading:(headingNode && headingNode.textContent.trim()) || 'Find your signature scent.',
+    description:(descriptionNode && descriptionNode.textContent.trim()) || 'Accessible luxury fragrances with character, crafted for the moments that become your story.'
   };
   var fallbackImage=fallback.display_image_url;
   var activeImage=initialImage;
@@ -257,7 +271,11 @@
       slide.display_image_url || slide.image_url || fallbackImage,
       slide.heading ? String(slide.heading).trim() : fallback.heading,
       slide.transition_style || 'fade',
-      function(){syncCta(slide.cta_text,slide.cta_link);}
+      function(){
+        if(headingNode) headingNode.textContent=String(slide.heading || fallback.heading).trim();
+        if(descriptionNode) descriptionNode.textContent=String(slide.subtitle || slide.description || fallback.description).trim();
+        syncCta(slide.cta_text,slide.cta_link);
+      }
     );
   }
 
@@ -276,6 +294,8 @@
     stop();
     syncControls();
     hero.classList.add('premium-hero-image-fallback');
+    if(headingNode) headingNode.textContent=fallback.heading;
+    if(descriptionNode) descriptionNode.textContent=fallback.description;
     setHeroImage(fallbackImage,fallback.heading,'fade',function(){syncCta(fallback.cta_text,fallback.cta_link);});
   }
 
@@ -295,6 +315,17 @@
       if(countNode) countNode.textContent=String(data.products.length).padStart(2,'0');
       if(window.refreshMysticVibeReveals) window.refreshMysticVibeReveals(grid);
       else grid.querySelectorAll('.reveal').forEach(function(card){card.classList.add('visible');});
+    }
+    if(Array.isArray(data.products) && typeof catalogFilterProducts==='function'){
+      ['deals','new-arrivals'].forEach(function(filter){
+        var section=root.querySelector('[data-home-section="'+filter+'"]');
+        var target=section && section.querySelector('[data-home-product-grid="'+filter+'"]');
+        if(!section || !target) return;
+        var filtered=catalogFilterProducts(data.products,filter).slice(0,4);
+        target.innerHTML=filtered.map(function(product){return productCard(product);}).join('');
+        section.hidden=!filtered.length;
+        if(window.refreshMysticVibeReveals) window.refreshMysticVibeReveals(target);
+      });
     }
     var incoming=Array.isArray(data.slides)?data.slides.filter(function(slide){
       return slide && slide.is_published===true && String(slide.image_url || '').trim();
