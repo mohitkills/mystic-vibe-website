@@ -1295,3 +1295,70 @@ body:not([data-theme="dark"]) .premium-slide-status { display: none !important; 
     transition: none !important;
   }
 }
+
+
+/* FINAL FINAL slider indicator: clean circular dots, no gold/yellow active pill. */
+body:not([data-theme="dark"]) .premium-slide-dots {
+  gap: 3px !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot,
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot[aria-current="true"] {
+  display: grid !important;
+  place-items: center !important;
+  flex: 0 0 16px !important;
+  width: 16px !important;
+  min-width: 16px !important;
+  max-width: 16px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+  max-height: 18px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot::before {
+  content: "" !important;
+  display: block !important;
+  width: 6px !important;
+  height: 6px !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: rgba(255,255,255,.68) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,.3) !important;
+  transform: none !important;
+  transition: width .18s ease, height .18s ease, background .18s ease, border-color .18s ease !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot[aria-current="true"]::before {
+  width: 10px !important;
+  height: 10px !important;
+  border: 1.5px solid #fff !important;
+  border-radius: 50% !important;
+  background: rgba(255,255,255,.12) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.32), inset 0 0 0 1.5px rgba(255,255,255,.1) !important;
+  transform: none !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot:hover::before,
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot:focus-visible::before {
+  background: rgba(255,255,255,.88) !important;
+  border-color: #fff !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot[aria-current="true"]:hover::before,
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot[aria-current="true"]:focus-visible::before {
+  background: rgba(255,255,255,.2) !important;
+  border-color: #fff !important;
+}
+@media (max-width: 760px) {
+  body:not([data-theme="dark"]) .premium-slide-dots { gap: 2px !important; }
+  body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot,
+  body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot[aria-current="true"] {
+    flex-basis: 15px !important;
+    width: 15px !important;
+    min-width: 15px !important;
+    max-width: 15px !important;
+    height: 18px !important;
+    min-height: 18px !important;
+    max-height: 18px !important;
+  }
+}

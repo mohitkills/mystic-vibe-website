@@ -305,14 +305,17 @@ test('Global glass background and category tiles match the beige-mint-lavender r
   assert.ok(adminCss.includes('#E9E6F1'));
 });
 
-test('Hero pagination follows the slim progress-bar style without a bulky pill', async () => {
+test('Hero pagination uses tiny circular indicators with no yellow active highlight', async () => {
   const css = await read('css/theme-system.css');
-  assert.ok(css.includes('width: max-content !important'));
-  assert.ok(css.includes('border: 0 !important'));
-  assert.ok(css.includes('background: transparent !important'));
-  assert.ok(css.includes('background: rgba(255,255,255,.55) !important'));
-  assert.ok(css.includes('premium-slide-dot[aria-current="true"]::before'));
-  assert.ok(css.includes('flex-basis: 23px !important'));
+  assert.ok(css.includes('FINAL FINAL slider indicator'));
+  assert.ok(css.includes('width: 6px !important'));
+  assert.ok(css.includes('height: 6px !important'));
+  assert.ok(css.includes('width: 10px !important'));
+  assert.ok(css.includes('border: 1.5px solid #fff !important'));
+  assert.ok(css.includes('border-radius: 50% !important'));
+  assert.ok(css.includes('background: rgba(255,255,255,.12) !important'));
+  assert.ok(css.includes('background: rgba(255,255,255,.88) !important'));
+  assert.ok(!css.slice(css.indexOf('FINAL FINAL slider indicator')).includes('background: #B49A60 !important'));
 });
 
 test('Hero slider supports mouse drag and touch swipe with compact controls', async () => {
