@@ -349,6 +349,17 @@ test('Hero carousel is reduced to half height on desktop and mobile with control
   assert.ok(css.includes('object-fit: cover !important'));
 });
 
+test('Homepage omits the statistics strip and editorial heading while keeping the product grid', async () => {
+  const home = await read('js/premium-home.js');
+  assert.ok(!home.includes('<section class="signature-strip"'));
+  assert.ok(!home.includes('<div class="signature-stat">'));
+  assert.ok(!home.includes('Wear what<br>you want remembered.'));
+  assert.ok(!home.includes('Fragrance is personal. Explore our most-loved compositions'));
+  assert.ok(home.includes('<section class="section" id="signatures"><div class="container"><div class="grid product-grid">'));
+  assert.ok(home.includes('cardList(catalog)'));
+  assert.ok(home.includes('View All Perfumes'));
+});
+
 test('Homepage places Shop by category below Find your fragrance family with glass fill hover animation', async () => {
   const home = await read('js/premium-home.js');
   const css = await read('css/theme-system.css');
@@ -399,7 +410,7 @@ test('Reference ivory-glass theme is bright-only, readable, and preserves storef
   assert.ok(sync.includes("readPublished('homepage_slides')"));
   assert.ok(home.includes('var fallbackSlides=['));
   assert.ok(home.includes('slides=completeSlides(incoming)'));
-  const heroMarkupEnd = home.indexOf('signature-strip', home.indexOf('root.innerHTML='));
+  const heroMarkupEnd = home.indexOf('id="signatures"', home.indexOf('root.innerHTML='));
   assert.ok(heroMarkupEnd > 0);
   const heroMarkup = home.slice(home.indexOf('root.innerHTML='), heroMarkupEnd);
   assert.ok(!heroMarkup.includes('<h1'));
