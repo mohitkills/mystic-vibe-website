@@ -34,7 +34,7 @@ create or replace function public.is_current_user_owner()
 returns boolean
 language sql
 stable
-security invoker
+security definer
 set search_path = ''
 as $function$
   select exists (
