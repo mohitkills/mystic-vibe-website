@@ -27,7 +27,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '
 const SITE_URL = 'https://mystic-vibe.vercel.app';
 
 Deno.serve(async (request: Request) => {
-  if (request.method === 'OPTIONS') return new Response('ok', { status: 204, headers: CORS_HEADERS });
+  if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS });
   if (request.method !== 'POST') return respond(405, { error: 'Method not allowed.' });
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
     return respond(500, { error: 'Team access is not configured on the server.' });

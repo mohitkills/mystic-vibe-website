@@ -136,6 +136,8 @@ test('Team Access is owner-gated and backed by server-only admin management func
   assert.match(admin, /initialize: 'initializeTeamAccessAdmin'/);
   assert.match(team, /functions\.invoke\('admin-team-access'/);
   assert.match(team, /data-revoke-user-id/);
+  assert.match(edge, /new Response\(null, \{ status: 204, headers: CORS_HEADERS \}\)/, 'OPTIONS preflight must return an empty 204 response');
+  assert.doesNotMatch(edge, /new Response\(['"]ok['"], \{ status: 204/, '204 responses cannot include a body');
   assert.match(edge, /auth\.getUser\(token\)/);
   assert.match(edge, /rpc\('is_current_user_owner'\)/);
   assert.match(edge, /auth\.admin\.inviteUserByEmail/);
