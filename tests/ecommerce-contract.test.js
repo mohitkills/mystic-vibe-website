@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { runInNewContext } from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import { readdir } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
@@ -222,4 +223,175 @@ test('homepage has exactly one image-first hero, one configurable CTA and animat
   assert.match(css, /@keyframes mvHeroZoom/);
   assert.match(migration, /add column if not exists transition_style text not null default 'fade'/i);
   assert.match(migration, /check \(transition_style in \('fade', 'slide-left', 'slide-up', 'zoom'\)\)/i);
+});
+
+test('hero controller rotates two slides in one image area and updates only the configured CTA', async () => {
+  const source = await read('js/premium-home.js');
+  const controllerStart = source.lastIndexOf("(function(){\n  if(!document.body || document.body.dataset.page!=='home') return;");
+  assert.ok(controllerStart >= 0, 'hero controller IIFE must exist');
+  const controller = source.slice(controllerStart);
+
+  function fakeClassList() {
+    const values = new Set();
+    return {
+      add: (...items) => items.forEach((item) => values.add(item)),
+      remove: (...items) => items.forEach((item) => values.delete(item)),
+      contains: (item) => values.has(item),
+      toggle: (item, force) => {
+        if (force === undefined ? !values.has(item) : force) values.add(item);
+        else values.delete(item);
+        return values.has(item);
+      },
+    };
+  }
+
+  function fakeElement(tagName) {
+    const attributes = new Map();
+    const handlers = new Map();
+    let src = '';
+    const element = {
+      tagName,
+      dataset: {},
+      style: {},
+      classList: fakeClassList(),
+      children: [],
+      parentElement: null,
+      textContent: '',
+      href: '',
+      alt: '',
+      decoding: '',
+      draggable: true,
+      complete: true,
+      naturalWidth: 120,
+      get offsetWidth() { return 100; },
+      get src() { return src; },
+      set src(value) {
+        src = String(value || '');
+        if (src) attributes.set('src', src);
+        else attributes.delete('src');
+        if (typeof element.onload === 'function' && !src.includes('broken')) element.onload();
+        else if (typeof element.onerror === 'function' && src.includes('broken')) element.onerror();
+      },
+      getAttribute(name) {
+        if (name === 'src') return src || null;
+        if (name === 'href') return element.href || attributes.get(name) || null;
+        return attributes.has(name) ? attributes.get(name) : null;
+      },
+      setAttribute(name, value) {
+        attributes.set(name, String(value));
+        if (name === 'href') element.href = String(value);
+      },
+      removeAttribute(name) {
+        attributes.delete(name);
+        if (name === 'src') src = '';
+        if (name === 'aria-hidden') attributes.delete(name);
+      },
+      addEventListener(name, callback, options = {}) {
+        const current = handlers.get(name) || [];
+        current.push({ callback, once: Boolean(options.once) });
+        handlers.set(name, current);
+      },
+      dispatch(name) {
+        const current = handlers.get(name) || [];
+        for (const entry of [...current]) {
+          entry.callback({ type: name, target: element });
+          if (entry.once) handlers.set(name, (handlers.get(name) || []).filter((candidate) => candidate !== entry));
+        }
+      },
+      append(...items) {
+        for (const item of items) {
+          item.parentElement = element;
+          element.children.push(item);
+        }
+      },
+    };
+    return element;
+  }
+
+  const image = fakeElement('img');
+  image.src = 'assets/images/hero-royal-marine.png';
+  image.alt = 'Default fragrance';
+  const media = fakeElement('div');
+  media.append(image);
+  media.querySelector = (selector) => selector === 'img' ? media.children.find((child) => child.tagName === 'img') : null;
+
+  const action = fakeElement('a');
+  action.textContent = 'Explore';
+  action.href = 'collection.html';
+  action.setAttribute('href', 'collection.html');
+
+  const hero = fakeElement('section');
+  hero.querySelector = (selector) => {
+    if (selector === '.premium-hero-media') return media;
+    if (selector === '.premium-hero-actions a') return action;
+    return null;
+  };
+
+  const windowListeners = new Map();
+  const intervals = new Map();
+  const timeouts = new Map();
+  let intervalId = 0;
+  let timeoutId = 0;
+  const document = {
+    body: { dataset: { page: 'home' } },
+    hidden: false,
+    querySelector: (selector) => selector === '.premium-hero' ? hero : null,
+    createElement: (tag) => fakeElement(tag),
+    addEventListener() {},
+  };
+  const window = {
+    matchMedia: () => ({ matches: false }),
+    addEventListener(name, callback) { windowListeners.set(name, callback); },
+    dispatchEvent(event) { windowListeners.get(event.type)?.(event); },
+  };
+  class FakeImage extends (class {}) {
+    constructor() {
+      super();
+      this.onload = null;
+      this.onerror = null;
+      this.complete = true;
+      this.naturalWidth = 120;
+      this._src = '';
+    }
+    set src(value) {
+      this._src = String(value || '');
+      if (this._src && this.onload) this.onload();
+    }
+    get src() { return this._src; }
+  }
+  class FakeCustomEvent {
+    constructor(type, options = {}) { this.type = type; this.detail = options.detail; }
+  }
+  const context = {
+    document, window, location: { href: 'https://mystic-vibe.example/', origin: 'https://mystic-vibe.example' },
+    Image: FakeImage, URL, CustomEvent: FakeCustomEvent,
+    setInterval(callback) { const id = ++intervalId; intervals.set(id, callback); return id; },
+    clearInterval(id) { intervals.delete(id); },
+    setTimeout(callback) { const id = ++timeoutId; timeouts.set(id, callback); return id; },
+    clearTimeout(id) { timeouts.delete(id); },
+  };
+
+  runInNewContext(controller, context);
+
+  const slides = [
+    { id: 'one', heading: 'Slide one', image_url: 'assets/images/slide-one.webp', display_image_url: 'assets/images/slide-one.webp', cta_text: 'Buy Now', cta_link: '/products/royal-marine.html', transition_style: 'slide-left', is_published: true },
+    { id: 'two', heading: 'Slide two', image_url: 'assets/images/slide-two.webp', display_image_url: 'assets/images/slide-two.webp', cta_text: 'Claim Now', cta_link: '/collection.html?filter=offers', transition_style: 'zoom', is_published: true },
+  ];
+  window.dispatchEvent({ type: 'mystic-vibe-storefront-data', detail: { products: [], slides } });
+
+  assert.equal(media.children.length, 2, 'two overlapping image layers create a single hero viewport');
+  assert.equal(action.textContent, 'Buy Now');
+  assert.equal(action.href, 'https://mystic-vibe.example/products/royal-marine.html');
+  assert.equal(media.children.filter((child) => child.classList.contains('is-active')).length, 1);
+  media.children.find((child) => child.classList.contains('is-incoming')).dispatch('animationend');
+  assert.ok(media.children.find((child) => child.classList.contains('is-active')).src.includes('slide-one.webp'));
+
+  assert.equal(intervals.size, 1, 'one automatic slide timer runs for the carousel');
+  [...intervals.values()][0]();
+  assert.equal(action.textContent, 'Claim Now');
+  assert.equal(action.href, 'https://mystic-vibe.example/collection.html?filter=offers');
+  media.children.find((child) => child.classList.contains('is-incoming')).dispatch('animationend');
+  const activeImage = media.children.find((child) => child.classList.contains('is-active'));
+  assert.ok(activeImage.src.includes('slide-two.webp'));
+  assert.equal(media.children.filter((child) => child.classList.contains('is-active')).length, 1);
 });
