@@ -305,6 +305,16 @@ test('Global glass background and category tiles match the beige-mint-lavender r
   assert.ok(adminCss.includes('#E9E6F1'));
 });
 
+test('Hero pagination follows the slim progress-bar style without a bulky pill', async () => {
+  const css = await read('css/theme-system.css');
+  assert.ok(css.includes('width: max-content !important'));
+  assert.ok(css.includes('border: 0 !important'));
+  assert.ok(css.includes('background: transparent !important'));
+  assert.ok(css.includes('background: rgba(255,255,255,.55) !important'));
+  assert.ok(css.includes('premium-slide-dot[aria-current="true"]::before'));
+  assert.ok(css.includes('flex-basis: 23px !important'));
+});
+
 test('Hero slider supports mouse drag and touch swipe with compact controls', async () => {
   const home = await read('js/premium-home.js');
   const css = await read('css/theme-system.css');
@@ -314,11 +324,15 @@ test('Hero slider supports mouse drag and touch swipe with compact controls', as
   assert.ok(home.includes("var swipeThreshold=44"));
   assert.ok(home.includes("show(active+(deltaX<0?1:-1))"));
   assert.ok(home.includes("media.style.touchAction='pan-y'"));
-  assert.ok(css.includes('flex: 0 0 16px !important'));
-  assert.ok(css.includes('width: 15px !important'));
   assert.ok(css.includes('.premium-slide-controls .premium-slide-dot::before'));
-  assert.ok(css.includes('width: 15px'));
+  assert.ok(css.includes('background: rgba(255,255,255,.55) !important'));
+  assert.ok(css.includes('width: 27px !important'));
+  assert.ok(css.includes('.premium-slide-controls .premium-slide-arrow'));
+  assert.ok(css.includes('display: none !important'));
+  assert.ok(css.includes('background: transparent !important'));
   assert.ok(css.includes('cursor: grabbing'));
+  assert.ok(home.includes("media.addEventListener('pointerdown'"));
+  assert.ok(home.includes("media.addEventListener('pointerup'"));
 });
 
 test('Hero carousel is reduced to half height on desktop and mobile with controls retained', async () => {

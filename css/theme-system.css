@@ -1186,3 +1186,112 @@ body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot[aria-cu
     max-height: 15px !important;
   }
 }
+
+
+/* FINAL SLIDER PAGINATION — slim progress bars inspired by the reference.
+   The bulky glass pill/arrows are visually removed; slide dots remain clickable.
+   Touch swipe and desktop mouse-drag continue to provide next/previous navigation. */
+body:not([data-theme="dark"]) .premium-slide-controls {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  top: auto !important;
+  bottom: 12px !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  width: max-content !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-arrow {
+  display: none !important;
+}
+body:not([data-theme="dark"]) .premium-slide-dots {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot,
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot[aria-current="true"] {
+  display: grid !important;
+  place-items: center !important;
+  flex: 0 0 27px !important;
+  width: 27px !important;
+  min-width: 27px !important;
+  max-width: 27px !important;
+  height: 26px !important;
+  min-height: 26px !important;
+  max-height: 26px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot::before {
+  content: "";
+  display: block;
+  width: 27px !important;
+  height: 3px !important;
+  border-radius: 99px !important;
+  background: rgba(255,255,255,.55) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,.28);
+  transition: background .2s ease, transform .2s ease;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot[aria-current="true"]::before {
+  width: 27px !important;
+  height: 3px !important;
+  border-radius: 99px !important;
+  background: #fff !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.3);
+  transform: scaleY(1.25);
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot:hover::before,
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot:focus-visible::before {
+  background: #B49A60 !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot:focus-visible {
+  outline: 1px solid rgba(255,255,255,.9) !important;
+  outline-offset: 1px;
+}
+body:not([data-theme="dark"]) .premium-slide-status { display: none !important; }
+@media (max-width: 760px) {
+  body:not([data-theme="dark"]) .premium-slide-controls {
+    bottom: 6px !important;
+    gap: 4px !important;
+  }
+  body:not([data-theme="dark"]) .premium-slide-dots { gap: 4px !important; }
+  body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot,
+  body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot[aria-current="true"] {
+    flex-basis: 23px !important;
+    width: 23px !important;
+    min-width: 23px !important;
+    max-width: 23px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    max-height: 20px !important;
+  }
+  body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot::before,
+  body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot[aria-current="true"]::before {
+    width: 23px !important;
+    height: 3px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot::before {
+    transition: none !important;
+  }
+}
