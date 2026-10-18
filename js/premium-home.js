@@ -6,7 +6,7 @@
   var cardList=function(items){return items.map(function(p){return productCard(p)}).join('')};
   root.innerHTML=''
   +'<section class="premium-hero" aria-label="Mystic Vibe signature fragrance">'
-  +'<div class="premium-hero-media"><img src="assets/images/hero-royal-marine.png" alt="Royal Marine fragrance by Mystic Vibe against a midnight ocean"></div>'
+  +'<div class="premium-hero-media"><img class="premium-hero-image is-active" src="assets/images/hero-royal-marine.png" alt="Royal Marine fragrance by Mystic Vibe against a midnight ocean"></div>'
   +'<div class="premium-hero-content"><div class="premium-hero-actions"><a class="btn" href="collection.html">Explore</a></div></div>'
   +'</section>'
   +'<section class="signature-strip"><div class="container"><div class="signature-stat"><b>09</b>Signature fragrances</div><div class="signature-stat"><b>50ML</b>Every bottle</div><div class="signature-stat"><b>India</b>Crafted with intent</div><div class="signature-stat"><b>₹499</b>Accessible luxury</div></div></section>'
@@ -24,40 +24,35 @@
   var hero=document.querySelector('.premium-hero');
   if(!hero || hero.dataset.sliderInitialized==='true') return;
   hero.dataset.sliderInitialized='true';
+
+  var media=hero.querySelector('.premium-hero-media');
+  var initialImage=media && media.querySelector('img');
   var action=hero.querySelector('.premium-hero-actions a');
-  var image=hero.querySelector('.premium-hero-media img');
-  if(!action || !image) return;
+  if(!media || !initialImage || !action) return;
 
   var fallback={
     cta_text:action.textContent.trim() || 'Explore',
     cta_link:action.getAttribute('href') || 'collection.html',
-    display_image_url:image.getAttribute('src') || 'assets/images/hero-royal-marine.png',
-    heading:image.getAttribute('alt') || 'Mystic Vibe signature fragrance'
+    display_image_url:initialImage.getAttribute('src') || 'assets/images/hero-royal-marine.png',
+    heading:initialImage.getAttribute('alt') || 'Mystic Vibe signature fragrance'
   };
   var fallbackImage=fallback.display_image_url;
+  var activeImage=initialImage;
+  var inactiveImage=document.createElement('img');
+  inactiveImage.className='premium-hero-image';
+  inactiveImage.alt='';
+  inactiveImage.setAttribute('aria-hidden','true');
+  inactiveImage.decoding='async';
+  inactiveImage.draggable=false;
+  media.append(inactiveImage);
+
   var slides=[];
   var active=0;
   var timer=null;
   var imageRequest=0;
-  var controls=document.createElement('div');
-  controls.className='premium-slide-controls';
-  controls.setAttribute('role','group');
-  controls.setAttribute('aria-label','Homepage slide controls');
-  var previous=document.createElement('button');
-  previous.type='button';
-  previous.className='premium-slide-arrow';
-  previous.setAttribute('aria-label','Previous homepage slide');
-  previous.textContent='‹';
-  var status=document.createElement('span');
-  status.className='premium-slide-status';
-  status.setAttribute('aria-live','polite');
-  var next=document.createElement('button');
-  next.type='button';
-  next.className='premium-slide-arrow';
-  next.setAttribute('aria-label','Next homepage slide');
-  next.textContent='›';
-  controls.append(previous,status,next);
-  hero.append(controls);
+  var transitionTimer=null;
+  var reducedMotion=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var transitionNames=['fade','slide-left','slide-up','zoom'];
 
   function safeImage(value){
     if(typeof value!=='string' || !value.trim()) return fallbackImage;
@@ -68,7 +63,7 @@
     if(source.indexOf('blob:')===0) return source;
     try{
       var url=new URL(source,location.href);
-      if(url.origin===location.origin && (url.protocol==='https:' || url.protocol==='http:')) return url.href;
+      if((url.protocol==='https:' || url.protocol==='http:') && url.origin===location.origin) return url.href;
       if(url.protocol==='https:' && !url.username && !url.password &&
         !/\.supabase\.(?:co|in)$/i.test(url.hostname) &&
         !/\/storage\/v1\/object\//i.test(url.pathname) &&
@@ -77,36 +72,6 @@
     return fallbackImage;
   }
 
-  function setHeroImage(source, alt){
-    var request=++imageRequest;
-    var candidate=safeImage(source);
-    var probe=new Image();
-    probe.onload=function(){
-      if(request!==imageRequest) return;
-      image.src=candidate;
-      image.alt=alt || fallback.heading;
-      hero.classList.remove('premium-hero-image-fallback');
-      image.dataset.loaded='true';
-    };
-    probe.onerror=function(){
-      if(request!==imageRequest) return;
-      hero.classList.add('premium-hero-image-fallback');
-      image.dataset.loaded='false';
-      image.alt=fallback.heading;
-      if(candidate!==fallbackImage) image.src=fallbackImage;
-      else image.removeAttribute('src');
-    };
-    probe.src=candidate;
-  }
-
-  image.addEventListener('error',function(){
-    if(image.dataset.loaded==='false') return;
-    hero.classList.add('premium-hero-image-fallback');
-    image.dataset.loaded='false';
-    if(image.getAttribute('src')!==fallbackImage) image.src=fallbackImage;
-    else image.removeAttribute('src');
-  });
-
   function safeCtaLink(value){
     try{
       var target=new URL(String(value || fallback.cta_link),location.href);
@@ -114,38 +79,107 @@
     }catch(error){ return new URL(fallback.cta_link,location.href).href; }
   }
 
+  function syncCta(text, link){
+    action.textContent=String(text || fallback.cta_text || 'Explore').trim().slice(0,40);
+    action.href=safeCtaLink(link);
+    action.setAttribute('aria-label',action.textContent);
+  }
+
+  function finishTransition(request, oldImage, incomingImage, description){
+    if(request!==imageRequest) return;
+    if(transitionTimer) clearTimeout(transitionTimer);
+    transitionTimer=null;
+    oldImage.classList.remove('is-active','is-incoming');
+    oldImage.classList.remove('hero-transition-fade','hero-transition-slide-left','hero-transition-slide-up','hero-transition-zoom');
+    oldImage.alt='';
+    oldImage.setAttribute('aria-hidden','true');
+    incomingImage.classList.remove('is-incoming','hero-transition-fade','hero-transition-slide-left','hero-transition-slide-up','hero-transition-zoom');
+    incomingImage.classList.add('is-active');
+    incomingImage.alt=description || fallback.heading;
+    incomingImage.removeAttribute('aria-hidden');
+    activeImage=incomingImage;
+    inactiveImage=oldImage;
+  }
+
+  function setHeroImage(source, alt, requestedTransition, onReady){
+    var candidate=safeImage(source);
+    var request=++imageRequest;
+    var currentSource=activeImage.getAttribute('src') || '';
+    if(candidate===currentSource || candidate===activeImage.src){
+      activeImage.alt=alt || fallback.heading;
+      if(onReady) onReady();
+      return;
+    }
+
+    var probe=new Image();
+    probe.onload=function(){
+      if(request!==imageRequest) return;
+      var oldImage=activeImage;
+      var incomingImage=inactiveImage;
+      var style=transitionNames.includes(requestedTransition) ? requestedTransition : 'fade';
+      incomingImage.classList.remove('is-active','is-incoming','hero-transition-fade','hero-transition-slide-left','hero-transition-slide-up','hero-transition-zoom');
+      incomingImage.src=candidate;
+      incomingImage.alt='';
+      incomingImage.setAttribute('aria-hidden','true');
+      void incomingImage.offsetWidth;
+      incomingImage.classList.add('is-incoming','hero-transition-'+style);
+      if(onReady) onReady();
+
+      var finalized=false;
+      var finish=function(){
+        if(finalized) return;
+        finalized=true;
+        finishTransition(request,oldImage,incomingImage,alt);
+      };
+      incomingImage.addEventListener('animationend',finish,{once:true});
+      if(transitionTimer) clearTimeout(transitionTimer);
+      transitionTimer=setTimeout(finish,reducedMotion?80:1300);
+    };
+    probe.onerror=function(){
+      if(request!==imageRequest) return;
+      hero.classList.add('premium-hero-image-fallback');
+      if(candidate!==safeImage(fallbackImage)) setHeroImage(fallbackImage,fallback.heading,'fade',onReady);
+      // Keep the previous loaded image in place if even the fallback cannot be loaded.
+    };
+    probe.decoding='async';
+    probe.src=candidate;
+    if(probe.complete && probe.naturalWidth>0) probe.onload();
+  }
+
   function show(index){
     if(!slides.length) return;
     active=(index+slides.length)%slides.length;
     var slide=slides[active];
-    action.textContent=String(slide.cta_text || fallback.cta_text || 'Explore').trim().slice(0,40);
-    action.href=safeCtaLink(slide.cta_link);
-    action.setAttribute('aria-label',action.textContent);
-    setHeroImage(slide.display_image_url || slide.image_url || fallbackImage,
-      slide.heading ? String(slide.heading).trim() : fallback.heading);
-    status.textContent=(active+1)+' / '+slides.length;
-    controls.hidden=slides.length<2;
+    setHeroImage(
+      slide.display_image_url || slide.image_url || fallbackImage,
+      slide.heading ? String(slide.heading).trim() : fallback.heading,
+      slide.transition_style || 'fade',
+      function(){syncCta(slide.cta_text,slide.cta_link);}
+    );
   }
-  function start(){
+
+  function stop(){
     if(timer) clearInterval(timer);
     timer=null;
-    if(slides.length>1) timer=setInterval(function(){show(active+1);},7000);
+  }
+  function start(){
+    stop();
+    if(slides.length>1 && !reducedMotion && !document.hidden){
+      timer=setInterval(function(){show(active+1);},7000);
+    }
   }
   function showFallback(){
     slides=[];
-    if(timer) clearInterval(timer);
-    timer=null;
-    action.textContent=fallback.cta_text;
-    action.href=safeCtaLink(fallback.cta_link);
-    action.setAttribute('aria-label',action.textContent);
-    setHeroImage(fallbackImage,fallback.heading);
-    controls.hidden=true;
-    status.textContent='';
+    stop();
+    hero.classList.add('premium-hero-image-fallback');
+    setHeroImage(fallbackImage,fallback.heading,'fade',function(){syncCta(fallback.cta_text,fallback.cta_link);});
   }
-  previous.addEventListener('click',function(){show(active-1);start();});
-  next.addEventListener('click',function(){show(active+1);start();});
-  hero.addEventListener('mouseenter',function(){if(timer) clearInterval(timer);});
+
+  hero.addEventListener('mouseenter',stop);
   hero.addEventListener('mouseleave',start);
+  hero.addEventListener('focusin',stop);
+  hero.addEventListener('focusout',start);
+  document.addEventListener('visibilitychange',function(){if(document.hidden) stop(); else start();});
 
   window.addEventListener('mystic-vibe-storefront-data',function(event){
     var data=event.detail||{};
@@ -158,7 +192,7 @@
       else grid.querySelectorAll('.reveal').forEach(function(card){card.classList.add('visible');});
     }
     var incoming=Array.isArray(data.slides)?data.slides.filter(function(slide){
-      return slide && slide.is_published===true && String(slide.display_image_url || slide.image_url || '').trim();
+      return slide && slide.is_published===true && String(slide.image_url || '').trim();
     }):[];
     if(!incoming.length){
       showFallback();
@@ -169,9 +203,9 @@
     start();
   });
 
-  // Preserve the default image while CMS image delivery completes, and replay already-loaded data.
-  setHeroImage(fallbackImage,fallback.heading);
-  controls.hidden=true;
+  // Keep the initial artwork visible until a CMS-managed image is preloaded.
+  initialImage.classList.add('premium-hero-image','is-active');
+  syncCta(fallback.cta_text,fallback.cta_link);
   if(Array.isArray(window.MV_HOMEPAGE_SLIDES)){
     window.dispatchEvent(new CustomEvent('mystic-vibe-storefront-data',{detail:{
       products:window.MV_PRODUCTS || [],
