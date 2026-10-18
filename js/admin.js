@@ -267,7 +267,9 @@ async function renderSlides() {
   container.replaceChildren();
   if (!slides.length) return emptyMessage(container, 'No homepage slides are available yet.');
   for (const slide of slides) {
-    appendRecord(container, slide.heading, `${slide.is_published ? 'Published' : 'Draft'} · Order ${slide.sort_order}`, slide.id, [
+    const transition = String(slide.transition_style || 'fade').replace(/-/g, ' ');
+    const buttonText = String(slide.cta_text || 'Explore').trim();
+    appendRecord(container, slide.heading, `${slide.is_published ? 'Published' : 'Draft'} · Order ${slide.sort_order} · ${transition} · CTA “${buttonText}”`, slide.id, [
       { label: 'Edit', action: 'edit-slide' },
       { label: 'Duplicate', action: 'duplicate-slide' },
       { label: 'Move up', action: 'move-slide-up' },
