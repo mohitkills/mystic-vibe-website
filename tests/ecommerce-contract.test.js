@@ -201,6 +201,9 @@ test('homepage has exactly one image-first hero, one configurable CTA and animat
   assert.match(premium, /cta_text/);
   assert.match(premium, /cta_link/);
   assert.match(premium, /showFallback\(\)/);
+  const homeRefresh = sync.slice(sync.indexOf('function rerenderImagePage()'), sync.indexOf('function dispatchStorefrontData()'));
+  assert.match(homeRefresh, /if \(page === 'home'\) return;/, 'CMS refresh must preserve the single premium hero');
+  assert.doesNotMatch(homeRefresh, /renderMysticVibeHome/, 'CMS refresh must not restore the legacy multi-slide hero');
   assert.match(sync, /readPublished\('homepage_slides'\)/);
   assert.match(sync, /window\.MV_HOMEPAGE_SLIDES = await hydrateSlideImages\(publishedSlides\)/);
   assert.match(sync, /window\.MV_STOREFRONT_CMS_CONNECTED = Array\.isArray\(products\)/);

@@ -54,6 +54,12 @@
 @keyframes mvHeroSlideLeft{from{opacity:.72;transform:translate3d(3.5%,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
 @keyframes mvHeroSlideUp{from{opacity:.72;transform:translate3d(0,3.5%,0)}to{opacity:1;transform:translate3d(0,0,0)}}
 @keyframes mvHeroZoom{from{opacity:.78;transform:scale(1.07)}to{opacity:1;transform:scale(1)}}
+/* Keep CTA labels legible on hover and keyboard focus in both button styles. */
+.btn:hover,
+.btn:focus-visible { color: #101010 !important; }
+.btn.light:hover,
+.btn.light:focus-visible { color: #fff !important; }
+
 @media(prefers-reduced-motion:reduce){
   .premium-hero-media img.premium-hero-image.hero-transition-fade,
   .premium-hero-media img.premium-hero-image.hero-transition-slide-left,

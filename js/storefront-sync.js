@@ -171,7 +171,11 @@ async function hydrateProductImages(products, imageSlotsBySlug) {
 
 function rerenderImagePage() {
   const page = document.body.dataset.page;
-  if (page === 'home') window.renderMysticVibeHome?.();
+  // The premium-home controller owns homepage markup. Re-rendering the legacy
+  // app.js home template here restores its multi-panel hero and detaches the
+  // CMS-controlled single-viewport slider. The home controller updates its
+  // products and slides from the storefront data event instead.
+  if (page === 'home') return;
   if (page === 'collection') window.renderMysticVibeCollection?.();
   if (page === 'product') window.renderMysticVibeProduct?.();
 }
