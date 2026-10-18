@@ -103,6 +103,16 @@ test('customer order history and guest order lookup are connected to the secured
   assert.match(account, /Track a guest order/);
 });
 
+test('Admin native select options keep readable contrast in Windows dropdown popups', async () => {
+  const html = await read('admin.html');
+  const css = await read('css/admin.css');
+  assert.match(html, /<body class="admin-page">/);
+  assert.match(css, /\.admin-page\s*\{\s*color-scheme:\s*dark;/);
+  assert.match(css, /\.admin-page select option,[\s\S]*?color:\s*#f7f5ef !important;[\s\S]*?background-color:\s*#171a20 !important;/);
+  assert.match(css, /\.admin-page select option:checked,[\s\S]*?background-color:\s*#d4b05b !important;/);
+  assert.match(css, /\.admin-page select option:disabled/);
+});
+
 test('Admin access gate has an independent timeout and explicit ready signal', async () => {
   const html = await read('admin.html');
   const admin = await read('js/admin.js');
