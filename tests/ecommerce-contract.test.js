@@ -213,6 +213,20 @@ test('FAQ question and answer text remains readable in the light gradient theme'
   assert.ok(theme.includes('-webkit-text-fill-color: #575148 !important'));
 });
 
+test('Mobile action icons move out of the header into a fixed dock beside contact and restore on desktop', async () => {
+  const app = await read('js/app.js');
+  const theme = await read('css/theme-system.css');
+  assert.ok(app.includes("window.matchMedia('(max-width: 760px)').matches"));
+  assert.ok(app.includes("document.body.appendChild(navActions)"));
+  assert.ok(app.includes("navActions.classList.add('mobile-floating-actions')"));
+  assert.ok(app.includes("navActionsSlot.parentNode.insertBefore(navActions,navActionsSlot.nextSibling)"));
+  assert.ok(theme.includes('body:not([data-theme="dark"]) .mobile-floating-actions'));
+  assert.ok(theme.includes('right: calc(68px + env(safe-area-inset-right, 0px)) !important'));
+  assert.ok(theme.includes('right: calc(12px + env(safe-area-inset-right, 0px)) !important'));
+  assert.ok(theme.includes('body:not([data-theme="dark"]) .mobile-floating-actions .account-menu-panel'));
+  assert.ok(theme.includes('max-width: 340px'));
+});
+
 test('Floating contact icon stays visible and safely falls back to the Contact page when WhatsApp is not configured', async () => {
   const app = await read('js/app.js');
   const sync = await read('js/storefront-sync.js');

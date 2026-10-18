@@ -586,3 +586,106 @@ body:not([data-theme="dark"]) .whatsapp-float[hidden] { display: none !important
     max-height: 34px !important;
   }
 }
+
+
+/* FINAL MOBILE DOCK: actual DOM node is moved to body on narrow screens so it
+   cannot overlap the header/search or inherit header positioning contexts. */
+@media (max-width: 760px) {
+  body:not([data-theme="dark"]) .mobile-floating-actions {
+    position: fixed !important;
+    top: auto !important;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    left: auto !important;
+    right: calc(68px + env(safe-area-inset-right, 0px)) !important;
+    z-index: 1700 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-wrap: nowrap !important;
+    gap: 5px !important;
+    width: max-content !important;
+    max-width: calc(100vw - 132px) !important;
+    margin: 0 !important;
+    padding: 6px !important;
+    border: 1px solid rgba(255,255,255,.94) !important;
+    border-radius: 999px !important;
+    background: rgba(255,255,255,.91) !important;
+    box-shadow: 0 12px 34px rgba(54,45,28,.17) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(155%) !important;
+    backdrop-filter: blur(20px) saturate(155%) !important;
+    box-sizing: border-box !important;
+  }
+  body:not([data-theme="dark"]) .mobile-floating-actions > .icon-btn,
+  body:not([data-theme="dark"]) .mobile-floating-actions .account-menu-trigger {
+    display: grid !important;
+    place-items: center !important;
+    flex: 0 0 38px !important;
+    width: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(255,255,255,.83) !important;
+    color: #191919 !important;
+    border: 1px solid rgba(25,25,25,.1) !important;
+  }
+  body:not([data-theme="dark"]) .mobile-floating-actions .badge {
+    top: -3px !important;
+    right: -2px !important;
+    min-width: 15px !important;
+    height: 15px !important;
+    font-size: 9px !important;
+  }
+  body:not([data-theme="dark"]) .mobile-floating-actions .account-menu-wrap {
+    position: relative !important;
+    flex: 0 0 38px !important;
+    width: 38px !important;
+    min-width: 38px !important;
+  }
+  body:not([data-theme="dark"]) .mobile-floating-actions .account-menu-panel {
+    position: absolute !important;
+    top: auto !important;
+    bottom: calc(100% + 10px) !important;
+    left: auto !important;
+    right: -56px !important;
+    width: min(270px, calc(100vw - 24px)) !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: min(56svh, 400px) !important;
+    overflow: auto !important;
+    z-index: 1800 !important;
+  }
+  body:not([data-theme="dark"]) .whatsapp-float:not([hidden]) {
+    position: fixed !important;
+    right: calc(12px + env(safe-area-inset-right, 0px)) !important;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 1701 !important;
+    width: 48px !important;
+    min-width: 48px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    display: grid !important;
+    place-items: center !important;
+    box-sizing: border-box !important;
+  }
+}
+@media (max-width: 340px) {
+  body:not([data-theme="dark"]) .mobile-floating-actions {
+    right: calc(64px + env(safe-area-inset-right, 0px)) !important;
+    gap: 3px !important;
+    padding: 4px !important;
+  }
+  body:not([data-theme="dark"]) .mobile-floating-actions > .icon-btn,
+  body:not([data-theme="dark"]) .mobile-floating-actions .account-menu-trigger {
+    flex-basis: 34px !important;
+    width: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+  }
+}

@@ -96,6 +96,25 @@ function header(){
     '</div>';
   var menuButton=headerRoot.querySelector('.menu-toggle');
   var navLinks=headerRoot.querySelector('.nav-links');
+  var navActions=headerRoot.querySelector('.nav-actions');
+  var navActionsSlot=document.createComment('Mystic Vibe mobile action dock placement');
+  if(navActions&&navActions.parentNode)navActions.parentNode.insertBefore(navActionsSlot,navActions);
+  function syncMobileActionDock(){
+    var useFloatingDock=!!(window.matchMedia&&window.matchMedia('(max-width: 760px)').matches);
+    if(!navActions||!navActionsSlot.parentNode)return;
+    if(useFloatingDock){
+      if(navActions.parentNode!==document.body)document.body.appendChild(navActions);
+      navActions.classList.add('mobile-floating-actions');
+      navActions.setAttribute('aria-label','Quick actions');
+    }else{
+      navActions.classList.remove('mobile-floating-actions');
+      navActions.removeAttribute('aria-label');
+      if(navActions.parentNode!==navActionsSlot.parentNode)
+        navActionsSlot.parentNode.insertBefore(navActions,navActionsSlot.nextSibling);
+    }
+  }
+  syncMobileActionDock();
+  window.addEventListener('resize',syncMobileActionDock,{passive:true});
   menuButton.onclick=function(){
     var open=navLinks.classList.toggle('open');
     menuButton.setAttribute('aria-expanded',String(open));
