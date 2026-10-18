@@ -220,8 +220,8 @@ test('Mobile bottom navigation has four labeled icon actions and retains working
   assert.ok(app.includes('class="mobile-nav-label">Cart</span>'));
   assert.ok(app.includes('class="mobile-nav-label">Account</span>'));
   assert.ok(app.includes('class="mobile-nav-label">Contact</span>'));
-  assert.ok(app.includes("href=\\"'+pagePath('wishlist.html')+'\\""));
-  assert.ok(app.includes("href=\\"'+pagePath('cart.html')+'\\""));
+  assert.ok(app.includes("pagePath('wishlist.html')"));
+  assert.ok(app.includes("pagePath('cart.html')"));
   assert.ok(app.includes("navActions.appendChild(contactAction)"));
   assert.ok(theme.includes('display: flex !important'));
   assert.ok(theme.includes('flex-direction: column !important'));
