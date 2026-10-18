@@ -57,3 +57,38 @@ body.admin-page .admin-record-actions button{border:1px solid rgba(25,25,25,.12)
 body.admin-page .admin-record-actions button:hover{border-color:rgba(180,154,96,.65);background:rgba(180,154,96,.13)}
 body.admin-page .admin-status:not(:empty){color:#5b744b!important}
 body.admin-page .admin-status.error,body.admin-page .error{color:#a33a3a!important}
+
+
+/* Admin contrast repair: readable dark text across forms, metadata, helper copy and dashboard summaries. */
+body.admin-page { color: #24211d !important; color-scheme: light !important; }
+body.admin-page .admin-main,
+body.admin-page .admin-main :is(h1,h2,h3,h4,h5,p,span,small,label,legend,dt,dd,th,td,li,summary,code),
+body.admin-page .admin-topbar,
+body.admin-page .admin-topbar :is(span,small,strong) { color: #292620 !important; }
+body.admin-page .admin-main :is(.eyebrow,.admin-help,.admin-status,.admin-record-meta,.admin-record-description,.admin-summary-card>span,.admin-summary-card small,.admin-overview p,.admin-heading>p,.admin-gate p,.product-image-help,.product-image-status,.field-help,.form-help,.help-text,.hint,.muted,.meta,.subtle) {
+  color: #575148 !important;
+}
+body.admin-page .admin-main label,
+body.admin-page .admin-main .admin-label,
+body.admin-page .admin-main .form-label { color: #39342d !important; font-weight: 600; }
+body.admin-page .admin-main a:not(.btn),
+body.admin-page .admin-main a:not(.btn) :is(span,strong,small) { color: #292620 !important; }
+body.admin-page .admin-main input,
+body.admin-page .admin-main textarea,
+body.admin-page .admin-main select { color: #191919 !important; background: #fff !important; }
+body.admin-page .admin-main input::placeholder,
+body.admin-page .admin-main textarea::placeholder { color: #6a6359 !important; opacity: 1 !important; }
+body.admin-page .admin-main select option,
+body.admin-page .admin-main select optgroup,
+body.admin-page .admin-main datalist option { color: #191919 !important; background: #fff !important; }
+body.admin-page .admin-main button:not(.btn),
+body.admin-page .admin-main button:not(.btn) :is(span,strong,small) { color: #292620 !important; }
+body.admin-page .admin-main .admin-tabs button.active,
+body.admin-page .admin-main .admin-tabs button[aria-selected="true"],
+body.admin-page .admin-main button.btn,
+body.admin-page .admin-topbar button.btn:not(.light) { color: #fff !important; }
+body.admin-page .admin-main .admin-status.error,
+body.admin-page .admin-main .error,
+body.admin-page .admin-main [aria-invalid="true"] + small { color: #9b2929 !important; }
+body.admin-page .admin-main .success,
+body.admin-page .admin-main .good { color: #28623b !important; }

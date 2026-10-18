@@ -203,7 +203,7 @@ test('newsletter signups are stored through a restricted server function and man
   assert.match(marketing, /newsletter_subscribers/);
 });
 
-test('Reference ivory-glass theme applies across storefront and admin while preserving live integrations', async () => {
+test('Reference ivory-glass theme is bright-only, readable, and preserves storefront integrations', async () => {
   const home = await read('js/premium-home.js');
   const theme = await read('css/theme-system.css');
   const adminCss = await read('css/admin.css');
@@ -212,20 +212,30 @@ test('Reference ivory-glass theme applies across storefront and admin while pres
   const sync = await read('js/storefront-sync.js');
   assert.ok(theme.includes('--iv-bg:#F8F7F3'));
   assert.ok(theme.includes('--iv-gd:#B49A60'));
-  assert.ok(theme.includes('backdrop-filter:blur(18px) saturate(150%)'));
-  assert.ok(theme.includes('.premium-hero-heading'));
-  assert.ok(theme.includes('.ivory-category-grid'));
-  assert.ok(adminCss.includes('body.admin-page{'));
+  assert.ok(theme.includes('justify-content: center !important'));
+  assert.ok(theme.includes('.product-actions > .icon-btn[data-wish]'));
+  assert.ok(theme.includes('z-index: 1100 !important'));
+  assert.ok(theme.includes('premium-hero-content'));
+  assert.ok(theme.includes('premium-slide-controls .premium-slide-arrow'));
   assert.ok(adminCss.includes('body.admin-page select option'));
-  assert.ok(adminCss.includes('color-scheme:light'));
-  assert.ok(themeScript.includes("var key='mv_theme_v2',saved=localStorage.getItem(key),preferred='light'"));
-  assert.ok(home.includes('premium-hero-heading'));
-  assert.ok(home.includes('data-home-section="deals"'));
-  assert.ok(home.includes('data-home-section="new-arrivals"'));
-  assert.ok(home.includes('slide.heading || fallback.heading'));
-  assert.ok(sync.includes('window.MV_PRODUCTS.splice'));
+  assert.ok(adminCss.includes('Admin contrast repair'));
+  assert.ok(themeScript.includes("document.body.dataset.theme='light'"));
+  assert.ok(themeScript.includes("localStorage.removeItem('mv_theme_v2')"));
+  assert.ok(!themeScript.includes('setTheme(document.body.dataset.theme'));
+  assert.ok(app.includes('<strong class="serif">Mystic Vibe</strong>'));
+  assert.ok(!app.includes('<small>FINE FRAGRANCES</small>'));
   assert.ok(app.includes('data-site-search-input name="search"'));
   assert.ok(app.includes('data-account-toggle'));
+  assert.ok(sync.includes("readPublished('homepage_slides')"));
+  assert.ok(home.includes('var fallbackSlides=['));
+  assert.ok(home.includes('slides=completeSlides(incoming)'));
+  const heroMarkupEnd = home.indexOf("+'<section class=\\"signature-strip\\"");
+  assert.ok(heroMarkupEnd > 0);
+  const heroMarkup = home.slice(home.indexOf('root.innerHTML='), heroMarkupEnd);
+  assert.ok(!heroMarkup.includes('<h1'));
+  assert.ok(!heroMarkup.includes('premium-hero-heading'));
+  assert.ok(!heroMarkup.includes('premium-hero-description'));
+  assert.ok(!heroMarkup.includes('>Explore</a>'));
 });
 
 test('Storefront header exposes live product search and a profile menu with secure settings and logout', async () => {
@@ -317,7 +327,9 @@ test('homepage has exactly one image-first hero, one configurable CTA and animat
   assert.match(premium, /setAttribute\('aria-label','Previous slide'\)/);
   assert.match(premium, /setAttribute\('aria-label','Next slide'\)/);
   assert.match(premium, /data-hero-dot/);
-  assert.match(premium, /controls\.hidden=slides\.length<2/, 'controls stay hidden when there is only one published slide');
+  assert.match(premium, /controls\.hidden=slides\.length<2/, 'controls remain tied to the current slide deck');
+  assert.match(premium, /var fallbackSlides=\[/, 'a fallback slide deck keeps controls operational while CMS data loads');
+  assert.match(premium, /slides=completeSlides\(incoming\)/, 'a lone CMS slide is supplemented for manual navigation');
   assert.match(premium, /hero\.dataset\.sliderInitialized==='true'/, 'repeat initialization is guarded');
   assert.match(premium, /inactiveImage=document\.createElement\('img'\)/, 'next image uses a separate buffered layer');
   assert.match(premium, /probe\.onload=function\(\)/);
@@ -327,6 +339,7 @@ test('homepage has exactly one image-first hero, one configurable CTA and animat
   assert.match(premium, /cta_text/);
   assert.match(premium, /cta_link/);
   assert.match(premium, /showFallback\(\)/);
+  assert.match(premium, /showFallback\(\);\s*hero\.addEventListener\('mouseenter'/, 'fallback carousel starts before the CMS response');
   const homeRefresh = sync.slice(sync.indexOf('function rerenderImagePage()'), sync.indexOf('function dispatchStorefrontData()'));
   assert.match(homeRefresh, /if \(page === 'home'\) return;/, 'CMS refresh must preserve the single premium hero');
   assert.doesNotMatch(homeRefresh, /renderMysticVibeHome/, 'CMS refresh must not restore the legacy multi-slide hero');

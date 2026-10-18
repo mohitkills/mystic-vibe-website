@@ -5,9 +5,9 @@
   var catalog=MV_PRODUCTS;
   var cardList=function(items){return items.map(function(p){return productCard(p)}).join('')};
   root.innerHTML=''
-  +'<section class="premium-hero" aria-label="Mystic Vibe signature fragrance">'
+  +'<section class="premium-hero" aria-label="Featured Mystic Vibe fragrances" aria-roledescription="carousel">'
   +'<div class="premium-hero-media"><img class="premium-hero-image is-active" src="assets/images/hero-royal-marine.png" alt="Mystic Vibe signature fragrance" fetchpriority="high"></div>'
-  +'<div class="premium-hero-content"><span class="eyebrow premium-hero-kicker">THE ART OF FRAGRANCE</span><h1 class="serif premium-hero-heading">Find your signature scent.</h1><p class="premium-hero-description">Accessible luxury fragrances with character, crafted for the moments that become your story.</p><div class="premium-hero-actions"><a class="btn" href="collection.html">Explore</a></div></div>'
+  +'<div class="premium-hero-content" aria-hidden="true"><div class="premium-hero-actions"><a class="btn" href="collection.html" tabindex="-1"></a></div></div>'
   +'</section>'
   +'<section class="signature-strip"><div class="container"><div class="signature-stat"><b>09</b>Signature fragrances</div><div class="signature-stat"><b>50ML</b>Every bottle</div><div class="signature-stat"><b>India</b>Crafted with intent</div><div class="signature-stat"><b>₹499</b>Accessible luxury</div></div></section>'
   +'<section class="section ivory-category-section" id="categories"><div class="container"><div class="section-head"><div><span class="eyebrow">Explore the collection</span><h2 class="serif">Shop by category</h2></div><p>Start with the mood you want to wear today. Find a fragrance that feels like you.</p></div><div class="ivory-category-grid">'
@@ -271,11 +271,7 @@
       slide.display_image_url || slide.image_url || fallbackImage,
       slide.heading ? String(slide.heading).trim() : fallback.heading,
       slide.transition_style || 'fade',
-      function(){
-        if(headingNode) headingNode.textContent=String(slide.heading || fallback.heading).trim();
-        if(descriptionNode) descriptionNode.textContent=String(slide.subtitle || slide.description || fallback.description).trim();
-        syncCta(slide.cta_text,slide.cta_link);
-      }
+      function(){syncCta(slide.cta_text,slide.cta_link);}
     );
   }
 
@@ -289,17 +285,37 @@
       timer=setInterval(function(){show(active+1);},7000);
     }
   }
+  var fallbackSlides=[
+    {heading:'Mystic Vibe signature fragrance',image_url:'assets/images/hero-royal-marine.png',display_image_url:'assets/images/hero-royal-marine.png',transition_style:'fade',cta_text:'Explore',cta_link:'collection.html',is_published:true},
+    {heading:'Mystic Vibe fragrance collection',image_url:'assets/images/p1.jpg',display_image_url:'assets/images/p1.jpg',transition_style:'slide-left',cta_text:'Explore',cta_link:'collection.html',is_published:true},
+    {heading:'Mystic Vibe signature scents',image_url:'assets/images/p2.jpg',display_image_url:'assets/images/p2.jpg',transition_style:'zoom',cta_text:'Explore',cta_link:'collection.html',is_published:true}
+  ];
+  function completeSlides(published){
+    var result=Array.isArray(published)?published.slice():[];
+    if(result.length>=2)return result;
+    fallbackSlides.forEach(function(candidate){
+      if(result.length>=3)return;
+      var candidateSource=candidate.display_image_url||candidate.image_url;
+      var alreadyPresent=result.some(function(item){
+        return (item.display_image_url||item.image_url)===candidateSource;
+      });
+      if(!alreadyPresent)result.push(candidate);
+    });
+    return result;
+  }
   function showFallback(){
-    slides=[];
+    slides=fallbackSlides.slice();
+    active=0;
     stop();
     syncControls();
     hero.classList.add('premium-hero-image-fallback');
-    if(headingNode) headingNode.textContent=fallback.heading;
-    if(descriptionNode) descriptionNode.textContent=fallback.description;
-    setHeroImage(fallbackImage,fallback.heading,'fade',function(){syncCta(fallback.cta_text,fallback.cta_link);});
+    show(0);
+    start();
   }
 
   createControls();
+  // Initialize a working fallback carousel immediately; published CMS slides replace it once loaded.
+  showFallback();
   hero.addEventListener('mouseenter',function(){pointerInside=true;stop();});
   hero.addEventListener('mouseleave',function(){pointerInside=false;start();});
   hero.addEventListener('focusin',function(){focusInside=true;stop();});
@@ -334,7 +350,7 @@
       showFallback();
       return;
     }
-    slides=incoming;
+    slides=completeSlides(incoming);
     show(0);
     start();
   });
