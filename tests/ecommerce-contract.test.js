@@ -213,6 +213,18 @@ test('FAQ question and answer text remains readable in the light gradient theme'
   assert.ok(theme.includes('-webkit-text-fill-color: #575148 !important'));
 });
 
+test('Floating contact icon stays visible and safely falls back to the Contact page when WhatsApp is not configured', async () => {
+  const app = await read('js/app.js');
+  const sync = await read('js/storefront-sync.js');
+  const theme = await read('css/theme-system.css');
+  assert.ok(app.includes('class="whatsapp-float" href="'+pagePath('contact.html')+'" aria-label="Contact Mystic Vibe"'));
+  assert.ok(sync.includes('Always keep the floating contact action available'));
+  assert.ok(sync.includes('whatsapp.hidden = false'));
+  assert.ok(sync.includes("new URL('../contact.html', import.meta.url).href"));
+  assert.ok(sync.includes("whatsapp.href = 'https://wa.me/' + phone"));
+  assert.ok(theme.includes('.whatsapp-float:not([hidden])'));
+});
+
 test('Mobile header menu opens as a readable glass grid and account actions dock beside contact', async () => {
   const app = await read('js/app.js');
   const theme = await read('css/theme-system.css');

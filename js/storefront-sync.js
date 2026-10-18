@@ -285,13 +285,22 @@ function applySiteContent(rows) {
   const phone = String(contact.whatsapp_phone || '').replace(/\D/g, '');
   const whatsapp = document.querySelector('.whatsapp-float');
   if (whatsapp) {
+    // Always keep the floating contact action available. Use WhatsApp when the
+    // store owner configured a valid number; otherwise link to the Contact page.
+    whatsapp.hidden = false;
+    whatsapp.removeAttribute('aria-hidden');
     if (/^[1-9][0-9]{7,14}$/.test(phone)) {
       whatsapp.href = 'https://wa.me/' + phone;
-      whatsapp.hidden = false;
-      whatsapp.removeAttribute('aria-hidden');
+      whatsapp.setAttribute('aria-label', 'Chat with Mystic Vibe on WhatsApp');
+      whatsapp.title = 'Chat on WhatsApp';
+      whatsapp.target = '_blank';
+      whatsapp.rel = 'noopener noreferrer';
     } else {
-      whatsapp.hidden = true;
-      whatsapp.setAttribute('aria-hidden', 'true');
+      whatsapp.href = new URL('../contact.html', import.meta.url).href;
+      whatsapp.setAttribute('aria-label', 'Contact Mystic Vibe');
+      whatsapp.title = 'Contact Mystic Vibe';
+      whatsapp.removeAttribute('target');
+      whatsapp.removeAttribute('rel');
     }
   }
 
