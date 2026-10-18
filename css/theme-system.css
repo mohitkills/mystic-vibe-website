@@ -1110,3 +1110,79 @@ body:not([data-theme="dark"]) .premium-hero.is-dragging .premium-hero-media {
     transition: none !important;
   }
 }
+
+
+/* Ultra-compact hero slider controls — shrink the entire glass pill by about 60%. */
+body:not([data-theme="dark"]) .premium-slide-controls {
+  gap: 2px !important;
+  padding: 2px 3px !important;
+  min-height: 0 !important;
+  border-width: 1px !important;
+  box-shadow: 0 4px 12px rgba(45,38,25,.1) !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-arrow {
+  flex: 0 0 16px !important;
+  width: 16px !important;
+  min-width: 16px !important;
+  max-width: 16px !important;
+  height: 16px !important;
+  min-height: 16px !important;
+  max-height: 16px !important;
+  padding: 0 !important;
+  border-width: 1px !important;
+  font-size: 11px !important;
+  line-height: 14px !important;
+}
+body:not([data-theme="dark"]) .premium-slide-dots {
+  gap: 1px !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot {
+  flex: 0 0 7px !important;
+  width: 7px !important;
+  min-width: 7px !important;
+  max-width: 7px !important;
+  height: 16px !important;
+  min-height: 16px !important;
+  max-height: 16px !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot::before {
+  width: 4px !important;
+  height: 4px !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot[aria-current="true"] {
+  flex-basis: 9px !important;
+  width: 9px !important;
+  min-width: 9px !important;
+  max-width: 9px !important;
+  height: 16px !important;
+  min-height: 16px !important;
+  max-height: 16px !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot[aria-current="true"]::before {
+  width: 8px !important;
+  height: 4px !important;
+}
+@media (max-width: 760px) {
+  body:not([data-theme="dark"]) .premium-slide-controls {
+    bottom: 6px !important;
+    gap: 2px !important;
+    padding: 2px 3px !important;
+  }
+  body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-arrow {
+    flex: 0 0 15px !important;
+    width: 15px !important;
+    min-width: 15px !important;
+    max-width: 15px !important;
+    height: 15px !important;
+    min-height: 15px !important;
+    max-height: 15px !important;
+    font-size: 10px !important;
+    line-height: 13px !important;
+  }
+  body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot,
+  body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot[aria-current="true"] {
+    height: 15px !important;
+    min-height: 15px !important;
+    max-height: 15px !important;
+  }
+}

@@ -314,8 +314,8 @@ test('Hero slider supports mouse drag and touch swipe with compact controls', as
   assert.ok(home.includes("var swipeThreshold=44"));
   assert.ok(home.includes("show(active+(deltaX<0?1:-1))"));
   assert.ok(home.includes("media.style.touchAction='pan-y'"));
-  assert.ok(css.includes('flex: 0 0 28px !important'));
-  assert.ok(css.includes('width: 28px !important'));
+  assert.ok(css.includes('flex: 0 0 16px !important'));
+  assert.ok(css.includes('width: 15px !important'));
   assert.ok(css.includes('.premium-slide-controls .premium-slide-dot::before'));
   assert.ok(css.includes('width: 15px'));
   assert.ok(css.includes('cursor: grabbing'));
