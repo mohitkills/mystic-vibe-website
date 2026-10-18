@@ -203,6 +203,14 @@ test('newsletter signups are stored through a restricted server function and man
   assert.match(marketing, /newsletter_subscribers/);
 });
 
+test('Admin light buttons use readable dark text before hover, on focus and while disabled', async () => {
+  const css = await read('css/admin.css');
+  assert.match(css, /body\.admin-page \.admin-main button\.btn\.light,[\s\S]*?-webkit-text-fill-color: #292620 !important/);
+  assert.match(css, /body\.admin-page \.admin-main button\.btn\.light:hover[\s\S]*?background: rgba\(180,154,96,\.18\) !important/);
+  assert.match(css, /body\.admin-page \.admin-main button\.btn\.light:disabled[\s\S]*?color: #575148 !important/);
+  assert.match(css, /button\.btn\.light,body\.admin-page a\.btn\.light/);
+});
+
 test('Reference ivory-glass theme is bright-only, readable, and preserves storefront integrations', async () => {
   const home = await read('js/premium-home.js');
   const theme = await read('css/theme-system.css');

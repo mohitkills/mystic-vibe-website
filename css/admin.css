@@ -92,3 +92,46 @@ body.admin-page .admin-main .error,
 body.admin-page .admin-main [aria-invalid="true"] + small { color: #9b2929 !important; }
 body.admin-page .admin-main .success,
 body.admin-page .admin-main .good { color: #28623b !important; }
+
+
+/* Final button-contrast correction: light/secondary buttons must be readable
+   at rest, not only after hover. Keep the dark primary actions white-on-charcoal. */
+body.admin-page .admin-main button.btn.light,
+body.admin-page .admin-main a.btn.light,
+body.admin-page .admin-topbar button.btn.light,
+body.admin-page .admin-topbar a.btn.light,
+body.admin-page button.btn.light,
+body.admin-page a.btn.light {
+  color: #292620 !important;
+  -webkit-text-fill-color: #292620 !important;
+  background: rgba(255,255,255,.88) !important;
+  border-color: rgba(41,38,32,.24) !important;
+}
+body.admin-page .admin-main button.btn.light *,
+body.admin-page .admin-main a.btn.light *,
+body.admin-page .admin-topbar button.btn.light *,
+body.admin-page .admin-topbar a.btn.light * {
+  color: #292620 !important;
+  -webkit-text-fill-color: #292620 !important;
+}
+body.admin-page .admin-main button.btn.light:hover,
+body.admin-page .admin-main a.btn.light:hover,
+body.admin-page .admin-topbar button.btn.light:hover,
+body.admin-page .admin-topbar a.btn.light:hover,
+body.admin-page button.btn.light:focus-visible,
+body.admin-page a.btn.light:focus-visible {
+  color: #191919 !important;
+  -webkit-text-fill-color: #191919 !important;
+  background: rgba(180,154,96,.18) !important;
+  border-color: #B49A60 !important;
+}
+body.admin-page .admin-main button.btn.light:disabled,
+body.admin-page .admin-main button.btn.light[disabled],
+body.admin-page .admin-topbar button.btn.light:disabled {
+  color: #575148 !important;
+  -webkit-text-fill-color: #575148 !important;
+  background: #f0eee8 !important;
+  border-color: rgba(41,38,32,.18) !important;
+  opacity: 1 !important;
+  cursor: not-allowed;
+}
