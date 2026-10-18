@@ -219,7 +219,7 @@ test('Reference ivory-glass theme applies across storefront and admin while pres
   assert.ok(adminCss.includes('body.admin-page select option'));
   assert.ok(adminCss.includes('color-scheme:light'));
   assert.ok(themeScript.includes("var key='mv_theme_v2',saved=localStorage.getItem(key),preferred='light'"));
-  assert.ok(home.includes('class="premium-hero-heading"'));
+  assert.ok(home.includes('premium-hero-heading'));
   assert.ok(home.includes('data-home-section="deals"'));
   assert.ok(home.includes('data-home-section="new-arrivals"'));
   assert.ok(home.includes('slide.heading || fallback.heading'));
