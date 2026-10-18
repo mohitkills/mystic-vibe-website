@@ -112,8 +112,11 @@
     }
 
     var probe=new Image();
+    var loadHandled=false;
     probe.onload=function(){
-      if(request!==imageRequest) return;
+      if(request!==imageRequest || loadHandled) return;
+      loadHandled=true;
+      hero.classList.remove('premium-hero-image-fallback');
       var oldImage=activeImage;
       var incomingImage=inactiveImage;
       var style=transitionNames.includes(requestedTransition) ? requestedTransition : 'fade';
