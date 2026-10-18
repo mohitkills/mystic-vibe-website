@@ -203,6 +203,39 @@ test('newsletter signups are stored through a restricted server function and man
   assert.match(marketing, /newsletter_subscribers/);
 });
 
+test('Storefront header exposes live product search and a profile menu with secure settings and logout', async () => {
+  const app = await read('js/app.js');
+  const auth = await read('js/auth.js');
+  const menu = await read('js/site-account-menu.js');
+  const searchCss = await read('css/premium.css');
+  assert.ok(app.includes('data-site-search role="search"'));
+  assert.ok(app.includes('data-site-search-input name="search"'));
+  assert.ok(app.includes('searchCatalogProducts(searchQuery)'));
+  assert.ok(app.includes("new URLSearchParams(location.search).get('search')"));
+  assert.ok(app.includes('data-account-toggle'));
+  assert.ok(app.includes('js/site-account-menu.js'));
+  assert.ok(auth.includes("new URL('/account.html', location.origin)"));
+  assert.ok(!auth.includes("supabase.auth.signOut({ scope: 'local' })"), 'account/profile navigation must not silently sign out');
+  assert.ok(menu.includes('Profile Settings'));
+  assert.ok(menu.includes('My Orders'));
+  assert.ok(menu.includes('supabase.auth.signOut'));
+  assert.ok(searchCss.includes('.site-search-suggestions[hidden], .account-menu-panel[hidden]'));
+  assert.ok(searchCss.includes('.site-search-suggestions'));
+});
+
+test('Profile Settings updates authenticated user metadata and optionally changes password', async () => {
+  const html = await read('profile-settings.html');
+  const script = await read('js/profile-settings.js');
+  assert.ok(html.includes('data-page="profile-settings"'));
+  assert.ok(html.includes('js/profile-settings.js'));
+  assert.ok(script.includes('supabase.auth.getUser()'));
+  assert.ok(script.includes('supabase.auth.updateUser(payload)'));
+  assert.ok(script.includes('first_name: firstName'));
+  assert.ok(script.includes('last_name: lastName'));
+  assert.ok(script.includes('payload.password = password'));
+  assert.ok(script.includes('password !== confirmPassword'));
+});
+
 test('legacy page guards do not suppress the live checkout, tracking and newsletter modules', async () => {
   const app = await read('js/app.js');
   const checkout = await read('js/checkout.js');

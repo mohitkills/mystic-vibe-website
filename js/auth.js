@@ -21,26 +21,20 @@ function notify(message) {
 
 function updateAccountLinks(session) {
   currentSession = session;
-  document.querySelectorAll('.nav-actions a[href$="login.html"], .nav-actions a[href$="account.html"], .mobile-account-link').forEach(function (link) {
-    const label = session ? 'Sign out' : 'Sign in';
+  // Profile actions now live in the dedicated profile menu. Opening My Account
+  // must navigate to the account page and must never silently sign the user out.
+  document.querySelectorAll('.nav-actions a[href$="login.html"]').forEach(function (link) {
+    const label = session ? 'My account' : 'Sign in';
     link.setAttribute('aria-label', label);
     link.setAttribute('title', label);
   });
 }
 
-document.addEventListener('click', async function (event) {
-  const link = event.target.closest('.nav-actions a[href$="login.html"], .nav-actions a[href$="account.html"], .mobile-account-link');
+document.addEventListener('click', function (event) {
+  const link = event.target.closest('.nav-actions a[href$="login.html"]');
   if (!link || !currentSession) return;
-
   event.preventDefault();
-  try {
-    const { error } = await supabase.auth.signOut({ scope: 'local' });
-    if (error) throw error;
-    notify('Signed out.');
-  } catch (error) {
-    console.error('Supabase sign-out failed:', error);
-    notify('Unable to sign out. Please try again.');
-  }
+  window.location.assign(new URL('/account.html', location.origin).href);
 });
 
 supabase.auth.onAuthStateChange(function (_event, session) {
