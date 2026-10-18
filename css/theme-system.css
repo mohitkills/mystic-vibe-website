@@ -984,3 +984,16 @@ body:not([data-theme="dark"]) .whatsapp-float[hidden] { display: none !important
     box-shadow: none !important;
   }
 }
+
+
+/* Halve the hero carousel height while preserving full-bleed images and controls. */
+@media (min-width: 761px) {
+  body:not([data-theme="dark"]) .premium-hero {
+    min-height: clamp(280px, calc(50svh - 90px), 380px) !important;
+  }
+}
+@media (max-width: 760px) {
+  body:not([data-theme="dark"]) .premium-hero {
+    min-height: 280px !important;
+  }
+}

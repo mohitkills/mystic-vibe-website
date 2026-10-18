@@ -305,6 +305,15 @@ test('Global glass background and category tiles match the beige-mint-lavender r
   assert.ok(adminCss.includes('#E9E6F1'));
 });
 
+test('Hero carousel is reduced to half height on desktop and mobile with controls retained', async () => {
+  const css = await read('css/theme-system.css');
+  assert.ok(css.includes('min-height: clamp(280px, calc(50svh - 90px), 380px) !important'));
+  assert.ok(css.includes('@media (max-width: 760px)'));
+  assert.ok(css.includes('min-height: 280px !important'));
+  assert.ok(css.includes('.premium-slide-controls'));
+  assert.ok(css.includes('object-fit: cover !important'));
+});
+
 test('Homepage places Shop by category below Find your fragrance family with glass fill hover animation', async () => {
   const home = await read('js/premium-home.js');
   const css = await read('css/theme-system.css');
