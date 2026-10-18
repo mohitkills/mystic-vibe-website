@@ -419,6 +419,33 @@ test('Reference ivory-glass theme is bright-only, readable, and preserves storef
   assert.ok(!heroMarkup.includes('>Explore</a>'));
 });
 
+test('Product cards match the compact retail reference while preserving cart, wishlist, and truthful pricing', async () => {
+  const app = await read('js/app.js');
+  const css = await read('css/theme-system.css');
+  const start = app.indexOf('function productCard(p){');
+  const end = app.indexOf('function galleryControlsMarkup(p,images){', start);
+  assert.ok(start >= 0 && end > start);
+  const card = app.slice(start, end);
+  assert.ok(card.includes('product-card-bestseller'));
+  assert.ok(card.includes('product-card-discount'));
+  assert.ok(card.includes('discountPercent'));
+  assert.ok(card.includes('p.mrp>priceValue'));
+  assert.ok(card.includes('product-card-kicker'));
+  assert.ok(card.includes('product-card-price-original'));
+  assert.ok(card.includes('data-add='));
+  assert.ok(card.includes('data-wish='));
+  assert.ok(card.includes('p.rating'));
+  assert.ok(card.includes('ratingValue.toFixed(1)'));
+  assert.ok(css.includes('.product-card-image-stage > .visual'));
+  assert.ok(css.includes('aspect-ratio: 4 / 5 !important'));
+  assert.ok(css.includes('.product-card-bestseller'));
+  assert.ok(css.includes('.product-card-discount'));
+  assert.ok(css.includes('.product-card-wishlist'));
+  assert.ok(css.includes('.product-card-reference .product-card-add'));
+  assert.ok(css.includes('grid-template-columns: repeat(2,minmax(0,1fr)) !important'));
+  assert.ok(css.includes('text-transform: uppercase !important'));
+});
+
 test('Storefront header exposes live product search and a profile menu with secure settings and logout', async () => {
   const app = await read('js/app.js');
   const auth = await read('js/auth.js');
