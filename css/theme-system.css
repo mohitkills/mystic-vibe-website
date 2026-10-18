@@ -689,3 +689,154 @@ body:not([data-theme="dark"]) .whatsapp-float[hidden] { display: none !important
     max-height: 34px !important;
   }
 }
+
+
+/* Flipkart-inspired mobile bottom navigation, adapted to Mystic Vibe's ivory glass palette. */
+@media (max-width: 760px) {
+  body:not([data-theme="dark"]) .mobile-floating-actions {
+    position: fixed !important;
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1700 !important;
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: space-around !important;
+    flex-wrap: nowrap !important;
+    gap: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 7px 4px calc(5px + env(safe-area-inset-bottom, 0px)) !important;
+    box-sizing: border-box !important;
+    border: 0 !important;
+    border-top: 1px solid rgba(25,25,25,.09) !important;
+    border-radius: 14px 14px 0 0 !important;
+    background: rgba(255,255,255,.96) !important;
+    box-shadow: 0 -8px 28px rgba(45,40,32,.09) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(150%) !important;
+    backdrop-filter: blur(18px) saturate(150%) !important;
+  }
+  body:not([data-theme="dark"]) .mobile-floating-actions > a.mobile-nav-item,
+  body:not([data-theme="dark"]) .mobile-floating-actions > .mobile-nav-item,
+  body:not([data-theme="dark"]) .mobile-floating-actions .account-menu-wrap.mobile-nav-item,
+  body:not([data-theme="dark"]) .mobile-floating-actions > .mobile-dock-contact {
+    position: relative !important;
+    display: flex !important;
+    flex: 1 1 25% !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+    width: 25% !important;
+    max-width: 25% !important;
+    min-height: 54px !important;
+    height: 54px !important;
+    max-height: 60px !important;
+    margin: 0 !important;
+    padding: 2px 1px !important;
+    border: 0 !important;
+    border-radius: 9px !important;
+    background: transparent !important;
+    color: #666963 !important;
+    box-shadow: none !important;
+    font: 400 11px/1.15 Inter, sans-serif !important;
+    text-align: center !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    transform: none !important;
+    box-sizing: border-box !important;
+  }
+  body:not([data-theme="dark"]) .mobile-floating-actions .mobile-nav-icon {
+    display: block !important;
+    flex: 0 0 24px !important;
+    width: 24px !important;
+    min-width: 24px !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    max-height: 24px !important;
+    color: currentColor !important;
+    overflow: visible;
+  }
+  body:not([data-theme="dark"]) .mobile-floating-actions .mobile-nav-label {
+    display: block !important;
+    max-width: 100%;
+    margin: 0 !important;
+    color: currentColor !important;
+    font: 400 11px/1.15 Inter, sans-serif !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  body:not([data-theme="dark"]) .mobile-floating-actions > a.mobile-nav-item:active,
+  body:not([data-theme="dark"]) .mobile-floating-actions .account-menu-trigger[aria-expanded="true"],
+  body:not([data-theme="dark"]) .mobile-floating-actions > .mobile-dock-contact:active {
+    background: rgba(180,154,96,.12) !important;
+    color: #806A37 !important;
+  }
+  body:not([data-theme="dark"]) .mobile-floating-actions .account-menu-wrap.mobile-nav-item {
+    position: relative !important;
+    flex-basis: 25% !important;
+  }
+  body:not([data-theme="dark"]) .mobile-floating-actions .account-menu-trigger {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 54px !important;
+    min-height: 54px !important;
+    max-height: 60px !important;
+    padding: 2px 1px !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 9px !important;
+    background: transparent !important;
+    color: #666963 !important;
+    box-shadow: none !important;
+  }
+  body:not([data-theme="dark"]) .mobile-floating-actions .account-menu-panel {
+    position: absolute !important;
+    top: auto !important;
+    bottom: calc(100% + 10px) !important;
+    left: auto !important;
+    right: 0 !important;
+    z-index: 1800 !important;
+    width: min(270px, calc(100vw - 24px)) !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: min(56svh, 400px) !important;
+    overflow: auto !important;
+  }
+  body:not([data-theme="dark"]) .mobile-floating-actions .badge {
+    top: 2px !important;
+    left: calc(50% + 4px) !important;
+    right: auto !important;
+    min-width: 15px !important;
+    height: 15px !important;
+    padding: 0 4px !important;
+    font-size: 9px !important;
+    line-height: 15px !important;
+  }
+  body:not([data-theme="dark"]) .mobile-floating-actions > .mobile-dock-contact {
+    position: relative !important;
+    right: auto !important;
+    bottom: auto !important;
+    z-index: auto !important;
+  }
+}
+@media (max-width: 340px) {
+  body:not([data-theme="dark"]) .mobile-floating-actions .mobile-nav-label {
+    font-size: 10px !important;
+  }
+  body:not([data-theme="dark"]) .mobile-floating-actions .mobile-nav-icon {
+    width: 22px !important;
+    min-width: 22px !important;
+    height: 22px !important;
+    min-height: 22px !important;
+  }
+}

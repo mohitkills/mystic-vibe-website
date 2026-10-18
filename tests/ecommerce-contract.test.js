@@ -213,6 +213,21 @@ test('FAQ question and answer text remains readable in the light gradient theme'
   assert.ok(theme.includes('-webkit-text-fill-color: #575148 !important'));
 });
 
+test('Mobile bottom navigation has four labeled icon actions and retains working destinations', async () => {
+  const app = await read('js/app.js');
+  const theme = await read('css/theme-system.css');
+  assert.ok(app.includes('class="mobile-nav-label">Wishlist</span>'));
+  assert.ok(app.includes('class="mobile-nav-label">Cart</span>'));
+  assert.ok(app.includes('class="mobile-nav-label">Account</span>'));
+  assert.ok(app.includes('class="mobile-nav-label">Contact</span>'));
+  assert.ok(app.includes("href=\\"'+pagePath('wishlist.html')+'\\""));
+  assert.ok(app.includes("href=\\"'+pagePath('cart.html')+'\\""));
+  assert.ok(app.includes("navActions.appendChild(contactAction)"));
+  assert.ok(theme.includes('display: flex !important'));
+  assert.ok(theme.includes('flex-direction: column !important'));
+  assert.ok(theme.includes('bottom: 0 !important'));
+});
+
 test('Mobile action icons move out of the header into a fixed dock beside contact and restore on desktop', async () => {
   const app = await read('js/app.js');
   const theme = await read('css/theme-system.css');
@@ -221,9 +236,12 @@ test('Mobile action icons move out of the header into a fixed dock beside contac
   assert.ok(app.includes("navActions.classList.add('mobile-floating-actions')"));
   assert.ok(app.includes("navActionsSlot.parentNode.insertBefore(navActions,navActionsSlot.nextSibling)"));
   assert.ok(theme.includes('body:not([data-theme="dark"]) .mobile-floating-actions'));
-  assert.ok(theme.includes('right: calc(68px + env(safe-area-inset-right, 0px)) !important'));
-  assert.ok(theme.includes('right: calc(12px + env(safe-area-inset-right, 0px)) !important'));
+  assert.ok(theme.includes('justify-content: space-around !important'));
+  assert.ok(theme.includes('border-top: 1px solid rgba(25,25,25,.09) !important'));
+  assert.ok(theme.includes('.mobile-nav-label'));
+  assert.ok(theme.includes('.mobile-floating-actions > .mobile-dock-contact'));
   assert.ok(theme.includes('body:not([data-theme="dark"]) .mobile-floating-actions .account-menu-panel'));
+  assert.ok(app.includes('class="mobile-nav-label">Contact</span></a>'));
   assert.ok(theme.includes('max-width: 340px'));
 });
 
