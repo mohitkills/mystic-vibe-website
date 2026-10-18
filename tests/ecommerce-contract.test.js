@@ -176,18 +176,27 @@ test('legacy page guards do not suppress the live checkout, tracking and newslet
   assert.ok(account.includes('event.stopImmediatePropagation()'), 'tracking handles its own submit without bubbling to legacy handlers');
   assert.ok(newsletter.includes('event.stopPropagation()'), 'newsletter handles its own submit without legacy override');
 });
-test('homepage hero is image-first with one CMS-configurable CTA and never swaps to an unpreloaded image', async () => {
+test('homepage has exactly one image-first hero, one configurable CTA and animated buffered slides', async () => {
   const premium = await read('js/premium-home.js');
   const sync = await read('js/storefront-sync.js');
   const html = await read('admin.html');
+  const homeHtml = await read('index.html');
   const css = await read('css/premium.css');
-  assert.match(premium, /class="premium-hero-media"><img/);
-  assert.match(premium, /class="premium-hero-actions"><a class="btn" href="collection\.html">Explore<\/a>/);
+  const cms = await read('js/cms-records.js');
+  const admin = await read('js/admin.js');
+  const migration = await read('supabase/migrations/20261018100000_hero_slider_transition_styles.sql');
+
+  assert.equal((premium.match(/class="premium-hero"/g) || []).length, 1, 'only one hero section is rendered');
+  assert.equal((premium.match(/premium-hero-actions"><a/g) || []).length, 1, 'only one CTA is rendered');
+  assert.equal((homeHtml.match(/js\/premium-home\.js/g) || []).length, 1, 'hero controller is loaded once');
   assert.doesNotMatch(premium, /Discover Signatures|<h1 class="serif">Every Scent/);
-  assert.match(premium, /function setHeroImage\(source, alt\)/);
+  assert.doesNotMatch(premium, /premium-slide-controls|Previous homepage slide|Next homepage slide/);
+  assert.match(premium, /hero\.dataset\.sliderInitialized==='true'/, 'repeat initialization is guarded');
+  assert.match(premium, /inactiveImage=document\.createElement\('img'\)/, 'next image uses a separate buffered layer');
   assert.match(premium, /probe\.onload=function\(\)/);
   assert.match(premium, /probe\.onerror=function\(\)/);
-  assert.match(premium, /image\.src=fallbackImage/);
+  assert.match(premium, /finishTransition\(request,oldImage,incomingImage,alt\)/);
+  assert.match(premium, /slide\.transition_style\s*\|\|\s*'fade'/);
   assert.match(premium, /cta_text/);
   assert.match(premium, /cta_link/);
   assert.match(premium, /showFallback\(\)/);
@@ -195,9 +204,22 @@ test('homepage hero is image-first with one CMS-configurable CTA and never swaps
   assert.match(sync, /window\.MV_HOMEPAGE_SLIDES = await hydrateSlideImages\(publishedSlides\)/);
   assert.match(sync, /window\.MV_STOREFRONT_CMS_CONNECTED = Array\.isArray\(products\)/);
   assert.match(sync, /mergeCatalogBySlug\(\[\], mappedProducts/);
-  assert.match(html, /Slide name \(admin only\)/);
+  assert.match(html, /Slide transition<select name="transition_style"/);
   assert.match(html, /Button text<input name="cta_text"/);
-  assert.match(html, /Button link<input name="cta_link"/);
+  assert.match(html, /Button destination<input name="cta_link"/);
+  assert.match(html, /Claim Now/);
+  assert.match(html, /New slide/);
+  assert.match(html, /Duplicate/);
+  assert.match(html, /Move up/);
   assert.doesNotMatch(html, /Subtitle<input name="subtitle"/);
-  assert.match(css, /\.hero-note\{display:none!important\}/);
+  assert.match(admin, /transition_style: formValue\(form, 'transition_style'\)/);
+  assert.match(admin, /'transition_style'\]\)/);
+  assert.match(cms, /transition_style:\s*transitionStyle/);
+  assert.match(css, /\.premium-hero-media img\.premium-hero-image\.hero-transition-slide-left/);
+  assert.match(css, /@keyframes mvHeroFade/);
+  assert.match(css, /@keyframes mvHeroSlideLeft/);
+  assert.match(css, /@keyframes mvHeroSlideUp/);
+  assert.match(css, /@keyframes mvHeroZoom/);
+  assert.match(migration, /add column if not exists transition_style text not null default 'fade'/i);
+  assert.match(migration, /check \(transition_style in \('fade', 'slide-left', 'slide-up', 'zoom'\)\)/i);
 });
