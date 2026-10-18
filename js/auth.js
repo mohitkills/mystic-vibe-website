@@ -21,26 +21,20 @@ function notify(message) {
 
 function updateAccountLinks(session) {
   currentSession = session;
-  document.querySelectorAll('.nav-actions a[href$="login.html"], .mobile-account-link').forEach(function (link) {
-    const label = session ? 'Sign out' : 'Sign in';
+  // Profile actions now live in the dedicated profile menu. Opening My Account
+  // must navigate to the account page and must never silently sign the user out.
+  document.querySelectorAll('.nav-actions a[href$="login.html"]').forEach(function (link) {
+    const label = session ? 'My account' : 'Sign in';
     link.setAttribute('aria-label', label);
     link.setAttribute('title', label);
   });
 }
 
-document.addEventListener('click', async function (event) {
-  const link = event.target.closest('.nav-actions a[href$="login.html"], .mobile-account-link');
+document.addEventListener('click', function (event) {
+  const link = event.target.closest('.nav-actions a[href$="login.html"]');
   if (!link || !currentSession) return;
-
   event.preventDefault();
-  try {
-    const { error } = await supabase.auth.signOut({ scope: 'local' });
-    if (error) throw error;
-    notify('Signed out.');
-  } catch (error) {
-    console.error('Supabase sign-out failed:', error);
-    notify('Unable to sign out. Please try again.');
-  }
+  window.location.assign(new URL('/account.html', location.origin).href);
 });
 
 supabase.auth.onAuthStateChange(function (_event, session) {
@@ -127,7 +121,18 @@ if (authForm) {
         return;
       }
 
-      window.location.assign('index.html');
+      if (page === 'login') {
+        let isAdmin = false;
+        try {
+          const roleResult = await supabase.rpc('is_current_user_admin');
+          isAdmin = !roleResult.error && roleResult.data === true;
+        } catch (roleError) {
+          console.warn('Could not determine account role after sign-in:', roleError?.message || roleError);
+        }
+        window.location.assign(isAdmin ? 'admin.html' : 'account.html');
+      } else {
+        window.location.assign('index.html');
+      }
     } catch (error) {
       console.error('Supabase authentication failed:', error);
       feedback.textContent = error.message || 'Authentication failed. Please try again.';

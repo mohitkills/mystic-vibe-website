@@ -171,7 +171,11 @@ async function hydrateProductImages(products, imageSlotsBySlug) {
 
 function rerenderImagePage() {
   const page = document.body.dataset.page;
-  if (page === 'home') window.renderMysticVibeHome?.();
+  // The premium-home controller owns homepage markup. Re-rendering the legacy
+  // app.js home template here restores its multi-panel hero and detaches the
+  // CMS-controlled single-viewport slider. The home controller updates its
+  // products and slides from the storefront data event instead.
+  if (page === 'home') return;
   if (page === 'collection') window.renderMysticVibeCollection?.();
   if (page === 'product') window.renderMysticVibeProduct?.();
 }
@@ -206,6 +210,19 @@ function toStorefrontProduct(row, collectionNames) {
     product.notes = htmlText(notesText(row.fragrance_notes));
   }
   if (typeof row.is_featured === 'boolean') product.best = row.is_featured;
+  if (typeof row.storefront_category === 'string' && row.storefront_category.trim()) {
+    product.storefront_category = row.storefront_category;
+    product.storefront_category_label = ({
+      deals: 'Crazy Deals',
+      bestsellers: 'Bestsellers',
+      perfumes: 'Perfumes',
+      'fresh-aquatic': 'Fresh & Aquatic',
+      'woody-amber': 'Woody & Amber',
+      'fruity-floral': 'Fruity & Floral',
+      'new-arrivals': 'New Arrivals',
+      'gift-sets': 'Gift Sets',
+    })[row.storefront_category] || 'Perfumes';
+  }
   if (row.collection_id) {
     product.collection_id = row.collection_id;
     const collectionName = collectionNames.get(row.collection_id);
@@ -226,7 +243,7 @@ async function readPublished(table) {
     const { data, error } = await query.range(offset, offset + batchSize - 1);
     if (error) {
       console.warn(`Mystic Vibe could not load published ${table}:`, error.message);
-      return [];
+      return null;
     }
     rows.push(...(Array.isArray(data) ? data : []));
     if (!data || data.length < batchSize) break;
@@ -263,20 +280,89 @@ function applySiteContent(rows) {
     const text = typeof value === 'string' ? value : (value && typeof value.text === 'string' ? value.text : null);
     if (text !== null) node.textContent = text;
   });
+
+  const contact = content['store.contact'] && typeof content['store.contact'] === 'object' ? content['store.contact'] : {};
+  const phone = String(contact.whatsapp_phone || '').replace(/\D/g, '');
+  const whatsapp = document.querySelector('.whatsapp-float');
+  if (whatsapp) {
+    // Always keep the floating contact action available. Use WhatsApp when the
+    // store owner configured a valid number; otherwise link to the Contact page.
+    whatsapp.hidden = false;
+    whatsapp.removeAttribute('aria-hidden');
+    if (/^[1-9][0-9]{7,14}$/.test(phone)) {
+      whatsapp.href = 'https://wa.me/' + phone;
+      whatsapp.setAttribute('aria-label', 'Chat with Mystic Vibe on WhatsApp');
+      whatsapp.title = 'Chat on WhatsApp';
+      whatsapp.target = '_blank';
+      whatsapp.rel = 'noopener noreferrer';
+    } else {
+      whatsapp.href = new URL('../contact.html', import.meta.url).href;
+      whatsapp.setAttribute('aria-label', 'Contact Mystic Vibe');
+      whatsapp.title = 'Contact Mystic Vibe';
+      whatsapp.removeAttribute('target');
+      whatsapp.removeAttribute('rel');
+    }
+  }
+
+  const supportEmail = typeof contact.support_email === 'string' ? contact.support_email.trim() : '';
+  const exploreLinks = [...document.querySelectorAll('.footer-grid .links')].find((group) =>
+    group.querySelector('a[href$="contact.html"]'));
+  if (exploreLinks) {
+    let emailLink = exploreLinks.querySelector('[data-store-support-email]');
+    if (supportEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supportEmail)) {
+      if (!emailLink) {
+        emailLink = document.createElement('a');
+        emailLink.dataset.storeSupportEmail = 'true';
+        emailLink.textContent = 'Email support';
+        exploreLinks.append(emailLink);
+      }
+      emailLink.href = 'mailto:' + supportEmail;
+      emailLink.hidden = false;
+    } else if (emailLink) emailLink.hidden = true;
+  }
+
+  const copyright = document.querySelector('#site-footer .copyright');
+  if (copyright) {
+    copyright.textContent = '© 2026 Mystic Vibe. All rights reserved.';
+    for (const [key, title] of [['instagram_url', 'Instagram'], ['facebook_url', 'Facebook']]) {
+      let url = '';
+      try {
+        const parsed = new URL(String(contact[key] || ''));
+        if (parsed.protocol === 'https:' && !parsed.username && !parsed.password) url = parsed.href;
+      } catch { /* Optional social links may be unset. */ }
+      if (!url) continue;
+      const separator = document.createTextNode(' · ');
+      const link = document.createElement('a');
+      link.href = url;
+      link.textContent = title;
+      link.rel = 'noopener noreferrer';
+      link.target = '_blank';
+      copyright.append(separator, link);
+    }
+  }
 }
 
 async function applyRemoteData({ products, collections, slides, content }) {
-  const collectionNames = new Map(collections.filter((row) => row?.is_published).map((row) => [row.id, row.name]));
-  const mappedProducts = products.map((row) => toStorefrontProduct(row, collectionNames)).filter(Boolean);
+  window.MV_STOREFRONT_CMS_CONNECTED = Array.isArray(products);
+  const publishedCollections = Array.isArray(collections) ? collections : (window.MV_COLLECTIONS || []);
+  const publishedSlidesSource = Array.isArray(slides) ? slides : (window.MV_HOMEPAGE_SLIDES || []);
+  const publishedContent = Array.isArray(content) ? content : null;
+  const collectionNames = new Map(publishedCollections.filter((row) => row?.is_published).map((row) => [row.id, row.name]));
+  const productReadFailed = !Array.isArray(products);
+  const mappedProducts = (Array.isArray(products) ? products : []).map((row) => toStorefrontProduct(row, collectionNames)).filter(Boolean);
   const imageSlotsBySlug = new Map(mappedProducts.map(({ product, imageSlots }) => [product.slug, imageSlots]));
   const fallback = window.MV_STATIC_PRODUCTS || [];
-  const mergedProducts = mergeCatalogBySlug(fallback, mappedProducts.map(({ product }) => product));
+  // Only show fallback catalog cards if the CMS request itself failed. On a healthy connection,
+  // visitors see published database records only, so every visible product can be checked out.
+  const mergedProducts = productReadFailed
+    ? mergeCatalogBySlug(fallback, mappedProducts.map(({ product }) => product))
+    : mergeCatalogBySlug([], mappedProducts.map(({ product }) => product));
   window.MV_PRODUCTS.splice(0, window.MV_PRODUCTS.length, ...mergedProducts);
-  window.MV_COLLECTIONS = collections.filter((row) => row?.is_published);
-  const publishedSlides = slides.filter((row) => row?.is_published)
+  window.MV_COLLECTIONS = publishedCollections.filter((row) => row?.is_published);
+  const publishedSlides = publishedSlidesSource.filter((row) => row?.is_published)
     .sort((left, right) => Number(left.sort_order) - Number(right.sort_order) || String(left.created_at || '').localeCompare(String(right.created_at || '')));
-  window.MV_HOMEPAGE_SLIDES = await hydrateSlideImages(publishedSlides);
-  applySiteContent(content);
+  if (Array.isArray(slides)) window.MV_HOMEPAGE_SLIDES = await hydrateSlideImages(publishedSlides);
+  if (publishedContent) applySiteContent(publishedContent);
   rerenderImagePage();
 
   await Promise.all([hydrateProductImages(mergedProducts, imageSlotsBySlug)]);

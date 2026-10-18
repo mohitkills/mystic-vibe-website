@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="css/premium.css">
   <link rel="stylesheet" href="css/admin.css">
   <link rel="stylesheet" href="css/admin-product-upload.css">
+  <link rel="stylesheet" href="css/orders-enhanced.css">
 </head>
 <body class="admin-page">
   <header class="admin-topbar">
@@ -43,20 +44,50 @@
       </section>
       <nav class="admin-tabs" aria-label="Admin sections">
         <button type="button" class="active" data-tab="products">Products</button>
+        <button type="button" data-tab="orders">Orders</button>
+        <button type="button" data-tab="customers">Customers</button>
+        <button type="button" data-tab="coupons">Coupons & Offers</button>
+        <button type="button" data-tab="marketing">Newsletter</button>
         <button type="button" data-tab="collections">Collections</button>
         <button type="button" data-tab="slides">Homepage slides</button>
         <button type="button" data-tab="content">Site content</button>
         <button type="button" data-tab="media">Media library</button>
+        <button type="button" data-tab="settings">Store settings</button>
+        <button type="button" data-tab="team">Team Access</button>
       </nav>
+
+      <section class="admin-panel" data-panel="team" hidden>
+        <div class="admin-panel-heading">
+          <div><span class="eyebrow">Store ownership</span><h2 class="serif">Team Access</h2><p>Invite trusted people without sharing your password. Only the owner can change access.</p></div>
+        </div>
+        <form id="team-invite-form" class="panel admin-form">
+          <label class="wide">Team member email<input name="email" type="email" required maxlength="254" autocomplete="email" placeholder="teammate@example.com"></label>
+          <p class="admin-help wide">New users receive an email invitation. If the email already has a Mystic Vibe account, admin access is granted to that account without changing its password.</p>
+          <div class="form-actions wide"><button class="btn" type="submit" id="team-invite-submit">Invite team member</button></div>
+        </form>
+        <p id="team-access-status" class="admin-status" role="status" aria-live="polite"></p>
+        <div class="admin-panel-heading"><h3 class="serif">Authorized accounts</h3><button type="button" class="btn light" id="team-refresh">Refresh list</button></div>
+        <div id="team-member-list" class="admin-record-list" aria-live="polite"><p class="admin-help">Loading team access…</p></div>
+      </section>
 
       <section class="admin-panel active" data-panel="products">
         <div class="admin-panel-heading product-panel-heading"><div><span class="eyebrow">Inventory</span><h2 class="serif">Products</h2></div><div class="product-heading-actions"><button class="btn light" type="button" data-reset-form="product-form">New product</button><button class="btn product-save-primary" type="submit" form="product-form">Save Product</button></div></div>
-        <div class="product-list-tools" role="search"><label>Search products<input id="product-search" type="search" placeholder="Name, slug, SKU or notes"></label><label>Collection<select id="product-filter-collection"><option value="">All collections</option></select></label><label>Publication<select id="product-filter-status"><option value="">All products</option><option value="published">Published</option><option value="draft">Draft</option></select></label><label>Sort by<select id="product-sort"><option value="name">Name</option><option value="collection">Collection</option><option value="price">Price</option><option value="publication">Publication status</option></select></label></div>
+        <div class="product-list-tools" role="search"><label>Search products<input id="product-search" type="search" placeholder="Name, slug, SKU or notes"></label><label>Category<select id="product-filter-category"><option value="">All categories</option><option value="deals">Crazy Deals</option><option value="bestsellers">Bestsellers</option><option value="perfumes">Perfumes</option><option value="fresh-aquatic">Fresh &amp; Aquatic</option><option value="woody-amber">Woody &amp; Amber</option><option value="fruity-floral">Fruity &amp; Floral</option><option value="new-arrivals">New Arrivals</option><option value="gift-sets">Gift Sets</option></select></label><label>Collection<select id="product-filter-collection"><option value="">All collections</option></select></label><label>Publication<select id="product-filter-status"><option value="">All products</option><option value="published">Published</option><option value="draft">Draft</option></select></label><label>Sort by<select id="product-sort"><option value="name">Name</option><option value="category">Category</option><option value="collection">Collection</option><option value="price">Price</option><option value="publication">Publication status</option></select></label></div>
         <form id="product-form" class="panel admin-form">
           <input type="hidden" name="id">
           <label>Product name<input name="name" required maxlength="180"></label>
           <label>Slug<input name="slug" required maxlength="180" pattern="[a-z0-9]+(?:-[a-z0-9]+)*"></label>
-          <label>Collection<select name="collection_id"><option value="">No collection</option></select></label>
+          <label>Storefront category<select name="storefront_category" required>
+            <option value="perfumes" selected>Perfumes</option>
+            <option value="deals">Crazy Deals</option>
+            <option value="bestsellers">Bestsellers</option>
+            <option value="fresh-aquatic">Fresh &amp; Aquatic</option>
+            <option value="woody-amber">Woody &amp; Amber</option>
+            <option value="fruity-floral">Fruity &amp; Floral</option>
+            <option value="new-arrivals">New Arrivals</option>
+            <option value="gift-sets">Gift Sets</option>
+          </select><small>Choose where this product should appear in the storefront menu. Shop All includes every published product.</small></label>
+          <label>Collection (optional)<select name="collection_id"><option value="">No collection</option></select></label>
           <label>SKU<input name="sku" maxlength="100"></label>
           <label class="wide">Tagline<input name="tagline" maxlength="240"></label>
           <label class="wide">Description<textarea name="description" rows="3"></textarea></label>
@@ -77,9 +108,12 @@
         <div id="product-list" class="admin-record-list" aria-live="polite"></div>
       </section>
 
+      <section class="admin-panel" data-panel="customers" hidden><div class="panel"><h2 class="serif">Customers</h2><p>Loading customer list…</p></div></section>
+      <section class="admin-panel" data-panel="orders" hidden><div class="panel"><h2 class="serif">Customer Orders</h2><p>Loading the order management workspace…</p></div></section>
+
       <section class="admin-panel" data-panel="collections" hidden>
         <div class="admin-panel-heading"><div><span class="eyebrow">Catalog taxonomy</span><h2 class="serif">Collections</h2></div><div><button class="btn light" type="button" id="seed-collections">Add missing fragrance categories</button><button class="btn light" type="button" data-reset-form="collection-form">New collection</button></div></div>
-        <p class="admin-help">Suggested categories follow the fragrance families in the existing catalog. Product assignments are managed in the Products form. A collection with assigned products cannot be deleted; reassign those products first.</p>
+        <p class="admin-help">Storefront Category in the Products form controls the top navigation groups (Crazy Deals, Bestsellers, Perfumes, Fresh &amp; Aquatic, Woody &amp; Amber, Fruity &amp; Floral, New Arrivals and Gift Sets). Collections below are optional extra groupings. A collection with assigned products cannot be deleted; reassign those products first.</p>
         <form id="collection-form" class="panel admin-form">
           <input type="hidden" name="id">
           <label>Collection name<input name="name" required maxlength="180"></label>
@@ -95,16 +129,17 @@
       </section>
 
       <section class="admin-panel" data-panel="slides" hidden>
-        <div class="admin-panel-heading"><div><span class="eyebrow">Homepage</span><h2 class="serif">Slides</h2></div><button class="btn light" type="button" data-reset-form="slide-form">New slide</button></div>
+        <div class="admin-panel-heading"><div><span class="eyebrow">Homepage</span><h2 class="serif">Hero slider</h2><p>One full-screen image, one button. Add as many slides as you need.</p></div><button class="btn light" type="button" data-reset-form="slide-form">+ New slide</button></div>
+        <p class="admin-help">Each published slide uses its own image, button label, destination and transition. Save as a draft while preparing it, then publish it. Use Duplicate and Move up/Move down in the list to manage the order. The homepage shows only one hero at a time; it will never stack several hero sections.</p>
         <form id="slide-form" class="panel admin-form">
           <input type="hidden" name="id">
-          <label>Heading<input name="heading" required maxlength="180"></label>
-          <label>Subtitle<input name="subtitle" maxlength="260"></label>
-          <label>Button text<input name="cta_text" value="Explore"></label>
-          <label>Button link<input name="cta_link" value="/collection.html"></label>
-          <label>Image path<input name="image_url" placeholder="mystic-vibe-images/slides/... "></label>
-          <label class="file-field">Upload slide image<input name="slide-image" type="file" accept="image/jpeg,image/png,image/webp,image/avif"><small>The image stays private. A published slide image is delivered through the slide-image Edge Function.</small></label>
-          <label>Sort order<input name="sort_order" type="number" step="1" value="0"></label>
+          <label>Slide name (Admin only)<input name="heading" required maxlength="180" placeholder="e.g. Royal Marine launch"><small>Internal label and accessibility description only. This text is never overlaid on the hero image.</small></label>
+          <label>Button text<input name="cta_text" list="hero-cta-presets" value="Explore" maxlength="40" placeholder="Explore, Buy Now, Claim Now"><datalist id="hero-cta-presets"><option value="Explore"><option value="Buy Now"><option value="Claim Now"></datalist><small>Each slide has one button. Pick a suggestion or write your own.</small></label>
+          <label>Button destination<input name="cta_link" value="/collection.html" maxlength="500" placeholder="/products/royal-marine.html"><small>Use a store page path, e.g. /collection.html or /products/royal-marine.html.</small></label>
+          <label>Slide transition<select name="transition_style"><option value="fade">Soft fade</option><option value="slide-left">Slide from right</option><option value="slide-up">Rise from bottom</option><option value="zoom">Cinematic zoom</option></select><small>Animation used when this slide appears.</small></label>
+          <label>Slide order<input name="sort_order" type="number" step="1" value="0"><small>Lower numbers appear first. Use the Move up/Move down actions below to reorder.</small></label>
+          <label class="wide">Slide image path<input name="image_url" placeholder="mystic-vibe-images/slides/... "><small>Or upload a wide, high-resolution image below.</small></label>
+          <label class="file-field wide">Upload slide image<input name="slide-image" type="file" accept="image/jpeg,image/png,image/webp,image/avif"><small>Published images are delivered securely. An image must load before the slide is shown.</small></label>
           <label class="check-label"><input name="is_published" type="checkbox"> Published <small>Draft slides do not appear on the storefront.</small></label>
           <div class="form-actions wide"><button class="btn" type="submit">Save slide</button><button class="btn light" type="button" data-preview-slide>Preview</button><button class="btn light" type="button" data-reset-form="slide-form">Clear</button></div>
         </form>
@@ -135,6 +170,59 @@
         <p class="admin-help">Files are listed with temporary previews. Deletion is not offered because the current schema has no reference index to prove an object is unused.</p>
         <div id="media-library-list" class="admin-record-list" aria-live="polite"></div>
       </section>
+      <section class="admin-panel" data-panel="settings" hidden>
+        <div class="admin-panel-heading"><div><span class="eyebrow">Store configuration</span><h2 class="serif">Store Settings</h2><p>Manage delivery fees, Cash on Delivery, and the public support channels without editing code.</p></div></div>
+        <p id="store-settings-status" class="admin-status" role="status" aria-live="polite"></p>
+        <form id="store-shipping-form" class="panel admin-form">
+          <h3 class="serif wide">Shipping & payments</h3>
+          <label>Standard shipping fee (₹)<input name="standard_fee" type="number" min="0" max="100000" step="0.01" required value="0"></label>
+          <label>Free shipping above (₹)<input name="free_shipping_threshold" type="number" min="0" max="1000000" step="0.01" required value="0"><small>Enter 0 to disable a threshold. If the fee is ₹0, shipping remains free.</small></label>
+          <label class="check-label wide"><input type="checkbox" name="cod_enabled" checked> Enable Cash on Delivery</label>
+          <div class="form-actions wide"><button class="btn" type="submit">Save shipping settings</button></div>
+        </form>
+        <form id="store-copy-form" class="panel admin-form">
+          <h3 class="serif wide">Homepage & brand copy</h3>
+          <p class="admin-help wide">Edit the words shown in the homepage story, brand promise, value section and newsletter. For the large hero banner, use the Homepage Slides tab.</p>
+          <label class="wide">Featured collection description<textarea name="story_description" rows="3" maxlength="2000" placeholder="A short paragraph about the brand"></textarea></label>
+          <label class="wide">Brand promise<textarea name="brand_promise" rows="3" maxlength="2000" placeholder="What makes Mystic Vibe special?"></textarea></label>
+          <label class="wide">Why Mystic Vibe description<textarea name="why_description" rows="3" maxlength="2000" placeholder="Explain the brand's value"></textarea></label>
+          <label class="wide">Newsletter description<textarea name="newsletter_description" rows="3" maxlength="1000" placeholder="Copy shown beside the newsletter signup"></textarea></label>
+          <div class="form-actions wide"><button class="btn" type="submit">Save homepage copy</button></div>
+          <p class="admin-help wide">Only these supported homepage text fields are exposed here. This prevents accidentally breaking the storefront with invalid JSON.</p>
+        </form>
+        <form id="store-contact-form" class="panel admin-form">
+          <h3 class="serif wide">Public contact & social links</h3>
+          <label>Customer support email<input name="support_email" type="email" maxlength="254" placeholder="support@example.com"></label>
+          <label>WhatsApp number<input name="whatsapp_phone" inputmode="numeric" maxlength="15" placeholder="919876543210"><small>Include country code and digits only, for example 91 followed by the 10-digit mobile number.</small></label>
+          <label>Instagram profile URL<input name="instagram_url" type="url" maxlength="500" placeholder="https://www.instagram.com/yourbrand/"></label>
+          <label>Facebook page URL<input name="facebook_url" type="url" maxlength="500" placeholder="https://www.facebook.com/yourbrand"></label>
+          <div class="form-actions wide"><button class="btn" type="submit">Save contact settings</button></div>
+          <p class="admin-help wide">These details are public and can appear on the storefront. Never enter passwords, API keys or payment secrets here.</p>
+        </form>
+      </section>
+      <section class="admin-panel" data-panel="marketing" hidden><div class="panel"><h2 class="serif">Newsletter subscribers</h2><p>Loading newsletter subscribers…</p></div></section>
+      <section class="admin-panel" data-panel="coupons" hidden>
+        <div class="admin-panel-heading"><div><span class="eyebrow">Promotions</span><h2 class="serif">Coupons & Offers</h2><p>Create percentage or fixed discounts with date windows, minimum order values and redemption limits.</p></div><button class="btn light" type="button" data-coupon-new>New coupon</button></div>
+        <p id="coupon-admin-status" class="admin-status" role="status" aria-live="polite"></p>
+        <form id="coupon-form" class="panel admin-form" hidden>
+          <input type="hidden" name="id">
+          <h3 class="serif wide">Coupon details</h3>
+          <label>Coupon code<input name="code" required maxlength="40" pattern="[A-Za-z0-9_-]{3,40}" placeholder="MYSTIC10"></label>
+          <label>Description<input name="description" maxlength="180" placeholder="10% off selected orders"></label>
+          <label>Discount type<select name="discount_type" required><option value="percent">Percentage (%)</option><option value="fixed">Fixed amount (₹)</option></select></label>
+          <label>Discount value<input name="discount_value" type="number" required min="0.01" step="0.01"></label>
+          <label>Minimum order value (₹)<input name="minimum_order_value" type="number" min="0" max="1000000" step="0.01" value="0" required></label>
+          <label>Maximum discount (₹)<input name="maximum_discount" type="number" min="0" max="1000000" step="0.01" placeholder="Optional cap; useful for percentage offers"></label>
+          <label>Total redemption limit<input name="usage_limit" type="number" min="1" max="10000000" step="1" placeholder="Leave blank for unlimited"></label>
+          <label>Uses per email<input name="per_customer_limit" type="number" min="0" max="1000" step="1" value="1" required><small>0 means unlimited uses per email.</small></label>
+          <label>Starts at<input name="starts_at" type="datetime-local"></label>
+          <label>Ends at<input name="ends_at" type="datetime-local"></label>
+          <label class="check-label wide"><input name="is_active" type="checkbox" checked> Active</label>
+          <div class="form-actions wide"><button class="btn" type="submit">Save coupon</button><button class="btn light" type="button" data-coupon-cancel>Cancel</button></div>
+          <p class="admin-help wide">A discount is applied and redemption limits are checked in the database during order placement. Existing redemptions are retained even when a coupon is deactivated.</p>
+        </form>
+        <div id="coupon-list" class="admin-record-list" aria-live="polite"></div>
+      </section>
     </section>
     <dialog id="slide-preview" class="slide-preview-dialog" aria-labelledby="slide-preview-title">
       <div class="slide-preview-toolbar"><h2 id="slide-preview-title" class="serif">Slide preview</h2><div><button type="button" data-preview-size="desktop" aria-pressed="true">Desktop</button><button type="button" data-preview-size="mobile" aria-pressed="false">Mobile</button><button type="button" data-close-slide-preview>Close</button></div></div>
@@ -142,6 +230,28 @@
       <p class="admin-help">Preview uses the current form values. Unpublished previews are visible only in this signed-in dashboard.</p>
     </dialog>
   </main>
+  <script>
+    // Keep the workspace from displaying an endless "Checking your access" screen
+    // when a browser module or network dependency fails before admin.js can run.
+    (() => {
+      const root = document.documentElement;
+      const message = document.getElementById('gate-message');
+      const login = document.getElementById('login-link');
+      const timer = window.setTimeout(() => {
+        if (root.dataset.adminGateState === 'ready') return;
+        if (message) message.textContent = 'The admin workspace could not finish connecting. Try signing in again. If this keeps happening, a browser module or Supabase connection may be blocked.';
+        if (login) {
+          login.hidden = false;
+          login.href = 'login.html';
+          login.textContent = 'Open Sign In';
+        }
+      }, 10000);
+      window.addEventListener('mystic-vibe-admin-ready', () => {
+        root.dataset.adminGateState = 'ready';
+        window.clearTimeout(timer);
+      });
+    })();
+  </script>
   <script type="module" src="js/admin.js"></script>
 </body>
 </html>
