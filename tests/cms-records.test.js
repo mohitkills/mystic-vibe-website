@@ -66,7 +66,7 @@ test('slide payload validates required copy and integer order while preserving t
   assert.equal(payload.image_url, 'mystic-vibe-images/slides/hero.webp');
   assert.equal(payload.sort_order, 4);
   assert.equal(payload.is_published, true);
-  assert.throws(() => buildSlidePayload({ heading: '', sort_order: 0 }, null, 'https://mystic-vibe.example'), /heading/);
+  assert.throws(() => buildSlidePayload({ heading: '', sort_order: 0 }, null, 'https://mystic-vibe.example'), /slide name/);
   assert.throws(() => buildSlidePayload({ heading: 'Valid', sort_order: '1.5' }, null, 'https://mystic-vibe.example'), /whole number/);
 });
 
