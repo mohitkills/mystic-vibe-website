@@ -208,7 +208,7 @@ test('Admin light buttons use readable dark text before hover, on focus and whil
   assert.match(css, /body\.admin-page \.admin-main button\.btn\.light,[\s\S]*?-webkit-text-fill-color: #292620 !important/);
   assert.match(css, /body\.admin-page \.admin-main button\.btn\.light:hover[\s\S]*?background: rgba\(180,154,96,\.18\) !important/);
   assert.match(css, /body\.admin-page \.admin-main button\.btn\.light:disabled[\s\S]*?color: #575148 !important/);
-  assert.match(css, /button\.btn\.light,body\.admin-page a\.btn\.light/);
+  assert.ok(css.includes('body.admin-page .admin-topbar a.btn.light'));
 });
 
 test('Reference ivory-glass theme is bright-only, readable, and preserves storefront integrations', async () => {
