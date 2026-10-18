@@ -1362,3 +1362,101 @@ body:not([data-theme="dark"]) .premium-slide-controls .premium-slide-dot[aria-cu
     max-height: 18px !important;
   }
 }
+
+
+/* Hard reset for slider dots: the active mark must be a true circle, never a brown oval. */
+body:not([data-theme="dark"]) .premium-slide-controls button.premium-slide-dot,
+body:not([data-theme="dark"]) .premium-slide-controls button.premium-slide-dot[aria-current="true"],
+body:not([data-theme="dark"]) .premium-slide-controls button.premium-slide-dot:hover,
+body:not([data-theme="dark"]) .premium-slide-controls button.premium-slide-dot:focus,
+body:not([data-theme="dark"]) .premium-slide-controls button.premium-slide-dot:focus-visible {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  flex: 0 0 14px !important;
+  width: 14px !important;
+  min-width: 14px !important;
+  max-width: 14px !important;
+  height: 14px !important;
+  min-height: 14px !important;
+  max-height: 14px !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: transparent !important;
+  line-height: 0 !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls button.premium-slide-dot::before {
+  content: "" !important;
+  display: block !important;
+  position: static !important;
+  flex: none !important;
+  width: 5px !important;
+  min-width: 5px !important;
+  max-width: 5px !important;
+  height: 5px !important;
+  min-height: 5px !important;
+  max-height: 5px !important;
+  box-sizing: border-box !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: rgba(255,255,255,.76) !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,.25) !important;
+  transform: none !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls button.premium-slide-dot[aria-current="true"]::before,
+body:not([data-theme="dark"]) .premium-slide-controls button.premium-slide-dot[aria-current="true"]:hover::before,
+body:not([data-theme="dark"]) .premium-slide-controls button.premium-slide-dot[aria-current="true"]:focus-visible::before {
+  width: 9px !important;
+  min-width: 9px !important;
+  max-width: 9px !important;
+  height: 9px !important;
+  min-height: 9px !important;
+  max-height: 9px !important;
+  box-sizing: border-box !important;
+  border: 1.5px solid #fff !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  box-shadow: inset 0 0 0 .5px rgba(255,255,255,.3), 0 1px 2px rgba(0,0,0,.25) !important;
+  transform: none !important;
+}
+body:not([data-theme="dark"]) .premium-slide-controls button.premium-slide-dot:hover::before,
+body:not([data-theme="dark"]) .premium-slide-controls button.premium-slide-dot:focus-visible::before {
+  background: rgba(255,255,255,.95) !important;
+}
+@media (max-width: 760px) {
+  body:not([data-theme="dark"]) .premium-slide-dots { gap: 1px !important; }
+  body:not([data-theme="dark"]) .premium-slide-controls button.premium-slide-dot,
+  body:not([data-theme="dark"]) .premium-slide-controls button.premium-slide-dot[aria-current="true"],
+  body:not([data-theme="dark"]) .premium-slide-controls button.premium-slide-dot:hover,
+  body:not([data-theme="dark"]) .premium-slide-controls button.premium-slide-dot:focus-visible {
+    flex-basis: 12px !important;
+    width: 12px !important;
+    min-width: 12px !important;
+    max-width: 12px !important;
+    height: 12px !important;
+    min-height: 12px !important;
+    max-height: 12px !important;
+  }
+  body:not([data-theme="dark"]) .premium-slide-controls button.premium-slide-dot::before {
+    width: 4px !important;
+    min-width: 4px !important;
+    max-width: 4px !important;
+    height: 4px !important;
+    min-height: 4px !important;
+    max-height: 4px !important;
+  }
+  body:not([data-theme="dark"]) .premium-slide-controls button.premium-slide-dot[aria-current="true"]::before,
+  body:not([data-theme="dark"]) .premium-slide-controls button.premium-slide-dot[aria-current="true"]:hover::before {
+    width: 8px !important;
+    min-width: 8px !important;
+    max-width: 8px !important;
+    height: 8px !important;
+    min-height: 8px !important;
+    max-height: 8px !important;
+  }
+}

@@ -305,17 +305,19 @@ test('Global glass background and category tiles match the beige-mint-lavender r
   assert.ok(adminCss.includes('#E9E6F1'));
 });
 
-test('Hero pagination uses tiny circular indicators with no yellow active highlight', async () => {
+test('Hero active indicator fits as a true white circle without brown fill or oval spill', async () => {
   const css = await read('css/theme-system.css');
-  assert.ok(css.includes('FINAL FINAL slider indicator'));
-  assert.ok(css.includes('width: 6px !important'));
-  assert.ok(css.includes('height: 6px !important'));
-  assert.ok(css.includes('width: 10px !important'));
-  assert.ok(css.includes('border: 1.5px solid #fff !important'));
-  assert.ok(css.includes('border-radius: 50% !important'));
-  assert.ok(css.includes('background: rgba(255,255,255,.12) !important'));
-  assert.ok(css.includes('background: rgba(255,255,255,.88) !important'));
-  assert.ok(!css.slice(css.indexOf('FINAL FINAL slider indicator')).includes('background: #B49A60 !important'));
+  const finalFix = css.slice(css.indexOf('Hard reset for slider dots'));
+  assert.ok(finalFix.includes('button.premium-slide-dot[aria-current="true"]::before'));
+  assert.ok(finalFix.includes('box-sizing: border-box !important'));
+  assert.ok(finalFix.includes('width: 9px !important'));
+  assert.ok(finalFix.includes('height: 9px !important'));
+  assert.ok(finalFix.includes('border: 1.5px solid #fff !important'));
+  assert.ok(finalFix.includes('border-radius: 50% !important'));
+  assert.ok(finalFix.includes('background: transparent !important'));
+  assert.ok(finalFix.includes('width: 8px !important'));
+  assert.ok(finalFix.includes('flex-basis: 12px !important'));
+  assert.ok(!finalFix.includes('background: #B49A60'));
 });
 
 test('Hero slider supports mouse drag and touch swipe with compact controls', async () => {
