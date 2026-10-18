@@ -106,6 +106,12 @@
     var request=++imageRequest;
     var currentSource=activeImage.getAttribute('src') || '';
     if(candidate===currentSource || candidate===activeImage.src){
+      if(transitionTimer) clearTimeout(transitionTimer);
+      transitionTimer=null;
+      inactiveImage.classList.remove('is-active','is-incoming','hero-transition-fade','hero-transition-slide-left','hero-transition-slide-up','hero-transition-zoom');
+      inactiveImage.alt='';
+      inactiveImage.setAttribute('aria-hidden','true');
+      activeImage.classList.add('is-active');
       activeImage.alt=alt || fallback.heading;
       if(onReady) onReady();
       return;
