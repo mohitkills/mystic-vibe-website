@@ -191,7 +191,11 @@ test('homepage has exactly one image-first hero, one configurable CTA and animat
   assert.equal((premium.match(/premium-hero-actions"><a/g) || []).length, 1, 'only one CTA is rendered');
   assert.equal((homeHtml.match(/js\/premium-home\.js/g) || []).length, 1, 'hero controller is loaded once');
   assert.doesNotMatch(premium, /Discover Signatures|<h1 class="serif">Every Scent/);
-  assert.doesNotMatch(premium, /premium-slide-controls|Previous homepage slide|Next homepage slide/);
+  assert.match(premium, /className='premium-slide-controls'/, 'visitors get matching slide navigation controls');
+  assert.match(premium, /setAttribute\('aria-label','Previous slide'\)/);
+  assert.match(premium, /setAttribute\('aria-label','Next slide'\)/);
+  assert.match(premium, /data-hero-dot/);
+  assert.match(premium, /controls\.hidden=slides\.length<2/, 'controls stay hidden when there is only one published slide');
   assert.match(premium, /hero\.dataset\.sliderInitialized==='true'/, 'repeat initialization is guarded');
   assert.match(premium, /inactiveImage=document\.createElement\('img'\)/, 'next image uses a separate buffered layer');
   assert.match(premium, /probe\.onload=function\(\)/);
@@ -307,6 +311,11 @@ test('hero controller rotates two slides in one image area and updates only the 
           element.children.push(item);
         }
       },
+      replaceChildren(...items) {
+        element.children.forEach((child) => { child.parentElement = null; });
+        element.children = [];
+        element.append(...items);
+      },
     };
     return element;
   }
@@ -397,4 +406,25 @@ test('hero controller rotates two slides in one image area and updates only the 
   const activeImage = media.children.find((child) => child.classList.contains('is-active'));
   assert.ok(activeImage.src.includes('slide-two.webp'));
   assert.equal(media.children.filter((child) => child.classList.contains('is-active')).length, 1);
+
+  const controls = hero.children.find((child) => child.getAttribute('data-hero-controls') !== null);
+  assert.ok(controls, 'the visitor-facing controls are added to the hero');
+  const previous = controls.children.find((child) => child.getAttribute('data-hero-prev') !== null);
+  const next = controls.children.find((child) => child.getAttribute('data-hero-next') !== null);
+  const dots = controls.children.find((child) => child.getAttribute('data-hero-dots') !== null);
+  const status = controls.children.find((child) => child.getAttribute('data-hero-status') !== null);
+  assert.equal(dots.children.length, 2, 'one direct navigation dot is rendered per slide');
+  assert.equal(status.textContent, '02 / 02');
+  previous.dispatch('click');
+  assert.equal(action.textContent, 'Buy Now', 'previous button returns to the first slide');
+  assert.equal(status.textContent, '01 / 02');
+  media.children.find((child) => child.classList.contains('is-incoming')).dispatch('animationend');
+  next.dispatch('click');
+  assert.equal(action.textContent, 'Claim Now', 'next button advances the selected slide');
+  assert.equal(status.textContent, '02 / 02');
+  media.children.find((child) => child.classList.contains('is-incoming')).dispatch('animationend');
+  dots.children[0].dispatch('click');
+  assert.equal(action.textContent, 'Buy Now', 'pagination dots navigate directly to their slide');
+  assert.equal(status.textContent, '01 / 02');
+  media.children.find((child) => child.classList.contains('is-incoming')).dispatch('animationend');
 });

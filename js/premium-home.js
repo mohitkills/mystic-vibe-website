@@ -53,6 +53,99 @@
   var transitionTimer=null;
   var reducedMotion=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var transitionNames=['fade','slide-left','slide-up','zoom'];
+  var controls=null;
+  var previousButton=null;
+  var nextButton=null;
+  var dotsContainer=null;
+  var statusNode=null;
+  var pointerInside=false;
+  var focusInside=false;
+
+  function createControls(){
+    controls=document.createElement('div');
+    controls.className='premium-slide-controls';
+    controls.setAttribute('data-hero-controls','');
+    controls.setAttribute('role','group');
+    controls.setAttribute('aria-label','Homepage slider controls');
+    controls.hidden=true;
+
+    previousButton=document.createElement('button');
+    previousButton.type='button';
+    previousButton.className='premium-slide-arrow';
+    previousButton.setAttribute('data-hero-prev','');
+    previousButton.setAttribute('aria-label','Previous slide');
+    previousButton.setAttribute('title','Previous slide');
+    previousButton.textContent='‹';
+
+    dotsContainer=document.createElement('div');
+    dotsContainer.className='premium-slide-dots';
+    dotsContainer.setAttribute('data-hero-dots','');
+    dotsContainer.setAttribute('role','group');
+    dotsContainer.setAttribute('aria-label','Choose a homepage slide');
+
+    statusNode=document.createElement('span');
+    statusNode.className='premium-slide-status';
+    statusNode.setAttribute('data-hero-status','');
+    statusNode.setAttribute('aria-live','polite');
+    statusNode.setAttribute('aria-atomic','true');
+
+    nextButton=document.createElement('button');
+    nextButton.type='button';
+    nextButton.className='premium-slide-arrow';
+    nextButton.setAttribute('data-hero-next','');
+    nextButton.setAttribute('aria-label','Next slide');
+    nextButton.setAttribute('title','Next slide');
+    nextButton.textContent='›';
+
+    controls.append(previousButton,dotsContainer,statusNode,nextButton);
+    hero.append(controls);
+
+    previousButton.addEventListener('click',function(){
+      if(slides.length<2) return;
+      stop();
+      show(active-1);
+      start();
+    });
+    nextButton.addEventListener('click',function(){
+      if(slides.length<2) return;
+      stop();
+      show(active+1);
+      start();
+    });
+  }
+
+  function renderDots(){
+    var dots=[];
+    slides.forEach(function(slide,index){
+      var dot=document.createElement('button');
+      dot.type='button';
+      dot.className='premium-slide-dot';
+      dot.setAttribute('data-hero-dot',String(index));
+      dot.setAttribute('aria-label','Show slide '+String(index+1));
+      dot.setAttribute('title','Show slide '+String(index+1));
+      dot.addEventListener('click',function(){
+        if(slides.length<2) return;
+        stop();
+        show(index);
+        start();
+      });
+      dots.push(dot);
+    });
+    dotsContainer.replaceChildren.apply(dotsContainer,dots);
+  }
+
+  function syncControls(){
+    if(!controls) return;
+    controls.hidden=slides.length<2;
+    if(dotsContainer.children.length!==slides.length) renderDots();
+    previousButton.disabled=slides.length<2;
+    nextButton.disabled=slides.length<2;
+    Array.prototype.forEach.call(dotsContainer.children,function(dot,index){
+      dot.classList.toggle('is-active',index===active);
+      dot.setAttribute('aria-current',index===active?'true':'false');
+    });
+    statusNode.textContent=String(slides.length?active+1:0).padStart(2,'0')+' / '+String(slides.length).padStart(2,'0');
+  }
 
   function safeImage(value){
     if(typeof value!=='string' || !value.trim()) return fallbackImage;
@@ -158,6 +251,7 @@
   function show(index){
     if(!slides.length) return;
     active=(index+slides.length)%slides.length;
+    syncControls();
     var slide=slides[active];
     setHeroImage(
       slide.display_image_url || slide.image_url || fallbackImage,
@@ -173,21 +267,23 @@
   }
   function start(){
     stop();
-    if(slides.length>1 && !reducedMotion && !document.hidden){
+    if(slides.length>1 && !reducedMotion && !document.hidden && !pointerInside && !focusInside){
       timer=setInterval(function(){show(active+1);},7000);
     }
   }
   function showFallback(){
     slides=[];
     stop();
+    syncControls();
     hero.classList.add('premium-hero-image-fallback');
     setHeroImage(fallbackImage,fallback.heading,'fade',function(){syncCta(fallback.cta_text,fallback.cta_link);});
   }
 
-  hero.addEventListener('mouseenter',stop);
-  hero.addEventListener('mouseleave',start);
-  hero.addEventListener('focusin',stop);
-  hero.addEventListener('focusout',start);
+  createControls();
+  hero.addEventListener('mouseenter',function(){pointerInside=true;stop();});
+  hero.addEventListener('mouseleave',function(){pointerInside=false;start();});
+  hero.addEventListener('focusin',function(){focusInside=true;stop();});
+  hero.addEventListener('focusout',function(){focusInside=false;start();});
   document.addEventListener('visibilitychange',function(){if(document.hidden) stop(); else start();});
 
   window.addEventListener('mystic-vibe-storefront-data',function(event){
