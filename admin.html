@@ -107,12 +107,13 @@
         <div class="admin-panel-heading"><div><span class="eyebrow">Homepage</span><h2 class="serif">Slides</h2></div><button class="btn light" type="button" data-reset-form="slide-form">New slide</button></div>
         <form id="slide-form" class="panel admin-form">
           <input type="hidden" name="id">
-          <label>Slide name (admin only)<input name="heading" required maxlength="180" placeholder="e.g. Royal Marine launch"><small>Internal name and image description for accessibility; it will not appear as text over the homepage image.</small></label>
-          <label>Button text<input name="cta_text" value="Explore" maxlength="40" placeholder="Explore, Buy Now, Claim Now"></label>
-          <label>Button link<input name="cta_link" value="/collection.html" maxlength="500" placeholder="/products/royal-marine.html"></label>
-          <label class="wide">Image path<input name="image_url" placeholder="mystic-vibe-images/slides/... "><small>Or use Upload slide image below. Choose a wide, high-resolution image for a full-screen hero.</small></label>
-          <label class="file-field wide">Upload slide image<input name="slide-image" type="file" accept="image/jpeg,image/png,image/webp,image/avif"><small>The image stays private. A published slide image is delivered securely; failed images now fall back instead of leaving a blank slide.</small></label>
-          <label>Sort order<input name="sort_order" type="number" step="1" value="0"></label>
+          <label>Slide name (Admin only)<input name="heading" required maxlength="180" placeholder="e.g. Royal Marine launch"><small>Internal label and accessibility description only. This text is never overlaid on the hero image.</small></label>
+          <label>Button text<input name="cta_text" list="hero-cta-presets" value="Explore" maxlength="40" placeholder="Explore, Buy Now, Claim Now"><datalist id="hero-cta-presets"><option value="Explore"><option value="Buy Now"><option value="Claim Now"></datalist><small>Each slide has one button. Pick a suggestion or write your own.</small></label>
+          <label>Button destination<input name="cta_link" value="/collection.html" maxlength="500" placeholder="/products/royal-marine.html"><small>Use a store page path, e.g. /collection.html or /products/royal-marine.html.</small></label>
+          <label>Slide transition<select name="transition_style"><option value="fade">Soft fade</option><option value="slide-left">Slide from right</option><option value="slide-up">Rise from bottom</option><option value="zoom">Cinematic zoom</option></select><small>Animation used when this slide appears.</small></label>
+          <label>Slide order<input name="sort_order" type="number" step="1" value="0"><small>Lower numbers appear first. Use the Move up/Move down actions below to reorder.</small></label>
+          <label class="wide">Slide image path<input name="image_url" placeholder="mystic-vibe-images/slides/... "><small>Or upload a wide, high-resolution image below.</small></label>
+          <label class="file-field wide">Upload slide image<input name="slide-image" type="file" accept="image/jpeg,image/png,image/webp,image/avif"><small>Published images are delivered securely. An image must load before the slide is shown.</small></label>
           <label class="check-label"><input name="is_published" type="checkbox"> Published <small>Draft slides do not appear on the storefront.</small></label>
           <div class="form-actions wide"><button class="btn" type="submit">Save slide</button><button class="btn light" type="button" data-preview-slide>Preview</button><button class="btn light" type="button" data-reset-form="slide-form">Clear</button></div>
         </form>
