@@ -203,6 +203,29 @@ test('newsletter signups are stored through a restricted server function and man
   assert.match(marketing, /newsletter_subscribers/);
 });
 
+test('FAQ question and answer text remains readable in the light gradient theme', async () => {
+  const app = await read('js/app.js');
+  const theme = await read('css/theme-system.css');
+  assert.ok(app.includes("function faqHtml()"));
+  assert.ok(theme.includes('.faq-item > button'));
+  assert.ok(theme.includes('-webkit-text-fill-color: #191919 !important'));
+  assert.ok(theme.includes('.faq-item .faq-answer'));
+  assert.ok(theme.includes('-webkit-text-fill-color: #575148 !important'));
+});
+
+test('Mobile header menu opens as a readable glass grid and account actions dock beside contact', async () => {
+  const app = await read('js/app.js');
+  const theme = await read('css/theme-system.css');
+  assert.ok(app.includes("navLinks.classList.toggle('open')"));
+  assert.ok(theme.includes('.site-header > .nav .nav-links.open'));
+  assert.ok(theme.includes('background: rgba(255,255,255,.97) !important'));
+  assert.ok(theme.includes('.site-header > .nav > .nav-actions'));
+  assert.ok(theme.includes('right: 68px !important'));
+  assert.ok(theme.includes('.account-menu-panel'));
+  assert.ok(theme.includes('bottom: calc(100% + 9px) !important'));
+  assert.ok(theme.includes('.whatsapp-float:not([hidden])'));
+});
+
 test('Global glass background and category tiles match the beige-mint-lavender reference', async () => {
   const theme = await read('css/theme-system.css');
   const adminCss = await read('css/admin.css');
