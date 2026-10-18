@@ -213,7 +213,7 @@ test('homepage has exactly one image-first hero, one configurable CTA and animat
   assert.match(html, /Move up/);
   assert.doesNotMatch(html, /Subtitle<input name="subtitle"/);
   assert.match(admin, /transition_style: formValue\(form, 'transition_style'\)/);
-  assert.match(admin, /'transition_style'\]\)/);
+  assert.match(admin, /'transition_style'\]\.map/);
   assert.match(cms, /transition_style:\s*transitionStyle/);
   assert.match(css, /\.premium-hero-media img\.premium-hero-image\.hero-transition-slide-left/);
   assert.match(css, /@keyframes mvHeroFade/);
