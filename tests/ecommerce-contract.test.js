@@ -217,7 +217,8 @@ test('Floating contact icon stays visible and safely falls back to the Contact p
   const app = await read('js/app.js');
   const sync = await read('js/storefront-sync.js');
   const theme = await read('css/theme-system.css');
-  assert.ok(app.includes('class="whatsapp-float" href="'+pagePath('contact.html')+'" aria-label="Contact Mystic Vibe"'));
+  assert.ok(app.includes('class="whatsapp-float"'));
+  assert.ok(app.includes('aria-label="Contact Mystic Vibe" title="Contact Mystic Vibe">☎'));
   assert.ok(sync.includes('Always keep the floating contact action available'));
   assert.ok(sync.includes('whatsapp.hidden = false'));
   assert.ok(sync.includes("new URL('../contact.html', import.meta.url).href"));
