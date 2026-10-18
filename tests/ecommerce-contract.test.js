@@ -309,7 +309,7 @@ test('Hero carousel is reduced to half height on desktop and mobile with control
   const css = await read('css/theme-system.css');
   assert.ok(css.includes('min-height: clamp(280px, calc(50svh - 90px), 380px) !important'));
   assert.ok(css.includes('@media (max-width: 760px)'));
-  assert.ok(css.includes('min-height: 280px !important'));
+  assert.ok(css.includes('min-height: 140px !important'));
   assert.ok(css.includes('.premium-slide-controls'));
   assert.ok(css.includes('object-fit: cover !important'));
 });

@@ -994,6 +994,6 @@ body:not([data-theme="dark"]) .whatsapp-float[hidden] { display: none !important
 }
 @media (max-width: 760px) {
   body:not([data-theme="dark"]) .premium-hero {
-    min-height: 280px !important;
+    min-height: 140px !important;
   }
 }
