@@ -53,7 +53,22 @@
         <button type="button" data-tab="content">Site content</button>
         <button type="button" data-tab="media">Media library</button>
         <button type="button" data-tab="settings">Store settings</button>
+        <button type="button" data-tab="team">Team Access</button>
       </nav>
+
+      <section class="admin-panel" data-panel="team" hidden>
+        <div class="admin-panel-heading">
+          <div><span class="eyebrow">Store ownership</span><h2 class="serif">Team Access</h2><p>Invite trusted people without sharing your password. Only the owner can change access.</p></div>
+        </div>
+        <form id="team-invite-form" class="panel admin-form">
+          <label class="wide">Team member email<input name="email" type="email" required maxlength="254" autocomplete="email" placeholder="teammate@example.com"></label>
+          <p class="admin-help wide">New users receive an email invitation. If the email already has a Mystic Vibe account, admin access is granted to that account without changing its password.</p>
+          <div class="form-actions wide"><button class="btn" type="submit" id="team-invite-submit">Invite team member</button></div>
+        </form>
+        <p id="team-access-status" class="admin-status" role="status" aria-live="polite"></p>
+        <div class="admin-panel-heading"><h3 class="serif">Authorized accounts</h3><button type="button" class="btn light" id="team-refresh">Refresh list</button></div>
+        <div id="team-member-list" class="admin-record-list" aria-live="polite"><p class="admin-help">Loading team access…</p></div>
+      </section>
 
       <section class="admin-panel active" data-panel="products">
         <div class="admin-panel-heading product-panel-heading"><div><span class="eyebrow">Inventory</span><h2 class="serif">Products</h2></div><div class="product-heading-actions"><button class="btn light" type="button" data-reset-form="product-form">New product</button><button class="btn product-save-primary" type="submit" form="product-form">Save Product</button></div></div>

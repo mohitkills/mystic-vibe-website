@@ -1088,6 +1088,7 @@ async function initializeAdmin() {
     { label: 'Coupons', load: () => import('./coupons-admin.js'), initialize: 'initializeCouponsAdmin' },
     { label: 'Customers', load: () => import('./customers-admin.js'), initialize: 'initializeCustomersAdmin' },
     { label: 'Newsletter', load: () => import('./marketing-admin.js'), initialize: 'initializeMarketingAdmin' },
+    { label: 'Team Access', load: () => import('./team-access-admin.js'), initialize: 'initializeTeamAccessAdmin' },
   ];
   const moduleResults = await Promise.allSettled(optionalModules.map(async (feature) => {
     const module = await feature.load();

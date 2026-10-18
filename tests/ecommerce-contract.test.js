@@ -121,6 +121,32 @@ test('Admin reports module import failure details instead of leaving a section s
   assert.match(admin, /failedFeatures\.map\(\(feature\) => feature\.label\)/);
 });
 
+test('Team Access is owner-gated and backed by server-only admin management functions', async () => {
+  const html = await read('admin.html');
+  const admin = await read('js/admin.js');
+  const team = await read('js/team-access-admin.js');
+  const edge = await read('supabase/functions/admin-team-access/index.ts');
+  const migration = await read('supabase/migrations/20261018103000_team_access_management.sql');
+
+  assert.match(html, /data-tab="team"/);
+  assert.match(html, /data-panel="team"/);
+  assert.match(html, /id="team-invite-form"/);
+  assert.match(html, /id="team-member-list"/);
+  assert.match(admin, /import\('\.\/team-access-admin\.js'\)/);
+  assert.match(admin, /initialize: 'initializeTeamAccessAdmin'/);
+  assert.match(team, /functions\.invoke\('admin-team-access'/);
+  assert.match(team, /data-revoke-user-id/);
+  assert.match(edge, /auth\.getUser\(token\)/);
+  assert.match(edge, /rpc\('is_current_user_owner'\)/);
+  assert.match(edge, /auth\.admin\.inviteUserByEmail/);
+  assert.match(edge, /admin_team_set_access/);
+  assert.match(edge, /targetId === user\.id/);
+  assert.match(migration, /role in \('owner', 'admin'\)/i);
+  assert.match(migration, /grant execute on function public\.admin_team_set_access\(uuid, boolean\) to service_role/i);
+  assert.match(migration, /revoke all on function public\.admin_team_set_access\(uuid, boolean\) from public, anon, authenticated/i);
+  assert.match(migration, /grant execute on function public\.is_current_user_owner\(\) to authenticated/i);
+});
+
 test('Admin exposes orders, promotions and store settings through connected modules', async () => {
   const html = await read('admin.html');
   const admin = await read('js/admin.js');
