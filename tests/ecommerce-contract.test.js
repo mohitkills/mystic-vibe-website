@@ -203,6 +203,24 @@ test('newsletter signups are stored through a restricted server function and man
   assert.match(marketing, /newsletter_subscribers/);
 });
 
+test('Global glass background and category tiles match the beige-mint-lavender reference', async () => {
+  const theme = await read('css/theme-system.css');
+  const adminCss = await read('css/admin.css');
+  assert.ok(theme.includes('linear-gradient(108deg'));
+  assert.ok(theme.includes('#EFE8D7'));
+  assert.ok(theme.includes('#F0F5F0'));
+  assert.ok(theme.includes('#E9E6F1'));
+  assert.ok(theme.includes('.ivory-category-card:nth-child(3n+1)'));
+  assert.ok(theme.includes('.ivory-category-card:nth-child(3n+2)'));
+  assert.ok(theme.includes('.ivory-category-card:nth-child(3n)'));
+  assert.ok(theme.includes('.ivory-category-index'));
+  assert.ok(theme.includes('display: none !important'));
+  assert.ok(theme.includes('backdrop-filter: blur(18px) saturate(135%)'));
+  assert.ok(adminCss.includes('linear-gradient(108deg'));
+  assert.ok(adminCss.includes('#F0F5F0'));
+  assert.ok(adminCss.includes('#E9E6F1'));
+});
+
 test('Homepage places Shop by category below Find your fragrance family with glass fill hover animation', async () => {
   const home = await read('js/premium-home.js');
   const css = await read('css/theme-system.css');

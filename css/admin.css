@@ -135,3 +135,26 @@ body.admin-page .admin-topbar button.btn.light:disabled {
   opacity: 1 !important;
   cursor: not-allowed;
 }
+
+
+/* Use the same warm beige → pale mint → lavender backdrop throughout Admin Studio. */
+body.admin-page {
+  background: linear-gradient(108deg,
+    #EFE8D7 0%,
+    #F1F1E9 29%,
+    #F0F5F0 51%,
+    #F0EEF5 74%,
+    #E9E6F1 100%) fixed !important;
+  background-color: #F0F2EB !important;
+}
+body.admin-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(32% 55% at 10% 4%, rgba(232,220,192,.2), transparent 82%),
+    radial-gradient(32% 58% at 55% 78%, rgba(201,231,216,.2), transparent 82%),
+    radial-gradient(30% 60% at 94% 20%, rgba(216,210,237,.22), transparent 83%);
+}

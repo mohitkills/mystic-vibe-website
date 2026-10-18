@@ -313,3 +313,97 @@ body:not([data-theme="dark"]) .ivory-category-card:focus-within .ivory-category-
     transition: none !important;
   }
 }
+
+
+/* Reference background: a continuous warm beige → pale mint → soft lavender
+   gradient across the storefront, with barely-there ambient haze. */
+body:not([data-theme="dark"]) {
+  background: linear-gradient(108deg,
+    #EFE8D7 0%,
+    #F1F1E9 29%,
+    #F0F5F0 51%,
+    #F0EEF5 74%,
+    #E9E6F1 100%) fixed !important;
+  background-color: #F0F2EB !important;
+}
+body:not([data-theme="dark"])::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(32% 55% at 10% 4%, rgba(232,220,192,.22), transparent 82%),
+    radial-gradient(32% 58% at 55% 78%, rgba(201,231,216,.22), transparent 82%),
+    radial-gradient(30% 60% at 94% 20%, rgba(216,210,237,.24), transparent 83%);
+}
+body:not([data-theme="dark"]) main,
+body:not([data-theme="dark"]) .site-main {
+  background-color: transparent;
+}
+@media (prefers-reduced-transparency: reduce) {
+  body:not([data-theme="dark"])::before { opacity: .45; }
+}
+
+/* Category cards now follow the supplied reference: clean glass tiles,
+   no labels or arrows, a quiet pastel tint, and ample breathing room. */
+body:not([data-theme="dark"]) .ivory-category-grid {
+  align-items: stretch;
+  gap: 16px;
+}
+body:not([data-theme="dark"]) .ivory-category-card {
+  min-height: 170px;
+  padding: 24px 27px;
+  justify-content: center;
+  border-radius: 21px;
+  border: 1px solid rgba(255,255,255,.82);
+  box-shadow: 0 14px 38px rgba(66,57,41,.065), inset 0 1px 0 rgba(255,255,255,.92);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+  backdrop-filter: blur(18px) saturate(135%);
+}
+body:not([data-theme="dark"]) .ivory-category-card:nth-child(3n+1) {
+  background: linear-gradient(120deg, rgba(255,255,255,.82), rgba(250,246,235,.80));
+}
+body:not([data-theme="dark"]) .ivory-category-card:nth-child(3n+2) {
+  background: linear-gradient(120deg, rgba(255,255,255,.84), rgba(240,248,243,.82));
+}
+body:not([data-theme="dark"]) .ivory-category-card:nth-child(3n) {
+  background: linear-gradient(120deg, rgba(255,255,255,.84), rgba(247,244,251,.84));
+}
+body:not([data-theme="dark"]) .ivory-category-index,
+body:not([data-theme="dark"]) .ivory-category-card > .ivory-category-arrow {
+  display: none !important;
+}
+body:not([data-theme="dark"]) .ivory-category-card h3 {
+  margin: 0 0 3px;
+  padding: 0;
+  font-size: clamp(25px, 2.1vw, 31px);
+  line-height: 1.08;
+}
+body:not([data-theme="dark"]) .ivory-category-card p {
+  margin: 2px 0 0;
+  max-width: 36ch;
+  color: #77736D !important;
+  font-size: 13px;
+  line-height: 1.5;
+}
+body:not([data-theme="dark"]) .ivory-category-card::before {
+  background:
+    radial-gradient(ellipse at 92% 8%, rgba(180,154,96,.22), transparent 54%),
+    linear-gradient(125deg, rgba(236,224,193,.5), rgba(255,255,255,.35) 48%, rgba(220,236,229,.38));
+}
+body:not([data-theme="dark"]) .ivory-category-card:hover,
+body:not([data-theme="dark"]) .ivory-category-card:focus-visible,
+body:not([data-theme="dark"]) .ivory-category-card:focus-within {
+  box-shadow: 0 22px 46px rgba(82,70,48,.12), inset 0 1px 0 rgba(255,255,255,.98);
+}
+@media (max-width: 640px) {
+  body:not([data-theme="dark"]) .ivory-category-grid { gap: 10px; }
+  body:not([data-theme="dark"]) .ivory-category-card {
+    min-height: 150px;
+    padding: 18px 15px;
+    border-radius: 17px;
+  }
+  body:not([data-theme="dark"]) .ivory-category-card h3 { font-size: 23px; }
+  body:not([data-theme="dark"]) .ivory-category-card p { font-size: 11px; }
+}
