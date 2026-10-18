@@ -213,6 +213,22 @@ test('FAQ question and answer text remains readable in the light gradient theme'
   assert.ok(theme.includes('-webkit-text-fill-color: #575148 !important'));
 });
 
+test('Desktop header icons and contact control stay compact and hide mobile labels', async () => {
+  const theme = await read('css/theme-system.css');
+  const app = await read('js/app.js');
+  assert.ok(theme.includes('@media (min-width: 761px)'));
+  assert.ok(theme.includes('.site-header .nav-actions .mobile-nav-label'));
+  assert.ok(theme.includes('.site-header .nav-actions .mobile-nav-icon'));
+  assert.ok(theme.includes('width: 19px !important'));
+  assert.ok(theme.includes('.whatsapp-float .mobile-nav-label'));
+  assert.ok(theme.includes('width: 22px !important'));
+  assert.ok(theme.includes('body:not([data-theme="dark"]) .mobile-floating-actions'));
+  assert.ok(app.includes('aria-label="Wishlist"'));
+  assert.ok(app.includes('aria-label="Shopping bag"'));
+  assert.ok(app.includes('aria-label="Profile menu"'));
+  assert.ok(app.includes('aria-label="Contact Mystic Vibe"'));
+});
+
 test('Mobile bottom navigation has four labeled icon actions and retains working destinations', async () => {
   const app = await read('js/app.js');
   const theme = await read('css/theme-system.css');

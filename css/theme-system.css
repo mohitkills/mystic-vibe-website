@@ -840,3 +840,147 @@ body:not([data-theme="dark"]) .whatsapp-float[hidden] { display: none !important
     min-height: 22px !important;
   }
 }
+
+
+/* DESKTOP RESTORE: mobile icon labels/SVGs must never leak into the desktop header.
+   Keep the header icons compact and the contact button as a separate floating circle. */
+@media (min-width: 761px) {
+  body:not([data-theme="dark"]) .site-header .nav-actions:not(.mobile-floating-actions) {
+    position: relative !important;
+    display: flex !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 7px !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 0 0 auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  body:not([data-theme="dark"]) .site-header .nav-actions .mobile-nav-item:not(.account-menu-wrap) {
+    position: relative !important;
+    display: grid !important;
+    flex: 0 0 42px !important;
+    place-items: center !important;
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid rgba(25,25,25,.1) !important;
+    border-radius: 50% !important;
+    background: rgba(255,255,255,.58) !important;
+    color: #191919 !important;
+    line-height: 1 !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    box-sizing: border-box !important;
+  }
+  body:not([data-theme="dark"]) .site-header .nav-actions .mobile-nav-icon {
+    display: block !important;
+    flex: 0 0 19px !important;
+    width: 19px !important;
+    min-width: 19px !important;
+    height: 19px !important;
+    min-height: 19px !important;
+    max-height: 19px !important;
+    margin: 0 !important;
+  }
+  body:not([data-theme="dark"]) .site-header .nav-actions .mobile-nav-label {
+    display: none !important;
+  }
+  body:not([data-theme="dark"]) .site-header .nav-actions .badge {
+    top: -3px !important;
+    right: -3px !important;
+    left: auto !important;
+  }
+  body:not([data-theme="dark"]) .site-header .nav-actions .account-menu-wrap.mobile-nav-item {
+    display: block !important;
+    flex: 0 0 42px !important;
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+  body:not([data-theme="dark"]) .site-header .nav-actions .account-menu-trigger {
+    display: grid !important;
+    flex: 0 0 42px !important;
+    place-items: center !important;
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid rgba(25,25,25,.1) !important;
+    border-radius: 50% !important;
+    background: rgba(255,255,255,.58) !important;
+    color: #191919 !important;
+    box-shadow: none !important;
+  }
+  body:not([data-theme="dark"]) .site-header .nav-actions .account-menu-trigger .mobile-nav-label {
+    display: none !important;
+  }
+  body:not([data-theme="dark"]) .whatsapp-float:not([hidden]) {
+    position: fixed !important;
+    display: grid !important;
+    place-items: center !important;
+    right: 18px !important;
+    bottom: 18px !important;
+    z-index: 1701 !important;
+    width: 48px !important;
+    min-width: 48px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    max-width: 48px !important;
+    max-height: 48px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(255,255,255,.94) !important;
+    color: #191919 !important;
+    border: 1px solid rgba(25,25,25,.09) !important;
+    box-shadow: 0 12px 32px rgba(45,40,32,.14) !important;
+    text-decoration: none !important;
+    box-sizing: border-box !important;
+  }
+  body:not([data-theme="dark"]) .whatsapp-float .mobile-nav-icon {
+    display: block !important;
+    width: 22px !important;
+    min-width: 22px !important;
+    height: 22px !important;
+    min-height: 22px !important;
+    max-height: 22px !important;
+  }
+  body:not([data-theme="dark"]) .whatsapp-float .mobile-nav-label {
+    display: none !important;
+  }
+}
+
+/* The 4-item dock is intentionally mobile-only. Desktop never inherits its labels. */
+@media (min-width: 761px) {
+  body:not([data-theme="dark"]) .mobile-floating-actions {
+    position: static !important;
+    width: auto !important;
+    max-width: none !important;
+    box-shadow: none !important;
+  }
+}
