@@ -36,3 +36,27 @@
 .newsletter-feedback { margin: .7rem 0 0; font-size: .88rem; line-height: 1.5; color: #d8c7a6; }
 .newsletter-feedback.error { color: #f1a7a7; }
 .newsletter-feedback:empty { display: none; }
+
+
+/* Image-first hero carousel: keep the last loaded image visible while the next is animated in. */
+.premium-hero-media{isolation:isolate}
+.premium-hero-media img.premium-hero-image{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;z-index:0;transform:translate3d(0,0,0);will-change:opacity,transform}
+.premium-hero-media img.premium-hero-image.is-active{opacity:1;z-index:1}
+.premium-hero-media img.premium-hero-image.is-incoming{opacity:1;z-index:2}
+.premium-hero-media:after{z-index:3;pointer-events:none}
+.premium-hero-content{z-index:4}
+.premium-hero-actions .btn{position:relative;z-index:5}
+.premium-hero-media img.premium-hero-image.hero-transition-fade{animation:mvHeroFade .85s ease both}
+.premium-hero-media img.premium-hero-image.hero-transition-slide-left{animation:mvHeroSlideLeft .85s cubic-bezier(.22,.7,.25,1) both}
+.premium-hero-media img.premium-hero-image.hero-transition-slide-up{animation:mvHeroSlideUp .85s cubic-bezier(.22,.7,.25,1) both}
+.premium-hero-media img.premium-hero-image.hero-transition-zoom{animation:mvHeroZoom .9s cubic-bezier(.22,.7,.25,1) both}
+@keyframes mvHeroFade{from{opacity:0}to{opacity:1}}
+@keyframes mvHeroSlideLeft{from{opacity:.72;transform:translate3d(3.5%,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes mvHeroSlideUp{from{opacity:.72;transform:translate3d(0,3.5%,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes mvHeroZoom{from{opacity:.78;transform:scale(1.07)}to{opacity:1;transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){
+  .premium-hero-media img.premium-hero-image.hero-transition-fade,
+  .premium-hero-media img.premium-hero-image.hero-transition-slide-left,
+  .premium-hero-media img.premium-hero-image.hero-transition-slide-up,
+  .premium-hero-media img.premium-hero-image.hero-transition-zoom{animation-duration:.01ms;animation-iteration-count:1}
+}
