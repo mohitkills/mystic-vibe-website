@@ -203,6 +203,22 @@ test('newsletter signups are stored through a restricted server function and man
   assert.match(marketing, /newsletter_subscribers/);
 });
 
+test('Homepage places Shop by category below Find your fragrance family with glass fill hover animation', async () => {
+  const home = await read('js/premium-home.js');
+  const css = await read('css/theme-system.css');
+  const signatures = home.indexOf('id="signatures"');
+  const family = home.indexOf('id="families"');
+  const categories = home.indexOf('id="categories"');
+  const newArrivals = home.indexOf('id="new"');
+  assert.ok(signatures >= 0 && family > signatures && categories > family && newArrivals > categories,
+    'homepage order must place fragrance families before category tiles and both before new arrivals');
+  assert.match(css, /\.ivory-category-card:hover::before/);
+  assert.match(css, /clip-path: circle\(145% at 50% 50%\)/);
+  assert.match(css, /\.ivory-category-card:hover::after/);
+  assert.match(css, /left: 135%/);
+  assert.match(css, /prefers-reduced-motion: reduce/);
+});
+
 test('Admin light buttons use readable dark text before hover, on focus and while disabled', async () => {
   const css = await read('css/admin.css');
   assert.match(css, /body\.admin-page \.admin-main button\.btn\.light,[\s\S]*?-webkit-text-fill-color: #292620 !important/);
