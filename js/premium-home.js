@@ -321,7 +321,8 @@
   var slideGesture=null;
   var swipeThreshold=44;
   media.style.touchAction='pan-y';
-  media.querySelectorAll('img').forEach(function(image){image.draggable=false;});
+  initialImage.draggable=false;
+  inactiveImage.draggable=false;
   media.addEventListener('dragstart',function(event){event.preventDefault();});
   media.addEventListener('pointerdown',function(event){
     if(!event.isPrimary) return;

@@ -490,7 +490,9 @@ test('homepage has exactly one image-first hero, one configurable CTA and animat
   assert.match(premium, /cta_text/);
   assert.match(premium, /cta_link/);
   assert.match(premium, /showFallback\(\)/);
-  assert.match(premium, /showFallback\(\);\s*hero\.addEventListener\('mouseenter'/, 'fallback carousel starts before the CMS response');
+  assert.match(premium, /showFallback\(\)/, 'fallback carousel starts before the CMS response');
+  assert.match(premium, /media\.addEventListener\('pointerdown'/, 'image area accepts swipe or drag start');
+  assert.match(premium, /media\.addEventListener\('pointerup'/, 'image area handles completed swipe or drag');
   const homeRefresh = sync.slice(sync.indexOf('function rerenderImagePage()'), sync.indexOf('function dispatchStorefrontData()'));
   assert.match(homeRefresh, /if \(page === 'home'\) return;/, 'CMS refresh must preserve the single premium hero');
   assert.doesNotMatch(homeRefresh, /renderMysticVibeHome/, 'CMS refresh must not restore the legacy multi-slide hero');
@@ -584,10 +586,10 @@ test('hero controller rotates two slides in one image area and updates only the 
         current.push({ callback, once: Boolean(options.once) });
         handlers.set(name, current);
       },
-      dispatch(name) {
+      dispatch(name, event = {}) {
         const current = handlers.get(name) || [];
         for (const entry of [...current]) {
-          entry.callback({ type: name, target: element });
+          entry.callback(Object.assign({ type: name, target: element }, event));
           if (entry.once) handlers.set(name, (handlers.get(name) || []).filter((candidate) => candidate !== entry));
         }
       },
@@ -713,4 +715,16 @@ test('hero controller rotates two slides in one image area and updates only the 
   assert.equal(action.textContent, 'Buy Now', 'pagination dots navigate directly to their slide');
   assert.equal(status.textContent, '01 / 02');
   media.children.find((child) => child.classList.contains('is-incoming')).dispatch('animationend');
+
+  media.dispatch('pointerdown', { isPrimary: true, pointerType: 'touch', button: 0, pointerId: 11, clientX: 240, clientY: 100 });
+  media.dispatch('pointerup', { pointerId: 11, clientX: 170, clientY: 104 });
+  assert.equal(status.textContent, '02 / 02', 'leftward finger swipe advances to the next slide');
+  media.children.find((child) => child.classList.contains('is-incoming')).dispatch('animationend');
+  assert.equal(action.textContent, 'Claim Now');
+
+  media.dispatch('pointerdown', { isPrimary: true, pointerType: 'mouse', button: 0, pointerId: 12, clientX: 170, clientY: 100 });
+  media.dispatch('pointerup', { pointerId: 12, clientX: 240, clientY: 102 });
+  assert.equal(status.textContent, '01 / 02', 'rightward mouse drag returns to the previous slide');
+  media.children.find((child) => child.classList.contains('is-incoming')).dispatch('animationend');
+  assert.equal(action.textContent, 'Buy Now');
 });
