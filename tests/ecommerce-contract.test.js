@@ -229,7 +229,7 @@ test('Reference ivory-glass theme is bright-only, readable, and preserves storef
   assert.ok(sync.includes("readPublished('homepage_slides')"));
   assert.ok(home.includes('var fallbackSlides=['));
   assert.ok(home.includes('slides=completeSlides(incoming)'));
-  const heroMarkupEnd = home.indexOf("+'<section class=\\"signature-strip\\"");
+  const heroMarkupEnd = home.indexOf('signature-strip', home.indexOf('root.innerHTML='));
   assert.ok(heroMarkupEnd > 0);
   const heroMarkup = home.slice(home.indexOf('root.innerHTML='), heroMarkupEnd);
   assert.ok(!heroMarkup.includes('<h1'));
