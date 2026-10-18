@@ -545,6 +545,7 @@ async function previewSlide() {
     cta_link: formValue(form, 'cta_link'),
     image_url: formValue(form, 'image_url'),
     sort_order: formValue(form, 'sort_order'),
+    transition_style: formValue(form, 'transition_style'),
     is_published: form.elements.namedItem('is_published').checked,
   }, slides.find((slide) => slide.id === id) || null, location.origin, SUPABASE_URL);
   const dialog = document.querySelector('#slide-preview');
@@ -552,7 +553,8 @@ async function previewSlide() {
   const previewImage = stage.querySelector('img');
   const previewLink = stage.querySelector('a');
   stage.querySelector('h3').textContent = payload.heading;
-  stage.querySelector('p').textContent = payload.subtitle;
+  stage.querySelector('p').textContent = 'Transition: ' + payload.transition_style.replace(/-/g, ' ');
+  stage.dataset.transitionStyle = payload.transition_style;
   previewLink.textContent = payload.cta_text;
   previewLink.href = payload.cta_link;
   previewImage.src = payload.image_url ? (await signedImageUrl(payload.image_url)) || 'assets/images/hero-royal-marine.png' : 'assets/images/hero-royal-marine.png';
@@ -640,7 +642,7 @@ async function saveSlide(event) {
   if (uploadingForms.has(form)) throw new Error('Wait for the slide image upload to finish before saving.');
   const id = formValue(form, 'id');
   const existing = slides.find((slide) => slide.id === id) || null;
-  const fields = Object.fromEntries(['heading', 'subtitle', 'cta_text', 'cta_link', 'image_url', 'sort_order'].map((key) => [key, formValue(form, key)]));
+  const fields = Object.fromEntries(['heading', 'cta_text', 'cta_link', 'image_url', 'sort_order', 'transition_style'].map((key) => [key, formValue(form, key)]));
   fields.is_published = form.elements.namedItem('is_published').checked;
   const payload = buildSlidePayload(fields, existing, location.origin, SUPABASE_URL);
   await saveAndRefresh({ table: 'homepage_slides', key: 'id', id, payload, form, formId: 'slide-form', label: 'Homepage slide', successMessage: id ? 'Homepage slide updated.' : 'Homepage slide created.' });
