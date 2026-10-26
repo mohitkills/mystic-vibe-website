@@ -158,3 +158,11 @@ body.admin-page::before {
     radial-gradient(32% 58% at 55% 78%, rgba(201,231,216,.2), transparent 82%),
     radial-gradient(30% 60% at 94% 20%, rgba(216,210,237,.22), transparent 83%);
 }
+
+
+/* Team Access contrast fix: emails were inheriting the dark-mode white member-name rule. */
+body.admin-page #team-member-list .admin-record-main strong {
+  color: #191919 !important;
+  -webkit-text-fill-color: #191919 !important;
+  font-weight: 600 !important;
+}

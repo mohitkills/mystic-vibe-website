@@ -131,6 +131,17 @@ test('Admin reports module import failure details instead of leaving a section s
   assert.match(admin, /failedFeatures\.map\(\(feature\) => feature\.label\)/);
 });
 
+test('Team Access email addresses use dark readable text on the light member cards', async () => {
+  const adminCss = await read('css/admin.css');
+  const teamScript = await read('js/team-access-admin.js');
+  const adminHtml = await read('admin.html');
+  assert.ok(adminHtml.includes('id="team-member-list"'));
+  assert.ok(teamScript.includes("email.className") === false || teamScript.includes("email.textContent = member.email"));
+  assert.ok(adminCss.includes('body.admin-page #team-member-list .admin-record-main strong'));
+  assert.ok(adminCss.includes('color: #191919 !important'));
+  assert.ok(adminCss.includes('-webkit-text-fill-color: #191919 !important'));
+});
+
 test('Team Access is owner-gated and backed by server-only admin management functions', async () => {
   const html = await read('admin.html');
   const admin = await read('js/admin.js');
