@@ -62,6 +62,32 @@ if (authForm) {
   passwordInput.autocomplete = page === 'login' ? 'current-password' : 'new-password';
   if (page === 'register') passwordInput.minLength = 8;
 
+  // Add an accessible show/hide password control to both login and registration.
+  const passwordField = document.createElement('div');
+  passwordField.className = 'password-visibility-field full';
+  passwordInput.replaceWith(passwordField);
+  passwordField.appendChild(passwordInput);
+
+  const visibilityButton = document.createElement('button');
+  visibilityButton.type = 'button';
+  visibilityButton.className = 'password-visibility-toggle';
+  visibilityButton.setAttribute('aria-label', 'Show password');
+  visibilityButton.setAttribute('aria-pressed', 'false');
+  visibilityButton.title = 'Show password';
+  const eyeIcon = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true" focusable="false"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.8" stroke="currentColor" stroke-width="1.7"/></svg>';
+  const eyeOffIcon = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true" focusable="false"><path d="M3 3l18 18M10.6 6.2A10.8 10.8 0 0 1 12 6c6.1 0 9.5 6 9.5 6a17 17 0 0 1-3.1 3.7M6.2 6.3C3.9 7.8 2.5 12 2.5 12s3.4 6 9.5 6c1 0 1.9-.2 2.7-.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+  visibilityButton.innerHTML = eyeIcon;
+  passwordField.appendChild(visibilityButton);
+
+  visibilityButton.addEventListener('click', function () {
+    const shouldShow = passwordInput.type === 'password';
+    passwordInput.type = shouldShow ? 'text' : 'password';
+    visibilityButton.setAttribute('aria-label', shouldShow ? 'Hide password' : 'Show password');
+    visibilityButton.setAttribute('aria-pressed', String(shouldShow));
+    visibilityButton.title = shouldShow ? 'Hide password' : 'Show password';
+    visibilityButton.innerHTML = shouldShow ? eyeOffIcon : eyeIcon;
+  });
+
   if (page === 'login') {
     const resetLink = document.createElement('a');
     resetLink.className = 'full';

@@ -1740,3 +1740,59 @@ body:not([data-theme="dark"]) .product-card-reference .product-card-add:disabled
   }
   body:not([data-theme="dark"]) .product-card-price-row { gap: 4px; }
 }
+
+
+/* Accessible show/hide password control for sign-in and registration forms. */
+.password-visibility-field {
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  grid-column: 1 / -1 !important;
+}
+.password-visibility-field > input[type="password"],
+.password-visibility-field > input[type="text"] {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding-right: 54px !important;
+  box-sizing: border-box !important;
+}
+.password-visibility-field > .password-visibility-toggle {
+  position: absolute !important;
+  top: 50% !important;
+  right: 9px !important;
+  z-index: 2 !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  color: #625f58 !important;
+  box-shadow: none !important;
+  transform: translateY(-50%) !important;
+  cursor: pointer !important;
+}
+.password-visibility-field > .password-visibility-toggle:hover {
+  background: rgba(180,154,96,.12) !important;
+  color: #24211d !important;
+  transform: translateY(-50%) !important;
+}
+.password-visibility-field > .password-visibility-toggle:focus-visible {
+  outline: 2px solid #B49A60 !important;
+  outline-offset: 1px !important;
+}
+.password-visibility-field > .password-visibility-toggle svg {
+  display: block !important;
+  width: 20px !important;
+  height: 20px !important;
+  pointer-events: none;
+}

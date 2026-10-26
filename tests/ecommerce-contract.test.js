@@ -446,6 +446,20 @@ test('Product cards match the compact retail reference while preserving cart, wi
   assert.ok(css.includes('text-transform: uppercase !important'));
 });
 
+test('Login and registration password inputs have an accessible show/hide control', async () => {
+  const auth = await read('js/auth.js');
+  const css = await read('css/theme-system.css');
+  assert.ok(auth.includes("passwordField.className = 'password-visibility-field full'"));
+  assert.ok(auth.includes("visibilityButton.type = 'button'"));
+  assert.ok(auth.includes("passwordInput.type = shouldShow ? 'text' : 'password'"));
+  assert.ok(auth.includes("setAttribute('aria-label', shouldShow ? 'Hide password' : 'Show password')"));
+  assert.ok(auth.includes("setAttribute('aria-pressed', String(shouldShow))"));
+  assert.ok(auth.includes("page === 'login' ? 'current-password' : 'new-password'"));
+  assert.ok(css.includes('.password-visibility-field > .password-visibility-toggle'));
+  assert.ok(css.includes('padding-right: 54px !important'));
+  assert.ok(css.includes(':focus-visible'));
+});
+
 test('Storefront header exposes live product search and a profile menu with secure settings and logout', async () => {
   const app = await read('js/app.js');
   const auth = await read('js/auth.js');
