@@ -143,6 +143,10 @@ async function initialiseAccount() {
     heading.textContent = 'Showing your latest ' + orders.length + ' orders for ' + user.email + '.';
     root.prepend(heading);
   } catch (error) {
+    if (error?.name === 'AuthSessionMissingError' || error?.message === 'Auth session missing!') {
+      root.innerHTML = '<div class="panel"><h2 class="serif">Sign in to view your orders</h2><p>Your account lets you view orders placed while signed in. Guest orders can be tracked using the order number and checkout email.</p><a class="btn" href="login.html">Sign in</a> <a class="btn light" href="register.html">Create account</a> <a class="btn light" href="tracking.html">Track a guest order</a></div>';
+      return;
+    }
     console.error('Account orders could not be loaded:', error);
     root.innerHTML = '<div class="panel"><h2 class="serif">We could not load your orders</h2><p>' + escapeHtml(error?.message || 'Please try again later.') + '</p><a class="btn light" href="login.html">Sign in again</a> <a class="btn light" href="tracking.html">Track a guest order</a></div>';
   }
