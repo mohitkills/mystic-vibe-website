@@ -1810,3 +1810,35 @@ body:not([data-theme="dark"]) .product-card-reference .product-card-add:disabled
 }
 
 
+
+
+/* Keep the discount percentage beside the current and original prices, never floating over the product action button. */
+.product-card-content .product-card-price-row{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  flex-wrap:wrap!important;
+  gap:7px 9px!important;
+  min-width:0;
+  margin:0 0 10px!important;
+}
+.product-card-content .product-card-price-current,
+.product-card-content .product-card-price-original,
+.product-card-content .product-card-save{
+  position:static!important;
+  inset:auto!important;
+  float:none!important;
+  transform:none!important;
+  margin:0!important;
+  flex:0 0 auto;
+}
+.product-card-content .product-card-save{
+  display:inline-flex!important;
+  align-items:center!important;
+  white-space:nowrap!important;
+}
+.product-card-content .product-card-actions{
+  position:relative;
+  clear:both;
+}
