@@ -63,6 +63,9 @@ test('checkout recalculates products, shipping and offers on the server before p
   assert.match(checkout, /supabase\.rpc\('preview_checkout'/);
   assert.match(checkout, /supabase\.rpc\('place_order'/);
   assert.match(checkout, /p_coupon_code:\s*checkoutState\.coupon/);
+  assert.match(checkout, /p_items: cart\.map\(\(\{ slug, quantity, size_ml \}\) => \(\{ slug, quantity, size_ml \}\)\)/);
+  assert.match(checkout, /data-size-ml/);
+  assert.match(checkout, /variantFor\(product, item\.size_ml\)/);
   assert.match(checkout, /checkoutState\.verified/);
   assert.match(checkout, /preview\.items/);
   assert.match(checkout, /value="cod"/);
@@ -438,7 +441,8 @@ test('Product cards match the compact retail reference while preserving cart, wi
   assert.ok(start >= 0 && end > start);
   const card = app.slice(start, end);
   assert.ok(card.includes('product-card-bestseller'));
-  assert.ok(card.includes('product-card-discount'));
+  assert.ok(card.includes('product-card-save'));
+  assert.ok(!card.includes('product-card-discount'));
   assert.ok(card.includes('discountPercent'));
   assert.ok(card.includes('mrpValue>priceValue'));
   assert.ok(card.includes('product-card-kicker'));
@@ -448,9 +452,9 @@ test('Product cards match the compact retail reference while preserving cart, wi
   assert.ok(card.includes('p.rating'));
   assert.ok(card.includes('ratingValue.toFixed(1)'));
   assert.ok(css.includes('.product-card-image-stage > .visual'));
-  assert.ok(css.includes('aspect-ratio: 4 / 5 !important'));
+  assert.ok(css.includes('aspect-ratio: 1 / 1 !important'));
   assert.ok(css.includes('.product-card-bestseller'));
-  assert.ok(css.includes('.product-card-discount'));
+  assert.ok(css.includes('.product-card-save'));
   assert.ok(css.includes('.product-card-wishlist'));
   assert.ok(css.includes('.product-card-reference .product-card-add'));
   assert.ok(css.includes('grid-template-columns: repeat(2,minmax(0,1fr)) !important'));
@@ -491,12 +495,18 @@ test('Product detail page has a database-backed responsive retail layout without
   assert.ok(!page.includes("p.size+' ? '+rupee"));
   assert.ok(page.includes('data-product-add='));
   assert.ok(page.includes('data-buy='));
+  assert.ok(page.includes('data-select-size'));
+  assert.ok(page.includes('sizeSelectorMarkup'));
+  assert.ok(page.includes('selectedVariant.price'));
+  assert.ok(app.includes('function productVariants(p)'));
+  assert.ok(app.includes('function productVariant(p,sizeMl)'));
+  assert.ok(app.includes('size_ml:selectedSize'));
   assert.ok(page.includes('data-inc'));
   assert.ok(page.includes('data-dec'));
   assert.ok(page.includes('pdp-mobile-bar'));
   assert.ok(app.includes('function handleProductAdd('));
   assert.ok(app.includes("button.textContent=added?'Added':'Add to cart'"));
-  assert.ok(app.includes("addToCart(b.dataset.buy,Number(document.querySelector('#qty')?.value||1))"));
+  assert.ok(app.includes("addToCart(b.dataset.buy,Number(document.querySelector('#qty')?.value||1),Number(b.dataset.sizeMl))"));
   const discountMatch = app.match(/function productDiscountPercent\(mrp,price\)\{[^}]*\}/);
   assert.ok(discountMatch);
   const discount = runInNewContext(discountMatch[0] + '; productDiscountPercent;');
@@ -511,8 +521,9 @@ test('Product detail page has a database-backed responsive retail layout without
   const currency = runInNewContext(currencySource + '; productCurrency;');
   assert.equal(currency(449), '₹449.00');
   assert.ok(css.includes('body[data-page="product"] .pdp-gallery-stage'));
-  assert.ok(css.includes('aspect-ratio: 4 / 5'));
+  assert.ok(css.includes('aspect-ratio: 1 / 1'));
   assert.ok(css.includes('object-fit: contain'));
+  assert.ok(css.includes('data-select-size') || css.includes('.pdp-size-option'));
   assert.ok(css.includes('mix-blend-mode: multiply'));
   assert.ok(css.includes('grid-template-columns: 48px 58px 48px'));
   assert.ok(css.includes('grid-template-rows: 48px'));
@@ -526,6 +537,49 @@ test('Product detail page has a database-backed responsive retail layout without
   assert.ok(css.includes('@media (prefers-reduced-motion: reduce)'));
   assert.ok(css.includes(':focus-visible'));
   assert.ok(css.includes('grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr)'));
+});
+
+test('Product size variants are admin-managed, selected through the storefront, and validated by checkout RPCs', async () => {
+  const adminHtml = await read('admin.html');
+  const admin = await read('js/admin.js');
+  const sync = await read('js/storefront-sync.js');
+  const app = await read('js/app.js');
+  const checkout = await read('js/checkout.js');
+  const migration = await read('supabase/migrations/20261121090000_product_size_variants.sql');
+  const editor = adminHtml.slice(adminHtml.indexOf('id="product-size-variant-editor"'), adminHtml.indexOf('</div>', adminHtml.indexOf('id="product-size-variant-editor"')) + 6);
+  assert.ok(editor.includes('product-size-variant-grid'));
+  assert.ok(admin.includes('PRODUCT_SIZE_OPTIONS = [30, 50, 100]'));
+  assert.ok(admin.includes('readProductSizeVariants(form)'));
+  assert.ok(admin.includes('size_variants: sizeVariants'));
+  assert.ok(admin.includes('is_available: true'));
+  assert.ok(sync.includes('product.size_variants = row.size_variants.filter'));
+  assert.ok(app.includes('data-select-size'));
+  assert.ok(app.includes('data-pdp-current'));
+  assert.ok(app.includes('size_ml:selectedSize'));
+  assert.ok(app.includes('v.slug===s&&Number(v.size_ml)===selectedSize'));
+  assert.ok(checkout.includes('size_ml: size'));
+  assert.ok(checkout.includes('p_items: cart.map(({ slug, quantity, size_ml }) => ({ slug, quantity, size_ml }))'));
+  assert.ok(migration.includes('add column if not exists size_variants jsonb'));
+  assert.ok(migration.includes('entry.value ->> \'size_ml\''));
+  assert.ok(migration.includes('v_variant_stock - v_quantity'));
+  assert.ok(migration.includes('v_item.size_ml::text'));
+});
+
+test('product detail and card image areas remain square and the discount stays beside the price', async () => {
+  const pdpCss = await read('css/product-detail.css');
+  const themeCss = await read('css/theme-system.css');
+  const app = await read('js/app.js');
+  assert.ok(pdpCss.includes('aspect-ratio: 1 / 1'));
+  assert.ok(pdpCss.includes('object-fit: contain'));
+  assert.ok(themeCss.includes('.product-card-image-stage > .visual'));
+  assert.ok(themeCss.includes('aspect-ratio: 1 / 1 !important'));
+  const start = app.indexOf('function productCard(p){');
+  const end = app.indexOf('function productCurrency(value){', start);
+  const card = app.slice(start, end);
+  assert.ok(card.includes("var imageBadges=bestseller?"));
+  assert.ok(card.includes('product-card-save'));
+  assert.ok(!card.includes('product-card-discount'));
+  assert.ok(card.includes('+originalPrice+discountLabel'));
 });
 
 test('Login and registration password inputs have an accessible show/hide control', async () => {
