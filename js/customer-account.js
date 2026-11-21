@@ -25,7 +25,10 @@ function renderOrderResult(order) {
   return `
     <section class="panel order-detail-card">
       <div class="order-detail-top"><div><span class="eyebrow">Order</span><h2 class="serif">${escapeHtml(order.order_number)}</h2><p>Placed ${escapeHtml(accountDateText(order.created_at))}</p></div>
-      <div class="order-badges"><span class="badge">${escapeHtml(niceStatus(order.order_status))}</span><span class="badge">${escapeHtml(niceStatus(order.payment_status))}</span></div></div>
+      <div class="order-badges" aria-label="Order and payment status">
+        <span class="badge order-status-badge order-status-badge--${accountStatusInfo(order.order_status).tone}">Order · ${escapeHtml(niceStatus(order.order_status))}</span>
+        <span class="badge payment-status-badge payment-status-badge--${['paid','cod_collected'].includes(String(order.payment_status || '').toLowerCase()) ? 'paid' : String(order.payment_status || '').toLowerCase() === 'failed' ? 'failed' : String(order.payment_status || '').toLowerCase() === 'refunded' ? 'refunded' : 'pending'}">Payment · ${escapeHtml(niceStatus(order.payment_status))}</span>
+      </div></div>
       ${statusSteps(order.order_status)}
       ${order.carrier || order.tracking_number ? '<div class="tracking-shipment"><h3>Shipment details</h3><p>' + escapeHtml(order.carrier || 'Delivery partner') + (order.tracking_number ? ': ' + escapeHtml(order.tracking_number) : '') + '</p></div>' : ''}
       ${order.status_note ? '<div class="tracking-shipment"><h3>Store update</h3><p>' + escapeHtml(order.status_note) + '</p></div>' : ''}
