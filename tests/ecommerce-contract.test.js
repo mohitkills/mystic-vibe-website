@@ -504,7 +504,7 @@ test('Product detail page has a database-backed responsive retail layout without
   assert.equal(discount(499, 499), 0);
   assert.equal(discount(399, 449), 0);
   assert.equal(discount(0, 449), 0);
-  const currencyMatch = app.match(/function productCurrency\\(value\\)\\{[^}]*\\}/);
+  const currencyMatch = app.match(/function productCurrency\(value\)\{[^}]*\}/);
   assert.ok(currencyMatch);
   const currency = runInNewContext(currencyMatch[0] + '; productCurrency;');
   assert.equal(currency(449), '₹449.00');
