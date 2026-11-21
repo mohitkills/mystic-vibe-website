@@ -24,7 +24,7 @@ function renderOrderResult(order) {
   const items = Array.isArray(order.items) ? order.items : [];
   return `
     <section class="panel order-detail-card">
-      <div class="order-detail-top"><div><span class="eyebrow">Order</span><h2 class="serif">${escapeHtml(order.order_number)}</h2><p>Placed ${escapeHtml(dateText(order.created_at))}</p></div>
+      <div class="order-detail-top"><div><span class="eyebrow">Order</span><h2 class="serif">${escapeHtml(order.order_number)}</h2><p>Placed ${escapeHtml(accountDateText(order.created_at))}</p></div>
       <div class="order-badges"><span class="badge">${escapeHtml(niceStatus(order.order_status))}</span><span class="badge">${escapeHtml(niceStatus(order.payment_status))}</span></div></div>
       ${statusSteps(order.order_status)}
       ${order.carrier || order.tracking_number ? '<div class="tracking-shipment"><h3>Shipment details</h3><p>' + escapeHtml(order.carrier || 'Delivery partner') + (order.tracking_number ? ': ' + escapeHtml(order.tracking_number) : '') + '</p></div>' : ''}
@@ -98,6 +98,14 @@ async function initialiseTracking() {
       button.disabled = false; button.textContent = 'Find Order';
     }
   }, true);
+}
+
+function accountDateText(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Date unavailable';
+  return new Intl.DateTimeFormat('en-IN', {
+    day: '2-digit', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit',
+  }).format(date);
 }
 
 function accountStatusInfo(value) {
