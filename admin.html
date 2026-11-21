@@ -62,10 +62,36 @@
           <label class="wide">Description<textarea name="description" rows="3"></textarea></label>
           <label>Fragrance family<input name="fragrance_family"></label>
           <label>Fragrance notes<input name="fragrance_notes"></label>
-          <label>Size (ml)<input name="size_ml" type="number" min="1" step="1" value="50" required></label>
-          <label>Price<input name="price" type="number" min="0" step="0.01" required></label>
-          <label>MRP<input name="mrp" type="number" min="0" step="0.01" required></label>
-          <label>Stock<input name="stock" type="number" min="0" step="1" value="0" required></label>
+          <fieldset id="size-variant-editor" class="size-variants-editor wide">
+            <legend>Available sizes &amp; pricing</legend>
+            <p class="size-variants-help">Enable only the bottle sizes you actually sell. Set a separate selling price, MRP and stock for each enabled size. The storefront will show only these enabled sizes.</p>
+            <div class="size-variant-grid">
+              <article class="size-variant-card" data-size-variant-row="30">
+                <label class="size-variant-choice"><input type="checkbox" data-variant-enabled value="30"><strong>30 ML</strong></label>
+                <div class="size-variant-fields">
+                  <label>Price (₹)<input type="number" min="0.01" step="0.01" data-variant-price data-variant-value disabled></label>
+                  <label>MRP (₹)<input type="number" min="0" step="0.01" data-variant-mrp data-variant-value disabled></label>
+                  <label>Stock<input type="number" min="0" step="1" value="0" data-variant-stock data-variant-value disabled></label>
+                </div>
+              </article>
+              <article class="size-variant-card is-enabled" data-size-variant-row="50">
+                <label class="size-variant-choice"><input type="checkbox" data-variant-enabled value="50" checked><strong>50 ML</strong></label>
+                <div class="size-variant-fields">
+                  <label>Price (₹)<input type="number" min="0.01" step="0.01" data-variant-price data-variant-value required></label>
+                  <label>MRP (₹)<input type="number" min="0" step="0.01" data-variant-mrp data-variant-value></label>
+                  <label>Stock<input type="number" min="0" step="1" value="0" data-variant-stock data-variant-value></label>
+                </div>
+              </article>
+              <article class="size-variant-card" data-size-variant-row="100">
+                <label class="size-variant-choice"><input type="checkbox" data-variant-enabled value="100"><strong>100 ML</strong></label>
+                <div class="size-variant-fields">
+                  <label>Price (₹)<input type="number" min="0.01" step="0.01" data-variant-price data-variant-value disabled></label>
+                  <label>MRP (₹)<input type="number" min="0" step="0.01" data-variant-mrp data-variant-value disabled></label>
+                  <label>Stock<input type="number" min="0" step="1" value="0" data-variant-stock data-variant-value disabled></label>
+                </div>
+              </article>
+            </div>
+          </fieldset>
           <label>Sort order<input name="sort_order" type="number" step="1" value="0"></label>
           <label class="wide">Image paths <small>Uploaded paths are saved in order. Admin previews use temporary signed URLs. Published product images are served through the private image function while both buckets stay private; local artwork remains the fallback if that function is unavailable. Use an assets/... path or ordinary public HTTPS image URL for external artwork.</small><textarea name="image_urls" rows="3" placeholder="mystic-vibe-images/products/... "></textarea></label>
           <label class="file-field">Add product images<input name="product-image" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple aria-describedby="product-image-status"><small>Select multiple images. The first image is the main image; use the controls below to reorder or remove images.</small></label>
