@@ -3,9 +3,11 @@ on:
   push:
     branches:
       - feature/complete-ecommerce-foundation
+      - fix/current-mystic-vibe-image-canvas-offer-badge
   pull_request:
     branches:
       - main
+      - feature/complete-ecommerce-foundation
 jobs:
   syntax:
     runs-on: ubuntu-latest
