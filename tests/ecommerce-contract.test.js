@@ -106,6 +106,42 @@ test('customer order history and guest order lookup are connected to the secured
   assert.match(account, /Track a guest order/);
 });
 
+test('My Orders redesign preserves the existing signed-in order queries and data while adding presentation-only UI', async () => {
+  const account = await read('js/customer-account.js');
+  const html = await read('account.html');
+  const css = await read('css/orders-enhanced.css');
+
+  assert.match(html, /<title>My Orders — Mystic Vibe<\\/title>/);
+  assert.ok(account.includes("supabase.from('orders')"));
+  assert.ok(account.includes(".select('id,order_number,created_at,order_status,payment_status,payment_method,subtotal,shipping_fee,discount_amount,total,carrier,tracking_number')"));
+  assert.ok(account.includes(".order('created_at', { ascending: false }).limit(50)"));
+  assert.ok(account.includes("supabase.from('order_items')"));
+  assert.ok(account.includes(".select('order_id,product_name,product_slug,size_ml,quantity,unit_price,line_total')"));
+  assert.ok(account.includes(".in('order_id', ids).order('created_at', { ascending: true })"));
+  assert.ok(account.includes("supabase.auth.getUser()"));
+  assert.ok(account.includes("new Intl.DateTimeFormat('en-IN'"));
+  assert.ok(account.includes('data-copy-order='));
+  assert.ok(account.includes('data-orders-retry'));
+  assert.ok(account.includes('tracking.html?order='));
+  assert.ok(account.includes('items.slice(0, 3)'));
+  assert.ok(account.includes('money(item.line_total)'));
+  assert.ok(account.includes('money(item.unit_price)'));
+  assert.ok(account.includes('money(order.total)'));
+  assert.ok(account.includes("['cancelled', 'canceled', 'failed']"));
+  assert.ok(account.includes("pending: 0, confirmed: 1, processing: 1, shipped: 2, delivered: 3"));
+  assert.ok(!account.includes('Pay now'));
+  assert.ok(!account.includes('Retry payment'));
+
+  for (const selector of ['.oc-status--pending', '.oc-status--processing', '.oc-status--shipped',
+    '.oc-status--delivered', '.oc-status--cancelled', '.oc-status--failed', '.oc-status--refunded',
+    '.oc-copy:focus-visible', '.oc-track', '.oc-skeleton', '.oc-empty--error']) {
+    assert.ok(css.includes(selector), 'missing My Orders presentation style: ' + selector);
+  }
+  assert.ok(css.includes('max-width: 600px'));
+  assert.ok(css.includes('max-width: 360px'));
+  assert.ok(css.includes('prefers-reduced-motion: reduce'));
+  assert.ok(css.includes('mix-blend-mode: multiply'));
+});
 test('Admin native select options keep readable contrast in Windows dropdown popups', async () => {
   const html = await read('admin.html');
   const css = await read('css/admin.css');
