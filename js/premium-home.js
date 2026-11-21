@@ -25,8 +25,8 @@
   +'<section class="section story-band"><div class="container"><div><span class="eyebrow">The Mystic Standard</span><h2 class="serif">A presence<br>that lingers.</h2></div><div class="story-panel"><p data-site-content="home.brand.promise">Thoughtfully composed, confidently worn. Premium fragrance should be expressive, not out of reach.</p><a class="btn" href="collection.html">Find Your Signature</a></div></div></section>'
   +'<section class="section"><div class="container"><div class="section-head"><div><span class="eyebrow">The Essentials</span><h2 class="serif">Why Mystic Vibe</h2></div><p data-site-content="home.why.description">We make a refined fragrance ritual feel effortless—from the first detail to the final impression.</p></div><div class="grid feature-grid"><div class="feature card"><strong>Lasting<br>character</strong></div><div class="feature card"><strong>Premium<br>presentation</strong></div><div class="feature card"><strong>Made in<br>India</strong></div><div class="feature card"><strong>Considered<br>compositions</strong></div><div class="feature card"><strong>Luxury made<br>accessible</strong></div></div></div></section>'
   +'<section class="section"><div class="container"><div class="newsletter"><div><span class="eyebrow">Private Access</span><h2 class="serif">Notes from Mystic Vibe.</h2><p data-site-content="home.newsletter.description">First access to new scents, private offers and curated fragrance stories.</p></div><form data-newsletter><input type="email" placeholder="Your email address" required aria-label="Email address"><button class="btn">Join The List</button></form></div></div></section>';
-  var observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){entry.target.classList.add('visible');observer.unobserve(entry.target)}})},{threshold:.1});
-  root.querySelectorAll('.card,.newsletter,.story-panel').forEach(function(el){el.classList.add('reveal');observer.observe(el)});
+  root.querySelectorAll('.card,.newsletter,.story-panel').forEach(function(el){el.classList.add('reveal');});
+  if(window.initReveal)window.initReveal(root);
 })();
 
 (function(){
