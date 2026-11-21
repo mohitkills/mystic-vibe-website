@@ -999,3 +999,21 @@ test('Cart remove animation preserves the existing remove filter, and cart drawe
   assert.match(motionCss, /\.mv-cart-drawer\s*\{[\s\S]*?z-index:\s*2000/);
   assert.ok(motionCss.includes('.mv-cart-checkout:hover'));
 });
+
+
+test('homepage hero loads published CMS slides and their private images instead of relying only on static fallbacks', async () => {
+  const html = await read('index.html');
+  const cms = await read('js/homepage-cms.js');
+  const hero = await read('js/premium-home.js');
+
+  assert.match(html, /type="module" src="js\/homepage-cms\.js"/);
+  assert.match(cms, /from\('homepage_slides'\)/);
+  assert.match(cms, /\.eq\('is_published', true\)/);
+  assert.match(cms, /\.order\('sort_order'/);
+  assert.match(cms, /functions\/v1\/slide-image/);
+  assert.match(cms, /apikey: SUPABASE_PUBLISHABLE_KEY/);
+  assert.match(cms, /URL\.createObjectURL\(blob\)/);
+  assert.match(cms, /display_image_url/);
+  assert.match(cms, /new CustomEvent\('mystic-vibe-storefront-data'/);
+  assert.match(hero, /slide\.display_image_url \|\| slide\.image_url/);
+});
