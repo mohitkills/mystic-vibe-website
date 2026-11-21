@@ -1001,19 +1001,22 @@ test('Cart remove animation preserves the existing remove filter, and cart drawe
 });
 
 
-test('homepage hero loads published CMS slides and their private images instead of relying only on static fallbacks', async () => {
-  const html = await read('index.html');
-  const cms = await read('js/homepage-cms.js');
-  const hero = await read('js/premium-home.js');
 
-  assert.match(html, /type="module" src="js\/homepage-cms\.js"/);
-  assert.match(cms, /from\('homepage_slides'\)/);
-  assert.match(cms, /\.eq\('is_published', true\)/);
-  assert.match(cms, /\.order\('sort_order'/);
-  assert.match(cms, /functions\/v1\/slide-image/);
-  assert.match(cms, /apikey: SUPABASE_PUBLISHABLE_KEY/);
-  assert.match(cms, /URL\.createObjectURL\(blob\)/);
-  assert.match(cms, /display_image_url/);
-  assert.match(cms, /new CustomEvent\('mystic-vibe-storefront-data'/);
-  assert.match(hero, /slide\.display_image_url \|\| slide\.image_url/);
+test('homepage CMS sync reaches the hero carousel after product sections are refreshed', async () => {
+  const html = await read('index.html');
+  const hero = await read('js/premium-home.js');
+  const sync = await read('js/storefront-sync.js');
+  const controllerStart = hero.indexOf("var hero=document.querySelector('.premium-hero');");
+  assert.ok(controllerStart >= 0, 'the image-first hero controller must be present');
+  const controller = hero.slice(controllerStart, hero.indexOf('})();', controllerStart));
+
+  assert.match(controller, /var root=hero\.closest\('main'\) \|\| document\.querySelector\('main'\);/);
+  assert.match(controller, /var section=root\.querySelector\('\[data-home-section=/);
+  assert.match(controller, /var incoming=Array\.isArray\(data\.slides\)/);
+  assert.match(sync, /readPublished\('homepage_slides'\)/);
+  assert.match(sync, /window\.MV_HOMEPAGE_SLIDES = await hydrateSlideImages\(publishedSlides\)/);
+  assert.match(sync, /functions\/v1\/slide-image/);
+  assert.match(sync, /slides: window\.MV_HOMEPAGE_SLIDES/);
+  assert.match(sync, /dispatchStorefrontData\(\)/);
+  assert.doesNotMatch(html, /homepage-cms\.js/, 'do not start a duplicate homepage slide loader');
 });
