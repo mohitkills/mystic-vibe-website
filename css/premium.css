@@ -396,3 +396,8 @@
 @media(max-width:640px){
   .product-card-gallery .visual{min-height:0!important;aspect-ratio:1/1!important}
 }
+
+/* Product cards: remove the image pagination dots while keeping previous/next arrows. */
+.product-image-controls .gallery-dots {
+  display: none !important;
+}
