@@ -35,6 +35,8 @@ test('fly-to-cart animates only transform and opacity and does not write cart da
   const js = await read('js/motion-ui.js');
   assert.match(js, /function flyToCart/);
   assert.match(js, /transition: 'transform 660ms[^']*opacity 660ms/);
+  assert.match(js, /savedCartQuantity\(\) > before/);
+  assert.match(js, /document\.addEventListener\('click',[\s\S]*?\}, true\);/);
   assert.doesNotMatch(js, /transition:\s*'[^']*(?:left|top|width|height)\s*:/);
   assert.doesNotMatch(js, /localStorage\.setItem\s*\(\s*['"]mv_cart/);
 });
