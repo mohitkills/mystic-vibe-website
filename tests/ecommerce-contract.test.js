@@ -292,6 +292,8 @@ test('Mobile header menu opens as a readable glass grid and account actions dock
   const app = await read('js/app.js');
   const theme = await read('css/theme-system.css');
   assert.ok(app.includes("navLinks.classList.toggle('open')"));
+  assert.ok(app.includes("event.key==='Escape'&&navLinks.classList.contains('open')"));
+  assert.ok(app.includes("menuButton.focus()"));
   assert.ok(theme.includes('.site-header > .nav .nav-links.open'));
   assert.ok(theme.includes('background: rgba(255,255,255,.97) !important'));
   assert.ok(theme.includes('.site-header > .nav > .nav-actions'));
@@ -604,6 +606,8 @@ test('Storefront header exposes live product search and a profile menu with secu
   const searchCss = await read('css/premium.css');
   assert.ok(app.includes('data-site-search role="search"'));
   assert.ok(app.includes('data-site-search-input name="search"'));
+  assert.ok(app.includes('role="combobox" aria-autocomplete="list"'));
+  assert.ok(app.includes("aria-controls=\"mv-search-suggestions\""));
   assert.ok(app.includes('searchCatalogProducts(searchQuery)'));
   assert.ok(app.includes("new URLSearchParams(location.search).get('search')"));
   assert.ok(app.includes('data-account-toggle'));
