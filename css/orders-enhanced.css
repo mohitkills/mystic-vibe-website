@@ -733,3 +733,93 @@ body[data-page="account"] .oc-skeleton-foot b { width: 150px; height: 42px; }
   body[data-page="account"] .oc-skeleton b,
   body[data-page="account"] .oc-skeleton-track { animation: none !important; }
 }
+
+
+/* Track Order: keep order and payment status chips in normal flow.
+   The site-wide .badge selector is absolutely positioned for nav counters;
+   that positioning must never apply to the two order-status labels. */
+body[data-page="tracking"] .order-detail-top {
+  min-width: 0;
+  gap: 1rem;
+}
+body[data-page="tracking"] .order-detail-top > div:first-child {
+  min-width: 0;
+  flex: 1 1 320px;
+}
+body[data-page="tracking"] .order-detail-top .order-badges {
+  position: static !important;
+  inset: auto !important;
+  display: flex;
+  flex: 0 1 auto;
+  align-items: flex-start;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: .5rem;
+  min-width: 0;
+  max-width: 100%;
+}
+body[data-page="tracking"] .order-detail-top .order-badges .badge {
+  position: static !important;
+  inset: auto !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 0;
+  height: auto;
+  min-height: 32px;
+  padding: .4rem .75rem;
+  border: 1px solid rgba(25,25,25,.1);
+  border-radius: 999px;
+  background: rgba(255,255,255,.76);
+  color: var(--iv-tx, #191919);
+  font: 600 .75rem/1.25 Inter, sans-serif;
+  white-space: nowrap;
+}
+body[data-page="tracking"] .order-detail-top .order-status-badge--pending {
+  background: rgba(180,154,96,.16);
+  border-color: rgba(180,154,96,.25);
+  color: #7D6730;
+}
+body[data-page="tracking"] .order-detail-top .order-status-badge--processing {
+  background: rgba(70,100,140,.12);
+  border-color: rgba(70,100,140,.2);
+  color: #2F4A6B;
+}
+body[data-page="tracking"] .order-detail-top .order-status-badge--shipped {
+  background: rgba(120,100,180,.12);
+  border-color: rgba(120,100,180,.2);
+  color: #4B3C8A;
+}
+body[data-page="tracking"] .order-detail-top .order-status-badge--delivered,
+body[data-page="tracking"] .order-detail-top .payment-status-badge--paid {
+  background: rgba(31,122,77,.12);
+  border-color: rgba(31,122,77,.2);
+  color: #1F7A4D;
+}
+body[data-page="tracking"] .order-detail-top .order-status-badge--cancelled,
+body[data-page="tracking"] .order-detail-top .order-status-badge--failed,
+body[data-page="tracking"] .order-detail-top .payment-status-badge--failed {
+  background: rgba(163,58,58,.12);
+  border-color: rgba(163,58,58,.2);
+  color: #8A2E2E;
+}
+body[data-page="tracking"] .order-detail-top .order-status-badge--refunded,
+body[data-page="tracking"] .order-detail-top .order-status-badge--unknown,
+body[data-page="tracking"] .order-detail-top .payment-status-badge--refunded {
+  background: rgba(95,90,83,.1);
+  border-color: rgba(95,90,83,.18);
+  color: #5F5A53;
+}
+@media (max-width: 600px) {
+  body[data-page="tracking"] .order-detail-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  body[data-page="tracking"] .order-detail-top .order-badges {
+    justify-content: flex-start;
+  }
+  body[data-page="tracking"] .order-detail-top .order-badges .badge {
+    white-space: normal;
+  }
+}
