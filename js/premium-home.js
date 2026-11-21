@@ -33,6 +33,8 @@
   if(!document.body || document.body.dataset.page!=='home') return;
   var hero=document.querySelector('.premium-hero');
   if(!hero || hero.dataset.sliderInitialized==='true') return;
+  var root=hero.closest('main') || document.querySelector('main');
+  if(!root) return;
   hero.dataset.sliderInitialized='true';
 
   var media=hero.querySelector('.premium-hero-media');
