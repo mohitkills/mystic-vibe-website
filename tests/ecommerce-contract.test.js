@@ -709,7 +709,9 @@ test('homepage has exactly one image-first hero, one configurable CTA and animat
   assert.match(homeRefresh, /if \(page === 'home'\) return;/, 'CMS refresh must preserve the single premium hero');
   assert.doesNotMatch(homeRefresh, /renderMysticVibeHome/, 'CMS refresh must not restore the legacy multi-slide hero');
   assert.match(sync, /readPublished\('homepage_slides'\)/);
-  assert.match(sync, /window\.MV_HOMEPAGE_SLIDES = await hydrateSlideImages\(publishedSlides\)/);
+  assert.match(sync, /page === 'home' \? readPublished\('homepage_slides'\)/);
+  assert.match(sync, /const slideImagesPromise = Array\.isArray\(slides\)[\s\S]*?hydrateSlideImages\(publishedSlides\)/);
+  assert.match(sync, /const \[hydratedSlides\] = await Promise\.all\(\[slideImagesPromise, productImagesPromise\]\)/);
   assert.match(sync, /window\.MV_STOREFRONT_CMS_CONNECTED = Array\.isArray\(products\)/);
   assert.match(sync, /mergeCatalogBySlug\(\[\], mappedProducts/);
   assert.match(html, /Slide transition<select name="transition_style"/);
@@ -1028,4 +1030,30 @@ test('mobile Cart page removes redundant category header and overlapping floatin
   assert.match(css, /body\[data-page="cart"\] \.catalog-nav\s*\{\s*display:\s*none !important;/);
   assert.match(css, /body\[data-page="cart"\] \.mobile-floating-actions,[\s\S]*?body\[data-page="cart"\] \.whatsapp-float:not\(\[hidden\]\)\s*\{[\s\S]*?display:\s*none !important;[\s\S]*?visibility:\s*hidden !important;/);
   assert.match(css, /padding-bottom:\s*calc\(148px \+ env\(safe-area-inset-bottom, 0px\)\)/);
+});
+
+
+test('storefront loading hides stale CMS-bound images until live content is hydrated', async () => {
+  const app = await read('js/app.js');
+  const sync = await read('js/storefront-sync.js');
+  const motion = await read('js/motion-ui.js');
+  const css = await read('css/theme-system.css');
+
+  assert.match(app, /window\.MV_STOREFRONT_LOADING=true;document\.body\.classList\.add\('mv-storefront-loading'\)/);
+  assert.match(app, /document\.body\.classList\.remove\('mv-storefront-loading'\)/);
+  assert.match(css, /body\.mv-storefront-loading main \.premium-hero-image/);
+  assert.match(css, /body\.mv-storefront-loading main \.product-card-reference img/);
+  assert.match(sync, /document\.body\.classList\.remove\('mv-storefront-loading'\)/);
+  assert.match(motion, /document\.body\.classList\.remove\('mv-storefront-loading'\)/);
+});
+
+test('storefront hydration loads homepage and collection extras only where needed and avoids unrelated private image downloads', async () => {
+  const sync = await read('js/storefront-sync.js');
+  assert.match(sync, /page === 'collection' \? readPublished\('collections'\)/);
+  assert.match(sync, /page === 'home' \? readPublished\('homepage_slides'\)/);
+  assert.match(sync, /const shouldHydrateProducts = \['home', 'collection', 'product', 'cart', 'wishlist'\]\.includes\(page\)/);
+  assert.match(sync, /function currentImageHydrationScope\(\)/);
+  assert.match(sync, /return \{ slugs, primaryOnly: true \}/);
+  assert.match(sync, /const slots = primaryOnly \? allSlots\.slice\(0, 1\) : allSlots/);
+  assert.match(sync, /const \[hydratedSlides\] = await Promise\.all\(\[slideImagesPromise, productImagesPromise\]\)/);
 });
