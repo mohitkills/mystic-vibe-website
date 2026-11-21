@@ -151,12 +151,14 @@ async function hydrateSlideImages(slides) {
 async function hydrateProductImages(products, imageSlotsBySlug, options = {}) {
   const allowedSlugs = Array.isArray(options.slugs) ? new Set(options.slugs) : null;
   const primaryOnly = options.primaryOnly === true;
+  const fromIndex = Number.isSafeInteger(options.fromIndex) && options.fromIndex > 0 ? options.fromIndex : 0;
   await Promise.all(products.map(async (product) => {
     if (allowedSlugs && !allowedSlugs.has(product.slug)) return;
     const allSlots = imageSlotsBySlug.get(product.slug);
-    if (!allSlots?.length) return;
-    const slots = primaryOnly ? allSlots.slice(0, 1) : allSlots;
-    const images = await Promise.all(slots.map(async (slot, index) => {
+    if (!allSlots?.length || fromIndex >= allSlots.length) return;
+    const slots = primaryOnly ? allSlots.slice(0, 1) : allSlots.slice(fromIndex);
+    const images = await Promise.all(slots.map(async (slot, offset) => {
+      const index = primaryOnly ? offset : fromIndex + offset;
       if (slot?.kind === 'url') {
         if (slot.legacyLocalFile) console.warn('Mystic Vibe normalized a legacy local-file product image to a same-site asset.');
         return slot.url;
@@ -169,12 +171,19 @@ async function hydrateProductImages(products, imageSlotsBySlug, options = {}) {
       }
       return fallbackImage(product, index);
     }));
-    product.images = images.filter(Boolean);
+    if (fromIndex > 0) {
+      product.images = [...(Array.isArray(product.images) ? product.images.slice(0, fromIndex) : []), ...images.filter(Boolean)];
+    } else {
+      product.images = images.filter(Boolean);
+    }
   }));
 }
 
 function currentImageHydrationScope() {
   const page = document.body.dataset.page;
+  if (page === 'home' || page === 'collection') {
+    return { slugs: null, primaryOnly: true };
+  }
   if (page === 'product') {
     return { slugs: [document.body.dataset.product].filter(Boolean), primaryOnly: false };
   }
@@ -438,6 +447,27 @@ async function applyRemoteData({ products, collections, slides, content }) {
   window.MV_STOREFRONT_LOADING = false;
   document.body.classList.remove('mv-storefront-loading');
   dispatchStorefrontData();
+
+  // The first image is enough to reveal the live catalogue quickly. Fetch the
+  // remaining gallery shots after first render so they never hold up page entry.
+  if (['home', 'collection'].includes(page)) {
+    const mainElement = document.querySelector('main');
+    const hasGalleryImages = mergedProducts.some((product) => (imageSlotsBySlug.get(product.slug) || []).length > 1);
+    if (hasGalleryImages) {
+      void hydrateProductImages(mergedProducts, imageSlotsBySlug, { fromIndex: 1 }).then(() => {
+        if (document.body.dataset.page !== page || document.querySelector('main') !== mainElement) return;
+        const scrollPosition = window.scrollY;
+        if (page === 'collection') {
+          window.renderMysticVibeCollection?.();
+          window.requestAnimationFrame(() => window.scrollTo(0, scrollPosition));
+          window.refreshMysticVibeReveals(document.querySelector('main'));
+        }
+        dispatchStorefrontData();
+      }).catch((error) => {
+        console.warn('Mystic Vibe product gallery images could not finish loading:', error.message);
+      });
+    }
+  }
 }
 
 const page = document.body.dataset.page;
