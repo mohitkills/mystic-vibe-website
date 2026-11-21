@@ -434,13 +434,13 @@ body[data-page="account"] .oc-track li::before {
   z-index: 0;
   top: 5px;
   left: 50%;
-  right: -50%;
+  right: calc(-100% - 8px);
   height: 3px;
   border-radius: 99px;
   background: rgba(25,25,25,.1);
 }
 body[data-page="account"] .oc-track li:last-child::before { display: none; }
-body[data-page="account"] .oc-track li.is-done::before { background: var(--iv-gd, #B49A60); }
+body[data-page="account"] .oc-track li.is-done:not(.is-current)::before { background: var(--iv-gd, #B49A60); }
 body[data-page="account"] .oc-track-dot {
   position: relative;
   z-index: 1;
