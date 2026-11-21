@@ -271,6 +271,10 @@ async function readPublished(table) {
 }
 
 window.refreshMysticVibeReveals = function (root) {
+  if (typeof window.initReveal === 'function') {
+    window.initReveal(root || document);
+    return;
+  }
   const scope = root || document;
   const items = scope.querySelectorAll('.reveal:not(.visible)');
   if (!items.length) return;
