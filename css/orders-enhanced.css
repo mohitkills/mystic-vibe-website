@@ -255,7 +255,7 @@ body[data-page="account"] .orders-kicker {
 body[data-page="account"] .orders-page-head h1 {
   margin: 0;
   color: var(--iv-tx, #191919);
-  font: 600 clamp(2.4rem, 5vw, 3.3rem)/.98 'Cormorant Garamond', serif;
+  font: 600 clamp(2.4rem, 5vw, 3.3rem)/.98 Inter, Arial, sans-serif;
   letter-spacing: -.025em;
 }
 body[data-page="account"] .orders-subtitle {
@@ -523,7 +523,7 @@ body[data-page="account"] .oc-item-name {
   display: block;
   min-width: 0;
   color: var(--iv-tx, #191919);
-  font: 600 1.2rem/1.1 'Cormorant Garamond', serif;
+  font: 600 1.2rem/1.1 Inter, Arial, sans-serif;
   text-transform: capitalize;
   overflow-wrap: anywhere;
 }
@@ -632,7 +632,7 @@ body[data-page="account"] .oc-empty-icon {
 body[data-page="account"] .oc-empty h2 {
   margin: 0;
   color: var(--iv-tx, #191919);
-  font: 600 1.7rem/1.1 'Cormorant Garamond', serif;
+  font: 600 1.7rem/1.1 Inter, Arial, sans-serif;
 }
 body[data-page="account"] .oc-empty p {
   max-width: 62ch;
