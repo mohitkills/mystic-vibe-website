@@ -1058,6 +1058,11 @@ test('storefront hydration loads homepage and collection extras only where neede
   assert.match(sync, /const shouldHydrateProducts = \['home', 'collection', 'product', 'cart', 'wishlist'\]\.includes\(page\)/);
   assert.match(sync, /function currentImageHydrationScope\(\)/);
   assert.match(sync, /return \{ slugs, primaryOnly: true \}/);
-  assert.match(sync, /const slots = primaryOnly \? allSlots\.slice\(0, 1\) : allSlots/);
+  assert.ok(sync.includes('const slots = primaryOnly ? allSlots.slice(0, 1) : allSlots.slice(fromIndex)'));
   assert.match(sync, /const \[hydratedSlides\] = await Promise\.all\(\[slideImagesPromise, productImagesPromise\]\)/);
+  assert.ok(sync.includes("if (page === 'home' || page === 'collection')"));
+  assert.ok(sync.includes('return { slugs: null, primaryOnly: true }'));
+  assert.ok(sync.includes('void hydrateProductImages(mergedProducts, imageSlotsBySlug, { fromIndex: 1 })'));
+  assert.ok(sync.includes('window.renderMysticVibeCollection?.()'));
+  assert.ok(sync.includes("dispatchStorefrontData();"));
 });
