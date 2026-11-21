@@ -1017,7 +1017,9 @@ test('homepage CMS sync reaches the hero carousel after product sections are ref
   assert.match(controller, /var section=root\.querySelector\('\[data-home-section=/);
   assert.match(controller, /var incoming=Array\.isArray\(data\.slides\)/);
   assert.match(sync, /readPublished\('homepage_slides'\)/);
-  assert.match(sync, /window\.MV_HOMEPAGE_SLIDES = await hydrateSlideImages\(publishedSlides\)/);
+  assert.match(sync, /page === 'home' \\? readPublished\\('homepage_slides'\\)/);
+  assert.match(sync, /const slideImagesPromise = Array\\.isArray\\(slides\\)[\\s\\S]*?hydrateSlideImages\\(publishedSlides\\)/);
+  assert.match(sync, /const \\[hydratedSlides\\] = await Promise\\.all\\(\\[slideImagesPromise, productImagesPromise\\]\\)/);
   assert.match(sync, /functions\/v1\/slide-image/);
   assert.match(sync, /slides: window\.MV_HOMEPAGE_SLIDES/);
   assert.match(sync, /dispatchStorefrontData\(\)/);
