@@ -936,3 +936,13 @@ test('hero controller rotates two slides in one image area and updates only the 
   media.children.find((child) => child.classList.contains('is-incoming')).dispatch('animationend');
   assert.equal(action.textContent, 'Buy Now');
 });
+
+test('signed-out account and profile pages render their sign-in states without treating a missing session as an error', async () => {
+  const account = await read('js/customer-account.js');
+  const profile = await read('js/profile-settings.js');
+  const missingSessionGuard = /error\?\.name === 'AuthSessionMissingError' \|\| error\?\.message === 'Auth session missing!'/;
+  assert.match(account, missingSessionGuard);
+  assert.match(account, /Sign in to view your orders/);
+  assert.match(profile, missingSessionGuard);
+  assert.match(profile, /showSignIn\(\);\s*return;/);
+});
