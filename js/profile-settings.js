@@ -75,6 +75,10 @@ async function initialiseProfileSettings() {
       }
     });
   } catch (error) {
+    if (error?.name === 'AuthSessionMissingError' || error?.message === 'Auth session missing!') {
+      showSignIn();
+      return;
+    }
     console.error('Profile settings could not be loaded:', error);
     card.textContent = error?.message || 'Your profile could not be loaded. Please refresh and try again.';
   }
