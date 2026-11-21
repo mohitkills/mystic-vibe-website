@@ -154,7 +154,7 @@ function accountProgressMarkup(value) {
 
 function accountItemImage(item) {
   const candidate = [item.image_url, item.product_image_url, item.image].find((value) =>
-    typeof value === 'string' && /^(https:\\/\\/|\\/?assets\\/)/i.test(value.trim()));
+    typeof value === 'string' && (value.trim().startsWith('https://') || value.trim().startsWith('/assets/') || value.trim().startsWith('assets/')));
   if (candidate) {
     return '<img src="' + escapeHtml(candidate.trim()) + '" alt="" width="64" height="64" loading="lazy">';
   }
@@ -191,7 +191,7 @@ function accountOrderCard(order, items) {
           '<button class="oc-copy" type="button" data-copy-order="' + escapeHtml(order.order_number) + '" aria-label="Copy order number" title="Copy order number">' +
             '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><rect x="6.5" y="6.5" width="9" height="10" rx="1.8"></rect><path d="M4.5 13V4.8A1.8 1.8 0 0 1 6.3 3h7"></path></svg><span>Copy</span></button>' +
         '</div>' +
-        '<p class="oc-date">Placed on ' + escapeHtml(dateText(order.created_at)) + '</p>' +
+        '<p class="oc-date">Placed on ' + escapeHtml(accountDateText(order.created_at)) + '</p>' +
       '</div>' +
       '<div class="oc-status-stack"><span class="oc-status oc-status--' + status.tone + '"><i aria-hidden="true"></i>' + escapeHtml(status.label) + '</span>' +
         (paymentStatus ? '<span class="oc-payment">Payment · ' + escapeHtml(paymentStatus) + '</span>' : '') +
