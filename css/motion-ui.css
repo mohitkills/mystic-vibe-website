@@ -258,7 +258,7 @@ body[data-theme="dark"] .mv-cart-drawer-head { border-color: rgba(255,255,255,.1
 .mv-cart-drawer-head h2 {
   margin: 4px 0 0;
   color: inherit;
-  font: 600 32px/1.05 "Cormorant Garamond", Georgia, serif;
+  font: 600 32px/1.05 Inter, Arial, sans-serif;
 }
 .mv-cart-close {
   display: grid;
@@ -387,7 +387,7 @@ body[data-theme="dark"] .mv-cart-empty-link {
 }
 .mv-cart-empty h3 {
   margin: 0;
-  font: 600 28px/1.1 "Cormorant Garamond", Georgia, serif;
+  font: 600 28px/1.1 Inter, Arial, sans-serif;
 }
 .mv-cart-empty p {
   margin: 0;
@@ -493,7 +493,7 @@ body[data-theme="dark"] .mv-cart-empty p { color: #aaa9a5; }
 .mv-cart-drawer-head h2 {
   margin: 0 !important;
   color: #191919 !important;
-  font: 600 38px/1 "Cormorant Garamond", Georgia, serif !important;
+  font: 600 38px/1 Inter, Arial, sans-serif !important;
   letter-spacing: -.02em;
 }
 .mv-cart-count {
@@ -554,7 +554,7 @@ body[data-theme="dark"] .mv-cart-empty p { color: #aaa9a5; }
 }
 .mv-cart-line-details strong {
   color: #191919 !important;
-  font: 600 23px/1.05 "Cormorant Garamond", Georgia, serif !important;
+  font: 600 23px/1.05 Inter, Arial, sans-serif !important;
   overflow-wrap: normal;
   word-break: normal;
 }
@@ -662,7 +662,7 @@ body[data-theme="dark"] .mv-cart-empty p { color: #aaa9a5; }
 .mv-cart-empty h3 {
   margin: 3px 0 0 !important;
   color: #191919 !important;
-  font: 600 31px/1.05 "Cormorant Garamond", Georgia, serif !important;
+  font: 600 31px/1.05 Inter, Arial, sans-serif !important;
 }
 .mv-cart-empty p {
   max-width: 270px;
