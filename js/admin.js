@@ -1,4 +1,6 @@
 import { supabase } from './supabase-client.js';
+// Optional dashboard modules are loaded after the admin session is verified.
+// A broken non-auth module must never prevent the login gate from initializing.
 import { SUPABASE_URL } from './supabase-config.js';
 import { buildOrderSwap, buildSlidePayload, normalizePersistentImageReference, saveCmsRecord } from './cms-records.js';
 
@@ -14,6 +16,17 @@ const signOutButton = document.querySelector('#sign-out');
 const bucketIds = ['mystic-vibe-images', 'mystic-vibe-media'];
 const imageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
 const mediaTypes = [...imageTypes, 'video/mp4'];
+const storefrontCategories = [
+  { value: 'deals', label: 'Crazy Deals' },
+  { value: 'bestsellers', label: 'Bestsellers' },
+  { value: 'perfumes', label: 'Perfumes' },
+  { value: 'fresh-aquatic', label: 'Fresh & Aquatic' },
+  { value: 'woody-amber', label: 'Woody & Amber' },
+  { value: 'fruity-floral', label: 'Fruity & Floral' },
+  { value: 'new-arrivals', label: 'New Arrivals' },
+  { value: 'gift-sets', label: 'Gift Sets' },
+];
+const storefrontCategoryLabels = new Map(storefrontCategories.map(({ value, label }) => [value, label]));
 let products = [];
 let collections = [];
 let slides = [];
@@ -28,6 +41,84 @@ let productSaveInProgress = false;
 let productFormDirty = false;
 const activeFormSaves = new WeakSet();
 const dirtyForms = new WeakSet();
+
+const PRODUCT_SIZE_OPTIONS = [30, 50, 100];
+
+function renderProductSizeVariantEditor(savedVariants = []) {
+  const form = document.querySelector('#product-form');
+  const container = document.querySelector('#product-size-variant-grid');
+  if (!form || !container) return;
+  const saved = Array.isArray(savedVariants) ? savedVariants : [];
+  const legacySize = Number(form.elements.namedItem('size_ml')?.value || 50);
+  const legacyPrice = form.elements.namedItem('price')?.value ?? '';
+  const legacyMrp = form.elements.namedItem('mrp')?.value ?? '';
+  const legacyStock = form.elements.namedItem('stock')?.value ?? '0';
+  const variants = PRODUCT_SIZE_OPTIONS.map((size) => {
+    const match = saved.find((row) => Number(row?.size_ml) === size);
+    const legacyMatch = !saved.length && legacySize === size;
+    return {
+      size_ml: size,
+      enabled: match ? match.is_available !== false : legacyMatch,
+      price: match ? match.price : legacyMatch ? legacyPrice : '',
+      mrp: match ? match.mrp : legacyMatch ? legacyMrp : '',
+      stock: match ? match.stock : legacyMatch ? legacyStock : '0',
+    };
+  });
+  container.innerHTML = variants.map((variant) => {
+    const size = variant.size_ml;
+    return '<section class="product-size-variant-card" data-size-variant="' + size + '">'
+      + '<label class="product-size-variant-toggle">'
+      + '<input type="checkbox" data-size-enabled="' + size + '"' + (variant.enabled ? ' checked' : '') + '>'
+      + '<strong>' + size + 'ML</strong><span>Show on product page</span></label>'
+      + '<div class="product-size-variant-fields">'
+      + '<label>Price (₹)<input type="number" min="0" step="0.01" data-size-price="' + size + '" value="' + escapeAdminAttribute(variant.price) + '"' + (variant.enabled ? ' required' : ' disabled') + '></label>'
+      + '<label>MRP (₹)<input type="number" min="0" step="0.01" data-size-mrp="' + size + '" value="' + escapeAdminAttribute(variant.mrp) + '"' + (variant.enabled ? ' required' : ' disabled') + '></label>'
+      + '<label>Stock<input type="number" min="0" step="1" data-size-stock="' + size + '" value="' + escapeAdminAttribute(variant.stock) + '"' + (variant.enabled ? ' required' : ' disabled') + '></label>'
+      + '</div></section>';
+  }).join('');
+  syncProductSizeVariantFields();
+}
+
+function escapeAdminAttribute(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  })[character]);
+}
+
+function readProductSizeVariants(form) {
+  const variants = PRODUCT_SIZE_OPTIONS.map((size) => {
+    const enabled = form.querySelector('[data-size-enabled="' + size + '"]')?.checked === true;
+    if (!enabled) return null;
+    const priceRaw = form.querySelector('[data-size-price="' + size + '"]')?.value ?? '';
+    const mrpRaw = form.querySelector('[data-size-mrp="' + size + '"]')?.value ?? '';
+    const stockRaw = form.querySelector('[data-size-stock="' + size + '"]')?.value ?? '';
+    const price = Number(priceRaw), mrp = Number(mrpRaw), stock = Number(stockRaw);
+    if (priceRaw === '' || mrpRaw === '' || stockRaw === ''
+      || !Number.isFinite(price) || price < 0
+      || !Number.isFinite(mrp) || mrp < price
+      || !Number.isSafeInteger(stock) || stock < 0) {
+      throw new Error('Enter a valid price, MRP and whole-number stock for ' + size + 'ML. MRP must be at least the selling price.');
+    }
+    return { size_ml: size, price, mrp, stock, is_available: true };
+  }).filter(Boolean);
+  if (!variants.length) throw new Error('Enable at least one bottle size before saving this product.');
+  return variants;
+}
+
+function syncProductSizeVariantFields() {
+  const form = document.querySelector('#product-form');
+  if (!form) return;
+  PRODUCT_SIZE_OPTIONS.forEach((size) => {
+    const enabled = form.querySelector('[data-size-enabled="' + size + '"]')?.checked === true;
+    ['price','mrp','stock'].forEach((field) => {
+      const input = form.querySelector('[data-size-' + field + '="' + size + '"]');
+      if (input) {
+        input.disabled = !enabled;
+        input.required = enabled && field !== 'stock';
+      }
+    });
+  });
+}
 
 function setStatus(message, isError) {
   statusNode.textContent = message || '';
@@ -118,9 +209,15 @@ async function renderProductImageGallery() {
   }
 }
 
+function markAdminGateReady() {
+  document.documentElement.dataset.adminGateState = 'ready';
+  window.dispatchEvent(new Event('mystic-vibe-admin-ready'));
+}
+
 function showGate(message, showLogin) {
   gateMessage.textContent = message;
   loginLink.hidden = !showLogin;
+  markAdminGateReady();
 }
 
 function showWorkspace(user) {
@@ -128,6 +225,7 @@ function showWorkspace(user) {
   workspace.hidden = false;
   signOutButton.hidden = false;
   document.querySelector('#admin-user-label').textContent = user?.email || 'Signed-in administrator';
+  markAdminGateReady();
 }
 
 function appendRecord(container, title, detail, id, actions, imageUrl) {
@@ -221,14 +319,16 @@ async function renderProducts() {
   container.replaceChildren();
   if (!products.length) return emptyMessage(container, 'No products are available yet.');
   const search = document.querySelector('#product-search').value.trim().toLowerCase();
+  const categoryFilter = document.querySelector('#product-filter-category').value;
   const collectionFilter = document.querySelector('#product-filter-collection').value;
   const statusFilter = document.querySelector('#product-filter-status').value;
   const sortBy = document.querySelector('#product-sort').value;
   const collectionById = new Map(collections.map((collection) => [collection.id, collection.name]));
   let visibleProducts = products.filter((product) => {
-    const searchable = [product.name, product.slug, product.sku, product.fragrance_family, product.fragrance_notes]
+    const searchable = [product.name, product.slug, product.sku, product.fragrance_family, product.fragrance_notes, storefrontCategoryLabels.get(product.storefront_category)]
       .filter(Boolean).join(' ').toLowerCase();
     if (search && !searchable.includes(search)) return false;
+    if (categoryFilter && product.storefront_category !== categoryFilter) return false;
     if (collectionFilter && product.collection_id !== collectionFilter) return false;
     if (statusFilter === 'published' && !product.is_published) return false;
     if (statusFilter === 'draft' && product.is_published) return false;
@@ -236,7 +336,8 @@ async function renderProducts() {
   });
   visibleProducts = [...visibleProducts].sort((left, right) => {
     if (sortBy === 'price') return Number(left.price || 0) - Number(right.price || 0);
-    if (sortBy === 'collection') return String(collectionById.get(left.collection_id) || '').localeCompare(collectionById.get(right.collection_id) || '') || left.name.localeCompare(right.name);
+    if (sortBy === 'category') return String(storefrontCategoryLabels.get(left.storefront_category) || '').localeCompare(String(storefrontCategoryLabels.get(right.storefront_category) || '')) || left.name.localeCompare(right.name);
+    if (sortBy === 'collection') return String(collectionById.get(left.collection_id) || '').localeCompare(String(collectionById.get(right.collection_id) || '')) || left.name.localeCompare(right.name);
     if (sortBy === 'publication') return Number(right.is_published) - Number(left.is_published) || left.name.localeCompare(right.name);
     return String(left.name || '').localeCompare(String(right.name || ''));
   });
@@ -244,7 +345,7 @@ async function renderProducts() {
   for (const product of visibleProducts) {
     const image = parseImagePaths(product.image_urls)[0] || '';
     const imageUrl = image ? await signedImageUrl(image) : '';
-    appendRecord(container, product.name, `${product.slug} · ${product.is_published ? 'Published' : 'Draft'} · Stock ${product.stock}`, product.id, [
+    appendRecord(container, product.name, `${product.slug} · ${storefrontCategoryLabels.get(product.storefront_category) || 'Perfumes'} · ${product.is_published ? 'Published' : 'Draft'} · Stock ${product.stock}`, product.id, [
       { label: 'Edit', action: 'edit-product' },
       { label: 'Duplicate', action: 'duplicate-product' },
       { label: product.is_published ? 'Unpublish' : 'Publish', action: 'toggle-product' },
@@ -258,7 +359,9 @@ async function renderSlides() {
   container.replaceChildren();
   if (!slides.length) return emptyMessage(container, 'No homepage slides are available yet.');
   for (const slide of slides) {
-    appendRecord(container, slide.heading, `${slide.is_published ? 'Published' : 'Draft'} · Order ${slide.sort_order}`, slide.id, [
+    const transition = String(slide.transition_style || 'fade').replace(/-/g, ' ');
+    const buttonText = String(slide.cta_text || 'Explore').trim();
+    appendRecord(container, slide.heading, `${slide.is_published ? 'Published' : 'Draft'} · Order ${slide.sort_order} · ${transition} · CTA “${buttonText}”`, slide.id, [
       { label: 'Edit', action: 'edit-slide' },
       { label: 'Duplicate', action: 'duplicate-slide' },
       { label: 'Move up', action: 'move-slide-up' },
@@ -480,6 +583,7 @@ function resetForm(formId, options = {}) {
     pendingProductImagePaths.clear();
     productFormDirty = false;
     renderProductImageGallery();
+    renderProductSizeVariantEditor([]);
     setProductImageStatus('');
     renderCollectionOptions();
   }
@@ -506,6 +610,7 @@ function fillProductForm(id) {
   dirtyForms.delete(form);
   dirtyForms.delete(form);
   renderProductImageGallery();
+  renderProductSizeVariantEditor(product.size_variants);
   setProductImageStatus(productImagePaths.length ? 'Saved product image path loaded.' : '');
   renderCollectionOptions(product.collection_id);
   form.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -536,6 +641,7 @@ async function previewSlide() {
     cta_link: formValue(form, 'cta_link'),
     image_url: formValue(form, 'image_url'),
     sort_order: formValue(form, 'sort_order'),
+    transition_style: formValue(form, 'transition_style'),
     is_published: form.elements.namedItem('is_published').checked,
   }, slides.find((slide) => slide.id === id) || null, location.origin, SUPABASE_URL);
   const dialog = document.querySelector('#slide-preview');
@@ -543,7 +649,8 @@ async function previewSlide() {
   const previewImage = stage.querySelector('img');
   const previewLink = stage.querySelector('a');
   stage.querySelector('h3').textContent = payload.heading;
-  stage.querySelector('p').textContent = payload.subtitle;
+  stage.querySelector('p').textContent = 'Transition: ' + payload.transition_style.replace(/-/g, ' ');
+  stage.dataset.transitionStyle = payload.transition_style;
   previewLink.textContent = payload.cta_text;
   previewLink.href = payload.cta_link;
   previewImage.src = payload.image_url ? (await signedImageUrl(payload.image_url)) || 'assets/images/hero-royal-marine.png' : 'assets/images/hero-royal-marine.png';
@@ -584,9 +691,18 @@ async function saveProduct(event) {
     }
     const imagePaths = uniquePaths(productImagePaths.map((reference) => normalizePersistentImageReference(reference, SUPABASE_URL)));
     syncProductImagePaths(imagePaths);
+    const sizeVariants = readProductSizeVariants(form);
+    const currentLegacySize = Number(formValue(form, 'size_ml') || 50);
+    const primaryVariant = sizeVariants.find((variant) => variant.size_ml === currentLegacySize) || sizeVariants[0];
+    form.elements.namedItem('size_ml').value = String(primaryVariant.size_ml);
+    form.elements.namedItem('price').value = String(primaryVariant.price);
+    form.elements.namedItem('mrp').value = String(primaryVariant.mrp);
+    form.elements.namedItem('stock').value = String(sizeVariants.reduce((total, variant) => total + variant.stock, 0));
+    form.elements.namedItem('size_variants').value = JSON.stringify(sizeVariants);
     const payload = {
       name: formValue(form, 'name'),
       slug,
+      storefront_category: formValue(form, 'storefront_category') || 'perfumes',
       collection_id: collectionId || null,
       sku: sku || null,
       tagline: formValue(form, 'tagline'),
@@ -597,16 +713,17 @@ async function saveProduct(event) {
       price: Number(formValue(form, 'price')),
       mrp: Number(formValue(form, 'mrp')),
       stock: Number(formValue(form, 'stock')),
+      size_variants: sizeVariants,
       sort_order: Number(formValue(form, 'sort_order') || 0),
       image_urls: imagePaths,
       is_featured: form.elements.namedItem('is_featured').checked,
       is_published: form.elements.namedItem('is_published').checked,
     };
     if (!payload.name || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(payload.slug)) throw new Error('Enter a product name and a valid lowercase slug.');
-    if (!Number.isSafeInteger(payload.size_ml) || payload.size_ml < 1) throw new Error('Product size must be a positive whole number of milliliters.');
-    if (![payload.price, payload.mrp].every((value) => Number.isFinite(value) && value >= 0)) throw new Error('Price and MRP must be valid non-negative amounts.');
-    if (payload.price > payload.mrp) throw new Error('Sale price cannot be higher than MRP.');
-    if (!Number.isSafeInteger(payload.stock) || payload.stock < 0) throw new Error('Stock must be a non-negative whole number.');
+    if (!storefrontCategoryLabels.has(payload.storefront_category)) throw new Error('Choose a valid storefront category.');
+    if (!sizeVariants.some((variant) => variant.size_ml === payload.size_ml)) throw new Error('The primary product size must be enabled.');
+    if (![payload.price, payload.mrp].every((value) => Number.isFinite(value) && value >= 0)) throw new Error('The primary size price and MRP are invalid.');
+    if (!Number.isSafeInteger(payload.stock) || payload.stock < 0) throw new Error('Combined stock must be a non-negative whole number.');
     if (!Number.isSafeInteger(payload.sort_order)) throw new Error('Product order must be a whole number.');
     const orphanedUploads = [...pendingProductImagePaths].filter((reference) => !imagePaths.includes(reference));
     const { saved, refreshed } = await saveAndRefresh({
@@ -631,7 +748,7 @@ async function saveSlide(event) {
   if (uploadingForms.has(form)) throw new Error('Wait for the slide image upload to finish before saving.');
   const id = formValue(form, 'id');
   const existing = slides.find((slide) => slide.id === id) || null;
-  const fields = Object.fromEntries(['heading', 'subtitle', 'cta_text', 'cta_link', 'image_url', 'sort_order'].map((key) => [key, formValue(form, key)]));
+  const fields = Object.fromEntries(['heading', 'cta_text', 'cta_link', 'image_url', 'sort_order', 'transition_style'].map((key) => [key, formValue(form, key)]));
   fields.is_published = form.elements.namedItem('is_published').checked;
   const payload = buildSlidePayload(fields, existing, location.origin, SUPABASE_URL);
   await saveAndRefresh({ table: 'homepage_slides', key: 'id', id, payload, form, formId: 'slide-form', label: 'Homepage slide', successMessage: id ? 'Homepage slide updated.' : 'Homepage slide created.' });
@@ -1046,7 +1163,40 @@ async function initializeAdmin() {
     return;
   }
   showWorkspace(session.user);
-  await loadRecords();
+  try {
+    await loadRecords();
+  } catch (error) {
+    console.error('Mystic Vibe catalog/content admin data could not load:', error);
+    setStatus(error?.message || 'Catalog/content data could not load. The admin account is authenticated; retry loading records.', true);
+  }
+
+  const optionalModules = [
+    { label: 'Orders', load: () => import('./orders-admin.js'), initialize: 'initializeOrdersAdmin' },
+    { label: 'Store settings', load: () => import('./store-settings.js'), initialize: 'initializeStoreSettings' },
+    { label: 'Coupons', load: () => import('./coupons-admin.js'), initialize: 'initializeCouponsAdmin' },
+    { label: 'Customers', load: () => import('./customers-admin.js'), initialize: 'initializeCustomersAdmin' },
+    { label: 'Newsletter', load: () => import('./marketing-admin.js'), initialize: 'initializeMarketingAdmin' },
+    { label: 'Team Access', load: () => import('./team-access-admin.js'), initialize: 'initializeTeamAccessAdmin' },
+  ];
+  const moduleResults = await Promise.allSettled(optionalModules.map(async (feature) => {
+    const module = await feature.load();
+    if (typeof module[feature.initialize] !== 'function') {
+      throw new Error('The module did not provide its expected initializer.');
+    }
+    module[feature.initialize](supabase);
+    return feature.label;
+  }));
+  const failedFeatures = moduleResults.flatMap((result, index) => result.status === 'rejected'
+    ? [{ label: optionalModules[index].label, error: result.reason }]
+    : []);
+  if (failedFeatures.length) {
+    failedFeatures.forEach((feature) => console.error('Mystic Vibe admin feature failed to initialize:', feature.label, feature.error));
+    const firstFailure = failedFeatures[0]?.error;
+    const detail = firstFailure?.message ? ' (' + firstFailure.message + ')' : '';
+    setStatus('Admin access is verified, but these sections could not load: ' +
+      failedFeatures.map((feature) => feature.label).join(', ') +
+      detail + '. Refresh the page or check the browser connection.', true);
+  }
 }
 
 document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => {
@@ -1069,7 +1219,12 @@ document.querySelector('#product-form').addEventListener('input', (event) => {
     renderProductImageGallery();
   }
 });
-document.querySelector('#product-form').addEventListener('change', (event) => { productFormDirty = true; dirtyForms.add(event.currentTarget); });
+document.querySelector('#product-form').addEventListener('change', (event) => {
+  productFormDirty = true;
+  dirtyForms.add(event.currentTarget);
+  if (event.target.matches('[data-size-enabled]')) syncProductSizeVariantFields();
+});
+renderProductSizeVariantEditor([]);
 ['collection-form', 'slide-form', 'content-form'].forEach((id) => {
   const form = document.getElementById(id);
   form.addEventListener('input', () => dirtyForms.add(form));

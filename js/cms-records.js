@@ -79,20 +79,34 @@ function isSafeObjectPath(path) {
     !path.split('/').some((part) => !part || part === '.' || part === '..');
 }
 
+const HERO_TRANSITIONS = new Set(['fade', 'slide-left', 'slide-up', 'zoom']);
+
 export function buildSlidePayload(fields, existing = null, origin, projectUrl) {
   const heading = String(fields.heading || '').trim();
-  if (!heading) throw new Error('Add a heading before saving the slide.');
+  if (!heading) throw new Error('Add a slide name so you can identify it in Admin.');
   const sortOrder = Number(String(fields.sort_order ?? '0').trim() || 0);
   if (!Number.isSafeInteger(sortOrder)) throw new Error('Slide order must be a whole number.');
+
   const submittedImage = String(fields.image_url || '').trim();
+  const imageUrl = normalizePersistentImageReference(submittedImage || existing?.image_url || '', projectUrl) || null;
+  const isPublished = fields.is_published === true;
+  if (isPublished && !imageUrl) throw new Error('Upload a hero image before publishing this slide.');
+
+  const transitionStyle = String(fields.transition_style || existing?.transition_style || 'fade').trim().toLowerCase();
+  if (!HERO_TRANSITIONS.has(transitionStyle)) throw new Error('Choose a supported hero transition style.');
+
+  const ctaText = String(fields.cta_text || '').trim() || 'Explore';
+  if (ctaText.length > 40) throw new Error('Button text must be 40 characters or fewer.');
+
   return {
     heading,
-    subtitle: String(fields.subtitle || '').trim(),
-    cta_text: String(fields.cta_text || '').trim() || 'Explore',
+    subtitle: '',
+    cta_text: ctaText,
     cta_link: normalizeInternalLink(fields.cta_link, origin),
-    image_url: normalizePersistentImageReference(submittedImage || existing?.image_url || '', projectUrl) || null,
+    image_url: imageUrl,
+    transition_style: transitionStyle,
     sort_order: sortOrder,
-    is_published: fields.is_published === true,
+    is_published: isPublished,
   };
 }
 
