@@ -506,7 +506,7 @@ test('Product detail page has a database-backed responsive retail layout without
   assert.ok(page.includes('data-dec'));
   assert.ok(page.includes('pdp-mobile-bar'));
   assert.ok(app.includes('function handleProductAdd('));
-  assert.ok(app.includes("button.textContent=added?'Added':'Add to cart'"));
+  assert.ok(app.includes("button.textContent=added?'Added':(Number(productVariant(productBySlug(slug),selectedSize)?.stock||0)>0?'Add to cart':'Out of stock')"));
   assert.ok(app.includes("addToCart(b.dataset.buy,Number(document.querySelector('#qty')?.value||1),Number(b.dataset.sizeMl))"));
   const discountMatch = app.match(/function productDiscountPercent\(mrp,price\)\{[^}]*\}/);
   assert.ok(discountMatch);
