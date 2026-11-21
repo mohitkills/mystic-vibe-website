@@ -198,8 +198,27 @@ function toStorefrontProduct(row, collectionNames) {
   const imageSlots = storefrontImageReferences(row.image_urls);
   if (typeof row.name === 'string' && row.name.trim()) product.name = htmlText(row.name);
   if (typeof row.tagline === 'string' && row.tagline.trim()) product.tagline = htmlText(row.tagline);
-  if (Number.isFinite(Number(row.size_ml)) && Number(row.size_ml) > 0) product.size = `${Number(row.size_ml)}ML`;
-  if (Number.isFinite(Number(row.price)) && Number(row.price) > 0) product.price = Number(row.price);
+  if (Number.isSafeInteger(Number(row.size_ml)) && Number(row.size_ml) > 0) {
+    product.size_ml = Number(row.size_ml);
+    product.size = `${Number(row.size_ml)}ML`;
+  }
+  if (Number.isFinite(Number(row.price)) && Number(row.price) >= 0) product.price = Number(row.price);
+  if (Array.isArray(row.size_variants)) {
+    product.size_variants = row.size_variants.filter((variant) => {
+      const size = Number(variant?.size_ml), price = Number(variant?.price), mrp = Number(variant?.mrp), stock = Number(variant?.stock);
+      return Number.isSafeInteger(size) && [30, 50, 100].includes(size)
+        && Number.isFinite(price) && price >= 0
+        && Number.isFinite(mrp) && mrp >= price
+        && Number.isSafeInteger(stock) && stock >= 0
+        && variant?.is_available !== false;
+    }).map((variant) => ({
+      size_ml: Number(variant.size_ml),
+      price: Number(variant.price),
+      mrp: Number(variant.mrp),
+      stock: Number(variant.stock),
+      is_available: true,
+    })).sort((left, right) => left.size_ml - right.size_ml);
+  }
   if (typeof row.fragrance_family === 'string' && row.fragrance_family.trim()) product.family = htmlText(row.fragrance_family);
   if (typeof row.description === 'string' && row.description.trim()) product.description = htmlText(row.description);
   if (Number.isFinite(Number(row.mrp)) && Number(row.mrp) > 0) product.mrp = Number(row.mrp);

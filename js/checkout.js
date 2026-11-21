@@ -7,15 +7,6 @@ const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
 })[character]);
 
-function readCart() {
-  try {
-    const rows = JSON.parse(localStorage.getItem('mv_cart') || '[]');
-    if (!Array.isArray(rows)) return [];
-    return rows.map((row) => ({ slug: String(row?.slug || ''), quantity: Number(row?.qty) }))
-      .filter((row) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(row.slug) &&
-        Number.isSafeInteger(row.quantity) && row.quantity >= 1 && row.quantity <= 20);
-  } catch { return []; }
-}
 function localProduct(slug) {
   const liveProducts = Array.isArray(window.MV_PRODUCTS) ? window.MV_PRODUCTS : [];
   const liveProduct = liveProducts.find((product) => product.slug === slug);
@@ -25,9 +16,38 @@ function localProduct(slug) {
   if (window.MV_STOREFRONT_CMS_CONNECTED === true) {
     return fallback
       ? { ...fallback, published: false, stock: 0, unavailable: true }
-      : { slug, name: slug.replace(/-/g, ' '), price: 0, size: '50ML', published: false, stock: 0, unavailable: true };
+      : { slug, name: slug.replace(/-/g, ' '), price: 0, size: '50ML', size_ml: 50, published: false, stock: 0, unavailable: true };
   }
-  return fallback || { slug, name: slug.replace(/-/g, ' '), price: 0, size: '50ML' };
+  return fallback || { slug, name: slug.replace(/-/g, ' '), price: 0, size: '50ML', size_ml: 50 };
+}
+function variantFor(product, sizeMl) {
+  if (!product) return null;
+  const variants = Array.isArray(product.size_variants) ? product.size_variants : [];
+  if (variants.length) return variants.find((variant) => Number(variant.size_ml) === Number(sizeMl) && variant.is_available !== false) || null;
+  const match = String(product.size || '').match(/(\d{1,3})\s*ML/i);
+  const size = Number(product.size_ml) || Number(match?.[1]);
+  return size && (!sizeMl || size === Number(sizeMl)) ? {
+    size_ml: size,
+    price: Number(product.price || 0),
+    mrp: Number(product.mrp ?? product.price ?? 0),
+    stock: Number(product.stock || 0),
+    is_available: true,
+  } : null;
+}
+function readCart() {
+  try {
+    const rows = JSON.parse(localStorage.getItem('mv_cart') || '[]');
+    if (!Array.isArray(rows)) return [];
+    return rows.map((row) => {
+      const slug = String(row?.slug || '');
+      const product = localProduct(slug);
+      const match = String(product?.size || '').match(/(\d{1,3})\s*ML/i);
+      const size = Number(row?.size_ml) || Number(product?.size_ml) || Number(match?.[1]) || 50;
+      return { slug, quantity: Number(row?.qty), size_ml: size };
+    }).filter((row) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(row.slug) &&
+      Number.isSafeInteger(row.quantity) && row.quantity >= 1 && row.quantity <= 20 &&
+      Number.isSafeInteger(row.size_ml) && row.size_ml > 0);
+  } catch { return []; }
 }
 
 async function waitForStorefrontCatalog() {
@@ -46,16 +66,18 @@ function cartAvailability(item) {
   if (!product || product.published === false || product.unavailable === true) {
     return { known: true, available: false, stock: 0, message: 'This perfume is no longer available.' };
   }
-  const stock = Number(product.stock);
+  const variant = variantFor(product, item.size_ml);
+  if (!variant) return { known: true, available: false, stock: 0, message: item.size_ml + 'ML is no longer available.' };
+  const stock = Number(variant.stock);
   if (Number.isFinite(stock) && stock < item.quantity) {
     return {
       known: true,
       available: false,
       stock,
-      message: stock > 0 ? `Only ${stock} left in stock.` : 'Out of stock.',
+      message: stock > 0 ? `Only ${stock} of the ${item.size_ml}ML size left in stock.` : item.size_ml + 'ML is out of stock.',
     };
   }
-  return { known: true, available: true, stock: Number.isFinite(stock) ? stock : null, message: 'In stock' };
+  return { known: true, available: true, stock: Number.isFinite(stock) ? stock : null, message: item.size_ml + 'ML in stock' };
 }
 
 function renderCheckoutLines(cart, verifiedItems = null) {
@@ -65,25 +87,26 @@ function renderCheckoutLines(cart, verifiedItems = null) {
     lines.innerHTML = '<p>Your cart is empty.</p><a class="btn" href="collection.html">Explore perfumes</a>';
     return;
   }
-  const verifiedBySlug = new Map((Array.isArray(verifiedItems) ? verifiedItems : []).map((item) => [item.product_slug, item]));
+  const verifiedBySlug = new Map((Array.isArray(verifiedItems) ? verifiedItems : []).map((item) => [item.product_slug + ':' + item.size_ml, item]));
   lines.innerHTML = cart.map((item) => {
     const product = localProduct(item.slug);
     const availability = cartAvailability(item);
-    const verified = verifiedBySlug.get(item.slug);
+    const variant = variantFor(product, item.size_ml);
+    const verified = verifiedBySlug.get(item.slug + ':' + item.size_ml);
     const unavailable = availability.known && !availability.available;
     const priceText = verified
       ? rupees(verified.line_total)
-      : unavailable
+      : unavailable || !variant
         ? 'Unavailable'
-        : rupees(Number(product.price || 0) * item.quantity);
+        : rupees(Number(variant.price || 0) * item.quantity);
     const stockText = verified
       ? 'Price and stock verified'
       : availability.message;
     return '<div class="checkout-line' + (unavailable ? ' checkout-line-unavailable' : '') + '">' +
-      '<div class="checkout-line-copy"><strong>' + escapeHtml(product.name) + ' × ' + Number(item.quantity) + '</strong>' +
+      '<div class="checkout-line-copy"><strong>' + escapeHtml(product.name) + ' · ' + Number(item.size_ml) + 'ML × ' + Number(item.quantity) + '</strong>' +
       '<small>' + escapeHtml(stockText) + '</small></div>' +
       '<div class="checkout-line-actions"><strong>' + priceText + '</strong>' +
-      '<button class="btn light checkout-remove" type="button" data-remove-checkout-item="' + escapeHtml(item.slug) + '" aria-label="Remove ' + escapeHtml(product.name) + ' from checkout">Remove</button></div>' +
+      '<button class="btn light checkout-remove" type="button" data-remove-checkout-item="' + escapeHtml(item.slug) + '" data-size-ml="' + Number(item.size_ml) + '" aria-label="Remove ' + escapeHtml(product.name) + ' ' + Number(item.size_ml) + 'ML from checkout">Remove</button></div>' +
       '</div>';
   }).join('');
 }
@@ -140,7 +163,7 @@ async function refreshPreview(candidateCode = checkoutState.coupon) {
     if (!cart.length) throw new Error('Your cart is empty. Add a perfume before checkout.');
     if (candidateCode && !email) throw new Error('Enter your checkout email before applying a coupon.');
     const response = await supabase.rpc('preview_checkout', {
-      p_items: cart.map(({ slug, quantity }) => ({ slug, quantity })),
+      p_items: cart.map(({ slug, quantity, size_ml }) => ({ slug, quantity, size_ml })),
       p_email: email,
       p_coupon_code: candidateCode || null,
     });
@@ -204,7 +227,7 @@ async function refreshPreview(candidateCode = checkoutState.coupon) {
 }
 function refreshShippingSummary() {
   const cart = readCart();
-  const subtotal = cart.reduce((sum, item) => sum + Number(localProduct(item.slug).price || 0) * item.quantity, 0);
+  const subtotal = cart.reduce((sum, item) => { const variant = variantFor(localProduct(item.slug), item.size_ml); return sum + Number(variant?.price || 0) * item.quantity; }, 0);
   const threshold = Number(shippingSettings.free_shipping_threshold || 0);
   const fee = threshold > 0 && subtotal >= threshold ? 0 : Number(shippingSettings.standard_fee || 0);
   const summary = document.querySelector('.summary');
@@ -224,7 +247,7 @@ function refreshShippingSummary() {
 
 function render() {
   const cart = readCart();
-  const subtotal = cart.reduce((sum, item) => sum + Number(localProduct(item.slug).price || 0) * item.quantity, 0);
+  const subtotal = cart.reduce((sum, item) => { const variant = variantFor(localProduct(item.slug), item.size_ml); return sum + Number(variant?.price || 0) * item.quantity; }, 0);
   main.innerHTML = `
     <section class="page-hero"><div class="page-title"><span class="eyebrow">Mystic Vibe</span><h1 class="serif">Secure Checkout</h1><p>Enter your delivery details. Final price and stock are verified by the store before the order is placed.</p></div></section>
     <section class="section"><div class="container split">
@@ -291,8 +314,9 @@ document.querySelector('#checkout-lines')?.addEventListener('click', async (even
   const button = event.target.closest('[data-remove-checkout-item]');
   if (!button) return;
   const slug = button.dataset.removeCheckoutItem;
-  const nextCart = readCart().filter((item) => item.slug !== slug);
-  localStorage.setItem('mv_cart', JSON.stringify(nextCart.map((item) => ({ slug: item.slug, qty: item.quantity }))));
+  const sizeMl = Number(button.dataset.sizeMl);
+  const nextCart = readCart().filter((item) => !(item.slug === slug && item.size_ml === sizeMl));
+  localStorage.setItem('mv_cart', JSON.stringify(nextCart.map((item) => ({ slug: item.slug, qty: item.quantity, size_ml: item.size_ml }))));
   checkoutState.coupon = '';
   checkoutState.preview = null;
   checkoutState.verified = false;
@@ -354,7 +378,7 @@ if (form) {
     button.disabled = true; button.textContent = 'Checking stock & placing order…'; feedback.hidden = true;
     try {
       const { data, error } = await supabase.rpc('place_order', {
-        p_customer: customer, p_items: cart.map(({ slug, quantity }) => ({ slug, quantity })),
+        p_customer: customer, p_items: cart.map(({ slug, quantity, size_ml }) => ({ slug, quantity, size_ml })),
         p_payment_method: 'cod', p_customer_notes: String(formData.get('customer_notes') || '').trim() || null,
         p_coupon_code: checkoutState.coupon || null,
       });
