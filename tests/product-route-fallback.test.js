@@ -17,9 +17,9 @@ test('unmatched CMS product slugs use the shared product detail template', async
   assert.match(fallback, /js\/app\.js/);
 });
 
-test('dynamic product route validates the slug before exposing it to the app', async () => {
+test('dynamic product route extracts and validates a product slug from the visible URL', async () => {
   const fallback = await read('products/_dynamic.html');
-  assert.match(fallback, /\\\^\[a-z0-9\]\+/);
-  assert.match(fallback, /\\\(?:-\[a-z0-9\]\+\)\*/);
-  assert.match(fallback, /replace\(\/\\\\\.html\$\/i,\s*['"]['"]\)/);
+  assert.ok(fallback.includes("filename.replace(/\\.html$/i, '')"));
+  assert.ok(fallback.includes("if (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))"));
+  assert.ok(fallback.includes("document.body.dataset.product = slug"));
 });
