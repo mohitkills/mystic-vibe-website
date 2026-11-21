@@ -148,10 +148,14 @@ async function hydrateSlideImages(slides) {
   }));
 }
 
-async function hydrateProductImages(products, imageSlotsBySlug) {
+async function hydrateProductImages(products, imageSlotsBySlug, options = {}) {
+  const allowedSlugs = Array.isArray(options.slugs) ? new Set(options.slugs) : null;
+  const primaryOnly = options.primaryOnly === true;
   await Promise.all(products.map(async (product) => {
-    const slots = imageSlotsBySlug.get(product.slug);
-    if (!slots?.length) return;
+    if (allowedSlugs && !allowedSlugs.has(product.slug)) return;
+    const allSlots = imageSlotsBySlug.get(product.slug);
+    if (!allSlots?.length) return;
+    const slots = primaryOnly ? allSlots.slice(0, 1) : allSlots;
     const images = await Promise.all(slots.map(async (slot, index) => {
       if (slot?.kind === 'url') {
         if (slot.legacyLocalFile) console.warn('Mystic Vibe normalized a legacy local-file product image to a same-site asset.');
@@ -167,6 +171,34 @@ async function hydrateProductImages(products, imageSlotsBySlug) {
     }));
     product.images = images.filter(Boolean);
   }));
+}
+
+function currentImageHydrationScope() {
+  const page = document.body.dataset.page;
+  if (page === 'product') {
+    return { slugs: [document.body.dataset.product].filter(Boolean), primaryOnly: false };
+  }
+  if (page === 'cart') {
+    try {
+      const items = JSON.parse(localStorage.getItem('mv_cart') || '[]');
+      const slugs = Array.isArray(items) ? [...new Set(items.map((item) => item?.slug)
+        .filter((slug) => typeof slug === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)))] : [];
+      return { slugs, primaryOnly: true };
+    } catch {
+      return { slugs: [], primaryOnly: true };
+    }
+  }
+  if (page === 'wishlist') {
+    try {
+      const items = JSON.parse(localStorage.getItem('mv_wishlist') || '[]');
+      const slugs = Array.isArray(items) ? [...new Set(items.filter((slug) =>
+        typeof slug === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)))] : [];
+      return { slugs, primaryOnly: true };
+    } catch {
+      return { slugs: [], primaryOnly: true };
+    }
+  }
+  return { slugs: null, primaryOnly: false };
 }
 
 function rerenderImagePage() {
@@ -367,6 +399,7 @@ function applySiteContent(rows) {
 }
 
 async function applyRemoteData({ products, collections, slides, content }) {
+  const page = document.body.dataset.page;
   window.MV_STOREFRONT_CMS_CONNECTED = Array.isArray(products);
   const publishedCollections = Array.isArray(collections) ? collections : (window.MV_COLLECTIONS || []);
   const publishedSlidesSource = Array.isArray(slides) ? slides : (window.MV_HOMEPAGE_SLIDES || []);
@@ -383,23 +416,34 @@ async function applyRemoteData({ products, collections, slides, content }) {
     : mergeCatalogBySlug([], mappedProducts.map(({ product }) => product));
   window.MV_PRODUCTS.splice(0, window.MV_PRODUCTS.length, ...mergedProducts);
   window.MV_COLLECTIONS = publishedCollections.filter((row) => row?.is_published);
+
   const publishedSlides = publishedSlidesSource.filter((row) => row?.is_published)
     .sort((left, right) => Number(left.sort_order) - Number(right.sort_order) || String(left.created_at || '').localeCompare(String(right.created_at || '')));
-  if (Array.isArray(slides)) window.MV_HOMEPAGE_SLIDES = await hydrateSlideImages(publishedSlides);
+  const shouldHydrateProducts = ['home', 'collection', 'product', 'cart', 'wishlist'].includes(page);
+  const imageScope = currentImageHydrationScope();
+  const productImagesPromise = shouldHydrateProducts
+    ? hydrateProductImages(mergedProducts, imageSlotsBySlug, imageScope)
+    : Promise.resolve();
+  const slideImagesPromise = Array.isArray(slides)
+    ? hydrateSlideImages(publishedSlides)
+    : Promise.resolve(null);
+
   if (publishedContent) applySiteContent(publishedContent);
-  rerenderImagePage();
+  const [hydratedSlides] = await Promise.all([slideImagesPromise, productImagesPromise]);
+  if (Array.isArray(slides)) window.MV_HOMEPAGE_SLIDES = hydratedSlides;
 
-  await Promise.all([hydrateProductImages(mergedProducts, imageSlotsBySlug)]);
   rerenderImagePage();
-
   window.refreshMysticVibeReveals(document.querySelector('main'));
+  window.MV_STOREFRONT_LOADING = false;
+  document.body.classList.remove('mv-storefront-loading');
   dispatchStorefrontData();
 }
 
+const page = document.body.dataset.page;
 const [products, collections, slides, content] = await Promise.all([
   readPublished('products'),
-  readPublished('collections'),
-  readPublished('homepage_slides'),
+  page === 'collection' ? readPublished('collections') : Promise.resolve(null),
+  page === 'home' ? readPublished('homepage_slides') : Promise.resolve(null),
   readPublished('site_content'),
 ]);
 await applyRemoteData({ products, collections, slides, content });
