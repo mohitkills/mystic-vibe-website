@@ -188,27 +188,27 @@
     });
   }
 
-  if (finePointer()) {
-    document.addEventListener('pointermove', (event) => {
-      latestPointerEvent = event;
-      if (pointerFrame) return;
-      pointerFrame = window.requestAnimationFrame(() => {
-        pointerFrame = 0;
-        if (latestPointerEvent) updatePointerEffects(latestPointerEvent);
-      });
-    }, { passive: true });
+  document.addEventListener('pointermove', (event) => {
+    if (!finePointer()) return;
+    latestPointerEvent = event;
+    if (pointerFrame) return;
+    pointerFrame = window.requestAnimationFrame(() => {
+      pointerFrame = 0;
+      if (latestPointerEvent) updatePointerEffects(latestPointerEvent);
+    });
+  }, { passive: true });
 
-    document.addEventListener('pointerout', (event) => {
-      const roots = [
-        event.target.closest && event.target.closest('[data-tilt]'),
-        event.target.closest && event.target.closest('.glass-spot'),
-        event.target.closest && event.target.closest('[data-magnetic]')
-      ];
-      roots.filter(Boolean).forEach((element) => {
-        if (!event.relatedTarget || !element.contains(event.relatedTarget)) resetPointerElement(element);
-      });
-    }, { passive: true });
-  }
+  document.addEventListener('pointerout', (event) => {
+    if (!finePointer()) return;
+    const roots = [
+      event.target.closest && event.target.closest('[data-tilt]'),
+      event.target.closest && event.target.closest('.glass-spot'),
+      event.target.closest && event.target.closest('[data-magnetic]')
+    ];
+    roots.filter(Boolean).forEach((element) => {
+      if (!event.relatedTarget || !element.contains(event.relatedTarget)) resetPointerElement(element);
+    });
+  }, { passive: true });
 
   function handleScroll() {
     if (scrollFrame) return;
@@ -298,9 +298,6 @@
       '</div>';
     document.body.append(scrim, drawer);
     scrim.addEventListener('click', closeDrawer);
-    drawer.addEventListener('click', (event) => {
-      if (event.target.closest('[data-mv-cart-close]')) closeDrawer();
-    });
   }
 
   function renderDrawer() {
@@ -524,7 +521,10 @@
     }
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
+    if (!drawer.contains(document.activeElement)) {
+      event.preventDefault();
+      first.focus();
+    } else if (event.shiftKey && document.activeElement === first) {
       event.preventDefault();
       last.focus();
     } else if (!event.shiftKey && document.activeElement === last) {
@@ -570,7 +570,26 @@
 
   if (typeof reduceQuery.addEventListener === 'function') reduceQuery.addEventListener('change', refreshMotionPreferences);
   if (typeof pointerQuery.addEventListener === 'function') {
-    pointerQuery.addEventListener('change', () => initReveal(document.body));
+    pointerQuery.addEventListener('change', () => {
+      if (!finePointer()) {
+        document.querySelectorAll('[data-tilt], [data-magnetic]').forEach((element) => {
+          element.removeAttribute('data-tilt');
+          element.removeAttribute('data-magnetic');
+          element.classList.remove('mv-tilt-hover');
+          element.style.removeProperty('--mv-rotate-x');
+          element.style.removeProperty('--mv-rotate-y');
+          element.style.removeProperty('--mv-magnet-x');
+          element.style.removeProperty('--mv-magnet-y');
+        });
+        document.querySelectorAll('.glass-spot').forEach((element) => {
+          element.classList.remove('glass-spot', 'mv-glass-hover');
+          const overlay = element.querySelector(':scope > .mv-glass-spotlight');
+          if (overlay) overlay.remove();
+        });
+      } else {
+        initReveal(document.body);
+      }
+    });
   }
 
   initParallax(document.body);
