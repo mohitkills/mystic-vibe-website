@@ -1860,3 +1860,12 @@ body.mv-storefront-loading main .pdp-gallery-column,
 body.mv-storefront-loading main .cart-item .ci-img {
   background: linear-gradient(135deg, rgba(235,231,222,.92), rgba(250,249,246,.98)) !important;
 }
+
+
+/* The homepage hero has a separate readiness gate: the fallback must stay
+   invisible until the first CMS slide image has actually been preloaded. */
+body.mv-storefront-hero-loading main .premium-hero-image,
+body main .premium-hero-image.mv-hero-stale-fallback {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
