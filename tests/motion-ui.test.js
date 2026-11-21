@@ -57,6 +57,8 @@ test('Supabase loading skeletons overlay existing cards without affecting layout
   const css = await read('css/motion-ui.css');
   assert.match(js, /function addSkeletonOverlay/);
   assert.match(js, /skel-media/);
+  assert.equal((js.match(/class="skel /g) || []).length, 4);
+  assert.match(js, /index % 4\) \* 70/);
   assert.match(css, /\.mv-skeleton-overlay\s*\{[^}]*position:\s*absolute[^}]*inset:\s*0/s);
   assert.match(css, /@keyframes mv-skeleton-shimmer/);
   assert.match(css, /to\s*\{\s*transform:\s*translateX/);
