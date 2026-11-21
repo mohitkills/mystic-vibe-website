@@ -457,6 +457,70 @@ test('Product cards match the compact retail reference while preserving cart, wi
   assert.ok(css.includes('text-transform: uppercase !important'));
 });
 
+test('Product detail page has a database-backed responsive retail layout without altering cart or stock rules', async () => {
+  const app = await read('js/app.js');
+  const css = await read('css/theme-system.css');
+  const productFiles = (await readdir(path.join(root, 'products'))).filter((name) => name.endsWith('.html'));
+  assert.ok(productFiles.length > 0);
+  for (const file of productFiles) {
+    const html = await read(path.join('products', file));
+    assert.match(html, /<meta charset="utf-8">/i, file + ' must declare UTF-8');
+  }
+  const start = app.indexOf('function renderProduct(){');
+  const end = app.indexOf('function renderCart(){', start);
+  assert.ok(start >= 0 && end > start);
+  const page = app.slice(start, end);
+  assert.ok(page.includes('p.name'));
+  assert.ok(page.includes('p.description'));
+  assert.ok(page.includes('p.notes'));
+  assert.ok(page.includes('p.family'));
+  assert.ok(page.includes('p.size'));
+  assert.ok(page.includes('p.price'));
+  assert.ok(page.includes('p.mrp'));
+  assert.ok(page.includes('p.stock'));
+  assert.ok(page.includes('productDetailGallery(p)'));
+  assert.ok(page.includes('pdp-price-row'));
+  assert.ok(page.includes('pdp-now'));
+  assert.ok(page.includes('pdp-mrp'));
+  assert.ok(page.includes('pdp-save'));
+  assert.ok(page.includes('pdp-tax'));
+  assert.ok(page.includes('hasRatingData'));
+  assert.ok(!page.includes('4.7'));
+  assert.ok(!page.includes('1269'));
+  assert.ok(!page.includes(' ? MRP '));
+  assert.ok(!page.includes("p.size+' ? '+rupee"));
+  assert.ok(page.includes('data-product-add='));
+  assert.ok(page.includes('data-buy='));
+  assert.ok(page.includes('data-inc'));
+  assert.ok(page.includes('data-dec'));
+  assert.ok(page.includes('pdp-mobile-bar'));
+  assert.ok(app.includes('function handleProductAdd('));
+  assert.ok(app.includes("button.textContent=added?'Added':'Add to cart'"));
+  assert.ok(app.includes("addToCart(b.dataset.buy,Number(document.querySelector('#qty')?.value||1))"));
+  const discountMatch = app.match(/function productDiscountPercent\\(mrp,price\\)\\{[^}]*\\}/);
+  assert.ok(discountMatch);
+  const discount = runInNewContext(discountMatch[0] + '; productDiscountPercent;');
+  assert.equal(discount(599, 449), 25);
+  assert.equal(discount(499, 499), 0);
+  assert.equal(discount(399, 449), 0);
+  assert.equal(discount(0, 449), 0);
+  const currencyMatch = app.match(/function productCurrency\\(value\\)\\{[^}]*\\}/);
+  assert.ok(currencyMatch);
+  const currency = runInNewContext(currencyMatch[0] + '; productCurrency;');
+  assert.equal(currency(449), '₹449.00');
+  assert.ok(css.includes('body[data-page="product"] .pdp-gallery-stage'));
+  assert.ok(css.includes('aspect-ratio: 4 / 5'));
+  assert.ok(css.includes('object-fit: contain'));
+  assert.ok(css.includes('mix-blend-mode: multiply'));
+  assert.ok(css.includes('body[data-page="product"] .pdp-buybox'));
+  assert.ok(css.includes('position: sticky'));
+  assert.ok(css.includes('body[data-page="product"] .pdp-mobile-bar'));
+  assert.ok(css.includes('@media (max-width: 380px)'));
+  assert.ok(css.includes('@media (prefers-reduced-motion: reduce)'));
+  assert.ok(css.includes(':focus-visible'));
+  assert.ok(css.includes('grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr)'));
+});
+
 test('Login and registration password inputs have an accessible show/hide control', async () => {
   const auth = await read('js/auth.js');
   const css = await read('css/theme-system.css');
