@@ -709,9 +709,9 @@ test('homepage has exactly one image-first hero, one configurable CTA and animat
   assert.match(homeRefresh, /if \(page === 'home'\) return;/, 'CMS refresh must preserve the single premium hero');
   assert.doesNotMatch(homeRefresh, /renderMysticVibeHome/, 'CMS refresh must not restore the legacy multi-slide hero');
   assert.match(sync, /readPublished\('homepage_slides'\)/);
-  assert.match(sync, /page === 'home' \? readPublished\('homepage_slides'\)/);
-  assert.match(sync, /const slideImagesPromise = Array\.isArray\(slides\)[\s\S]*?hydrateSlideImages\(publishedSlides\)/);
-  assert.match(sync, /const \[hydratedSlides\] = await Promise\.all\(\[slideImagesPromise, productImagesPromise\]\)/);
+  assert.ok(sync.includes("page === 'home' ? readPublished('homepage_slides')"));
+  assert.ok(sync.includes('const slideImagesPromise = Array.isArray(slides) ? hydrateSlideImages(publishedSlides)'));
+  assert.ok(sync.includes('const [hydratedSlides] = await Promise.all([slideImagesPromise, productImagesPromise])'));
   assert.match(sync, /window\.MV_STOREFRONT_CMS_CONNECTED = Array\.isArray\(products\)/);
   assert.match(sync, /mergeCatalogBySlug\(\[\], mappedProducts/);
   assert.match(html, /Slide transition<select name="transition_style"/);
