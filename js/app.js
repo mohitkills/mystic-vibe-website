@@ -22,7 +22,10 @@ function productVariant(p,sizeMl){
   var variants=productVariants(p);
   if(!variants.length)return null;
   var target=Number(sizeMl);
-  return variants.find(function(variant){return variant.size_ml===target})||variants.find(function(variant){return variant.size_ml===productSizeMl(p)})||variants[0];
+  if(Number.isSafeInteger(target)&&target>0){
+    return variants.find(function(variant){return variant.size_ml===target})||null;
+  }
+  return variants.find(function(variant){return variant.size_ml===productSizeMl(p)})||variants[0];
 }
 function cart(){
   try{
@@ -225,16 +228,17 @@ function header(){
   var primary=resolveProductImage(images[0]);
   var gallery=images.length>1;
   var galleryControls=gallery?'<div class="product-image-controls"><button type="button" class="gallery-arrow" data-gallery-prev aria-label="Previous '+escapeHtml(p.name)+' image">&#8249;</button><div class="gallery-dots" role="group" aria-label="Choose '+escapeHtml(p.name)+' image">'+images.map(function(src,i){return '<button type="button" class="gallery-dot '+(i?'':'active')+'" data-gallery-to="'+i+'" data-gallery-src="'+escapeHtml(resolveProductImage(src))+'" aria-label="Show image '+(i+1)+' of '+images.length+'" aria-pressed="'+(!i)+'"></button>'}).join('')+'</div><button type="button" class="gallery-arrow" data-gallery-next aria-label="Next '+escapeHtml(p.name)+' image">&#8250;</button></div>':'';
-  var stockKnown=p.stock!==undefined&&p.stock!==null&&Number.isFinite(Number(p.stock));
-  var outOfStock=stockKnown&&Number(p.stock)<=0;
-  var priceValue=Number(p.price);
-  var mrpValue=Number(p.mrp);
+  var defaultVariant=productVariant(p);
+  var cardStock=defaultVariant?Number(defaultVariant.stock):Number(p.stock);
+  var stockKnown=Number.isFinite(cardStock);
+  var outOfStock=stockKnown&&cardStock<=0;
+  var priceValue=defaultVariant?Number(defaultVariant.price):Number(p.price);
+  var mrpValue=defaultVariant?Number(defaultVariant.mrp):Number(p.mrp);
   var hasDiscount=Number.isFinite(priceValue)&&Number.isFinite(mrpValue)&&mrpValue>priceValue;
   var discountPercent=hasDiscount?Math.round((mrpValue-priceValue)/mrpValue*100):0;
   var bestseller=p.best===true||p.best===1||p.best==='true'||p.storefront_category==='bestsellers'||p.storefront_category_label==='Bestsellers';
   var imageBadges=bestseller?'<span class="product-card-badge product-card-bestseller">Bestseller</span>':'';
   var discountLabel=hasDiscount?'<span class="product-card-save">'+discountPercent+'% OFF</span>':'';
-  var defaultVariant=productVariant(p);
   var wishlistButton='<button class="icon-btn product-card-wishlist" data-wish="'+escapeHtml(p.slug)+'" aria-label="Add '+escapeHtml(p.name)+' to wishlist" title="Add to wishlist">&#9825;</button>';
   var ratingValue=Number(p.rating!==undefined?p.rating:(p.average_rating!==undefined?p.average_rating:p.averageRating));
   var reviewValue=Number(p.review_count!==undefined?p.review_count:(p.reviewCount!==undefined?p.reviewCount:p.reviews_count));
