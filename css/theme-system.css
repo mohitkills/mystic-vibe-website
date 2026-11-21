@@ -1842,3 +1842,21 @@ body:not([data-theme="dark"]) .product-card-reference .product-card-add:disabled
   position:relative;
   clear:both;
 }
+
+
+/* Prevent stale/static catalogue photos flashing while the live CMS is loading. */
+body.mv-storefront-loading main .premium-hero-image,
+body.mv-storefront-loading main .product-card-reference img,
+body.mv-storefront-loading main .pdp-gallery-column img,
+body.mv-storefront-loading main .cart-item .ci-img img,
+body.mv-storefront-loading main .wishlist-card img,
+body.mv-storefront-loading main .wishlist-item img {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+body.mv-storefront-loading main .premium-hero-media,
+body.mv-storefront-loading main .product-card-image-stage .visual,
+body.mv-storefront-loading main .pdp-gallery-column,
+body.mv-storefront-loading main .cart-item .ci-img {
+  background: linear-gradient(135deg, rgba(235,231,222,.92), rgba(250,249,246,.98)) !important;
+}
