@@ -111,7 +111,7 @@ test('My Orders redesign preserves the existing signed-in order queries and data
   const html = await read('account.html');
   const css = await read('css/orders-enhanced.css');
 
-  assert.match(html, /<title>My Orders — Mystic Vibe<\\/title>/);
+  assert.ok(html.includes('<title>My Orders — Mystic Vibe</title>'));
   assert.ok(account.includes("supabase.from('orders')"));
   assert.ok(account.includes(".select('id,order_number,created_at,order_status,payment_status,payment_method,subtotal,shipping_fee,discount_amount,total,carrier,tracking_number')"));
   assert.ok(account.includes(".order('created_at', { ascending: false }).limit(50)"));
