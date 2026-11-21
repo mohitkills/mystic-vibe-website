@@ -1044,7 +1044,7 @@ test('storefront loading hides stale CMS-bound images until live content is hydr
   const css = await read('css/theme-system.css');
 
   assert.match(app, /window\.MV_STOREFRONT_LOADING=true;document\.body\.classList\.add\('mv-storefront-loading'\)/);
-  assert.match(app, /document\.body\.classList\.remove\('mv-storefront-loading'\)/);
+  assert.ok(app.includes("document.body.classList.remove('mv-storefront-loading','mv-storefront-hero-loading')"));
   assert.match(css, /body\.mv-storefront-loading main \.premium-hero-image/);
   assert.match(css, /body\.mv-storefront-loading main \.product-card-reference img/);
   assert.match(sync, /document\.body\.classList\.remove\('mv-storefront-loading'\)/);
