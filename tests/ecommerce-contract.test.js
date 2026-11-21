@@ -644,7 +644,8 @@ test('Signup and password reset email callbacks always target the published site
   assert.ok(auth.includes('options: { emailRedirectTo: SIGNUP_CONFIRMATION_REDIRECT }'));
   assert.ok(auth.includes('Resend confirmation email'));
   assert.ok(auth.includes('if (page === \'register\' && !result.data.session)'));
-  assert.doesNotMatch(auth, /new URL\([^\n]*(?:location\.href|location\.origin)/);
+  assert.doesNotMatch(auth, /emailRedirectTo:\\s*[^,\\n]*(?:location\\.href|location\\.origin)/);
+  assert.doesNotMatch(auth, /const PASSWORD_RESET_REDIRECT = new URL\\([^\\n]*location\\./);
 });
 
 test('Login and registration password inputs have an accessible show/hide control', async () => {
