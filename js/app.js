@@ -554,7 +554,7 @@ function renderCart(){
     var available=Number(v.stock),outOfStock=Number.isFinite(available)&&available<quantity;
     var lineTotal=price*quantity;
     var image=resolveProductImage(Array.isArray(p.images)?p.images[0]:'');
-    var stockNote=outOfStock?'<p class="ci-stock-note">'+(available>0?'Only '+available+' available in this size. Reduce the quantity to continue.':'This size is out of stock. Remove it to continue.')+'</p>':'';
+    var stockNote=outOfStock?'<p class="ci-stock-note">'+(available>0?'Only '+available+' available; reduce quantity to continue checkout.':'Out of stock; remove this item to continue checkout.')+'</p>':'';
     var priceLine='<p class="ci-unit"><span>'+rupee(price)+' <small>per item</small></span>'+(hasDiscount?'<s>'+rupee(mrp)+'</s><em>Save '+savePercent+'%</em>':'')+'</p>';
     return '<article class="cart-item'+(outOfStock?' cart-item-unavailable':'')+'" data-cart-row="'+slug+'-'+size+'">'+
       '<a class="ci-img" href="'+productPath(p.slug)+'" aria-label="View '+escapeHtml(p.name)+' '+size+'ML"><img src="'+escapeHtml(image)+'" alt="'+escapeHtml(p.name)+' '+size+'ML perfume" loading="lazy" width="120" height="120"></a>'+
