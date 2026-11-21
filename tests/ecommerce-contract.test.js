@@ -959,3 +959,43 @@ test('cart rows refresh from the published Supabase catalogue after storefront h
   assert.match(refresh, /if \(page === 'cart'\) window\.renderMysticVibeCart\?\.\(\);/);
   assert.match(sync, /window\.MV_STOREFRONT_CMS_CONNECTED = Array\.isArray\(products\)/);
 });
+
+test('Cart page presents live cart variants in the porcelain-glass layout without changing cart or shipping rules', async () => {
+  const app = await read('js/app.js');
+  const cartHtml = await read('cart.html');
+  const cartCss = await read('css/cart-page.css');
+  const checkout = await read('js/checkout.js');
+  const start = app.indexOf('function renderCart(){');
+  const end = app.indexOf('function renderCheckout()', start);
+  assert.ok(start >= 0 && end > start);
+  const render = app.slice(start, end);
+  for (const token of ['productBySlug(item.slug)', 'productVariant(p,item.size_ml)', 'data-qinc=', 'data-qdec=', 'data-remove=', 'ci-name', 'ci-unit', 'ci-line-total', 'cart-order-summary', 'data-cart-checkout', 'MV_SITE_CONTENT', 'free_shipping_threshold', 'standard_fee', 'cart-sticky-bar']) {
+    assert.ok(render.includes(token), 'cart renders the existing data and expected control: ' + token);
+  }
+  assert.ok(render.includes('window.MV_STOREFRONT_LOADING===true'), 'cart uses skeletons during storefront hydration');
+  assert.ok(render.includes('data-cart-retry'), 'failed storefront load provides a retry action');
+  assert.ok(cartHtml.includes('css/cart-page.css'));
+  assert.ok(cartCss.includes('.cart-item:hover'));
+  assert.ok(cartCss.includes('.cart-qty button:disabled'));
+  assert.ok(cartCss.includes('.cart-summary-list .cart-summary-total'));
+  assert.ok(cartCss.includes('.cart-sticky-bar'));
+  assert.ok(cartCss.includes('body[data-page="cart"] .whatsapp-float'));
+  assert.ok(cartCss.includes('prefers-reduced-motion: reduce'));
+  assert.ok(checkout.includes('const fee = threshold > 0 && subtotal >= threshold ? 0 : Number(shippingSettings.standard_fee || 0)'));
+  assert.match(render, /threshold>0&&subtotal>=threshold\?0:standardFee/);
+});
+
+test('Cart remove animation preserves the existing remove filter, and cart drawer stacks above the sticky header', async () => {
+  const app = await read('js/app.js');
+  const motion = await read('js/motion-ui.js');
+  const motionCss = await read('css/motion-ui.css');
+  assert.ok(app.includes("cartRow.classList.add('is-removing')"));
+  assert.ok(app.includes("i.slug===rm.dataset.remove&&Number(i.size_ml)===Number(rm.dataset.sizeMl)"));
+  assert.ok(app.includes("window.matchMedia('(prefers-reduced-motion: reduce)')"));
+  assert.ok(motion.includes("data-mv-cart-count"));
+  assert.ok(motion.includes("mv-cart-line-pricing"));
+  assert.ok(motion.includes("window.renderMysticVibeCart()"));
+  assert.match(motionCss, /\.mv-cart-scrim\s*\{[\s\S]*?z-index:\s*1998/);
+  assert.match(motionCss, /\.mv-cart-drawer\s*\{[\s\S]*?z-index:\s*2000/);
+  assert.ok(motionCss.includes('.mv-cart-checkout:hover'));
+});
