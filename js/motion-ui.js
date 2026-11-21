@@ -9,7 +9,7 @@
   const reduced = () => reduceQuery.matches;
   const finePointer = () => pointerQuery.matches && !reduced();
   const revealSelector = '.section-head, .page-title, .product-card-reference, .ivory-category-card, .ivory-family-card, .feature-grid > .feature, .pdp-gallery-column, .pdp-buybox, .home-shop-all, .reveal';
-  const glassSelector = '.story-panel, .newsletter, .panel, .pdp-buybox, .product-gallery, .summary, .account-menu-panel';
+  const glassSelector = '.story-panel, .newsletter, .panel, .product-gallery, .summary';
   const magneticSelector = '.premium-hero-actions .btn, .home-shop-all .btn, .pdp-buybox .btn, .newsletter .btn, .page-title .btn';
 
   const stylesheet = document.createElement('link');
@@ -397,7 +397,7 @@
 
   function bumpCartCount(target) {
     const badge = (target && target.querySelector('[data-cart-count]')) || document.querySelector('[data-cart-count]');
-    if (!badge) return;
+    if (!badge || reduced()) return;
     badge.classList.remove('mv-cart-bump');
     void badge.offsetWidth;
     badge.classList.add('mv-cart-bump');
@@ -494,16 +494,18 @@
     const wishButton = event.target.closest && event.target.closest('[data-wish]');
     if (wishButton) {
       window.setTimeout(() => {
-        if (wishButton.getAttribute('aria-pressed') === 'true') {
-          wishButton.classList.remove('mv-wish-pop');
-          void wishButton.offsetWidth;
-          wishButton.classList.add('mv-wish-pop');
-        }
+        window.setTimeout(() => {
+          if (wishButton.getAttribute('aria-pressed') === 'true') {
+            wishButton.classList.remove('mv-wish-pop');
+            void wishButton.offsetWidth;
+            wishButton.classList.add('mv-wish-pop');
+          }
+        }, 0);
       }, 0);
     }
 
     if (event.target.closest && event.target.closest('[data-mv-cart-close]')) closeDrawer();
-  });
+  }, true);
 
   document.addEventListener('keydown', (event) => {
     if (!drawerOpen || !drawer) return;
