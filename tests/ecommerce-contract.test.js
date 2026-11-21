@@ -514,6 +514,11 @@ test('Product detail page has a database-backed responsive retail layout without
   assert.ok(css.includes('aspect-ratio: 4 / 5'));
   assert.ok(css.includes('object-fit: contain'));
   assert.ok(css.includes('mix-blend-mode: multiply'));
+  assert.ok(css.includes('grid-template-columns: 48px 58px 48px'));
+  assert.ok(css.includes('grid-template-rows: 48px'));
+  assert.ok(css.includes('justify-self: center'));
+  assert.ok(css.includes('align-self: center'));
+  assert.ok(css.includes('height: 54px'));
   assert.ok(css.includes('body[data-page="product"] .pdp-buybox'));
   assert.ok(css.includes('position: sticky'));
   assert.ok(css.includes('body[data-page="product"] .pdp-mobile-bar'));
