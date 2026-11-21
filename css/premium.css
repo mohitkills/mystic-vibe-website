@@ -401,3 +401,39 @@
 .product-image-controls .gallery-dots {
   display: none !important;
 }
+
+/* Frosted-glass treatment for the product image carousel arrows. */
+.product-image-controls .gallery-arrow {
+  display: grid !important;
+  place-items: center !important;
+  border: 1px solid rgba(255,255,255,.82) !important;
+  background: rgba(255,255,255,.58) !important;
+  color: #242424 !important;
+  box-shadow:
+    0 8px 22px rgba(30,28,24,.14),
+    inset 0 1px 0 rgba(255,255,255,.88) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(165%) !important;
+  backdrop-filter: blur(16px) saturate(165%) !important;
+  transition:
+    background .22s ease,
+    border-color .22s ease,
+    box-shadow .22s ease,
+    transform .22s ease !important;
+}
+.product-image-controls .gallery-arrow:hover,
+.product-image-controls .gallery-arrow:focus-visible {
+  background: rgba(255,255,255,.82) !important;
+  border-color: rgba(255,255,255,.98) !important;
+  color: #111 !important;
+  box-shadow:
+    0 10px 26px rgba(30,28,24,.18),
+    inset 0 1px 0 rgba(255,255,255,.96) !important;
+  transform: translateY(-1px) scale(1.04);
+}
+.product-image-controls .gallery-arrow:focus-visible {
+  outline: 2px solid rgba(180,154,96,.75) !important;
+  outline-offset: 3px !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .product-image-controls .gallery-arrow { transition: none !important; }
+}
