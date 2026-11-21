@@ -686,8 +686,13 @@ body[data-page="account"] .oc-skeleton-foot b { width: 150px; height: 42px; }
   body[data-page="account"] .orders-page-head h1 { font-size: clamp(2.2rem, 11vw, 2.8rem); }
   body[data-page="account"] .account-orders.orders-list { gap: 16px; }
   body[data-page="account"] .oc-order-card { padding: 18px; gap: 15px; }
-  body[data-page="account"] .oc-head { gap: 9px; }
-  body[data-page="account"] .oc-status-stack { max-width: 39%; gap: 5px; }
+  body[data-page="account"] .oc-head {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) auto;
+    align-items: start;
+    gap: 9px;
+  }
+  body[data-page="account"] .oc-status-stack { width: fit-content; max-width: 118px; gap: 5px; }
   body[data-page="account"] .oc-status { padding-inline: 9px; font-size: .7rem; }
   body[data-page="account"] .oc-payment { font-size: .66rem; }
   body[data-page="account"] .oc-id { font-size: .83rem; }
