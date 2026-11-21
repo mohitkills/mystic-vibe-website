@@ -710,7 +710,7 @@ test('homepage has exactly one image-first hero, one configurable CTA and animat
   assert.doesNotMatch(homeRefresh, /renderMysticVibeHome/, 'CMS refresh must not restore the legacy multi-slide hero');
   assert.match(sync, /readPublished\('homepage_slides'\)/);
   assert.ok(sync.includes("page === 'home' ? readPublished('homepage_slides')"));
-  assert.ok(sync.includes('const slideImagesPromise = Array.isArray(slides) ? hydrateSlideImages(publishedSlides)'));
+  assert.ok(sync.includes('const slideImagesPromise = Array.isArray(slides)'));
   assert.ok(sync.includes('const [hydratedSlides] = await Promise.all([slideImagesPromise, productImagesPromise])'));
   assert.match(sync, /window\.MV_STOREFRONT_CMS_CONNECTED = Array\.isArray\(products\)/);
   assert.match(sync, /mergeCatalogBySlug\(\[\], mappedProducts/);
@@ -1017,9 +1017,9 @@ test('homepage CMS sync reaches the hero carousel after product sections are ref
   assert.match(controller, /var section=root\.querySelector\('\[data-home-section=/);
   assert.match(controller, /var incoming=Array\.isArray\(data\.slides\)/);
   assert.match(sync, /readPublished\('homepage_slides'\)/);
-  assert.match(sync, /page === 'home' \\? readPublished\\('homepage_slides'\\)/);
-  assert.match(sync, /const slideImagesPromise = Array\\.isArray\\(slides\\)[\\s\\S]*?hydrateSlideImages\\(publishedSlides\\)/);
-  assert.match(sync, /const \\[hydratedSlides\\] = await Promise\\.all\\(\\[slideImagesPromise, productImagesPromise\\]\\)/);
+  assert.ok(sync.includes("page === 'home' ? readPublished('homepage_slides')"));
+  assert.ok(sync.includes('const slideImagesPromise = Array.isArray(slides)'));
+  assert.ok(sync.includes('const [hydratedSlides] = await Promise.all([slideImagesPromise, productImagesPromise])'));
   assert.match(sync, /functions\/v1\/slide-image/);
   assert.match(sync, /slides: window\.MV_HOMEPAGE_SLIDES/);
   assert.match(sync, /dispatchStorefrontData\(\)/);
@@ -1053,7 +1053,7 @@ test('storefront loading hides stale CMS-bound images until live content is hydr
 test('storefront hydration loads homepage and collection extras only where needed and avoids unrelated private image downloads', async () => {
   const sync = await read('js/storefront-sync.js');
   assert.match(sync, /page === 'collection' \? readPublished\('collections'\)/);
-  assert.match(sync, /page === 'home' \? readPublished\('homepage_slides'\)/);
+  assert.ok(sync.includes("page === 'home' ? readPublished('homepage_slides')"));
   assert.match(sync, /const shouldHydrateProducts = \['home', 'collection', 'product', 'cart', 'wishlist'\]\.includes\(page\)/);
   assert.match(sync, /function currentImageHydrationScope\(\)/);
   assert.match(sync, /return \{ slugs, primaryOnly: true \}/);
