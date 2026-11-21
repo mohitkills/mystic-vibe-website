@@ -1010,7 +1010,7 @@ test('homepage CMS sync reaches the hero carousel after product sections are ref
   assert.ok(controllerStart >= 0, 'the image-first hero controller must be present');
   const controller = hero.slice(controllerStart, hero.indexOf('})();', controllerStart));
 
-  assert.match(controller, /var root=hero\.closest\('main'\) \|\| document\.querySelector\('main'\);/);
+  assert.match(controller, /var root=document\.querySelector\('main'\) \|\| hero;/);
   assert.match(controller, /var section=root\.querySelector\('\[data-home-section=/);
   assert.match(controller, /var incoming=Array\.isArray\(data\.slides\)/);
   assert.match(sync, /readPublished\('homepage_slides'\)/);
