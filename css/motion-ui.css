@@ -62,8 +62,8 @@
 
 /* Small magnetic movement is applied with transform only. */
 [data-magnetic] {
-  transform: translate3d(var(--mv-magnet-x, 0px), var(--mv-magnet-y, 0px), 0);
-  transition: transform .22s var(--mv-motion-ease);
+  transform: translate3d(var(--mv-magnet-x, 0px), var(--mv-magnet-y, 0px), 0) !important;
+  transition: transform .22s var(--mv-motion-ease) !important;
 }
 [data-magnetic]:hover {
   transform: translate3d(var(--mv-magnet-x, 0px), calc(var(--mv-magnet-y, 0px) - 2px), 0) !important;
