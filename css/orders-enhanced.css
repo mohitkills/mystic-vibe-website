@@ -776,6 +776,11 @@ body[data-page="tracking"] .order-detail-top .order-badges .badge {
   font: 600 .75rem/1.25 Inter, sans-serif;
   white-space: nowrap;
 }
+body[data-page="tracking"] .order-detail-top .payment-status-badge--pending {
+  background: rgba(180,154,96,.16);
+  border-color: rgba(180,154,96,.25);
+  color: #7D6730;
+}
 body[data-page="tracking"] .order-detail-top .order-status-badge--pending {
   background: rgba(180,154,96,.16);
   border-color: rgba(180,154,96,.25);
