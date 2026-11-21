@@ -93,6 +93,9 @@
     document.querySelectorAll('.mv-skeleton-loading').forEach((card) => card.classList.remove('mv-skeleton-loading'));
     document.querySelectorAll('.product-grid[aria-busy="true"]').forEach((grid) => grid.removeAttribute('aria-busy'));
     initReveal(document.querySelector('main') || document.body);
+    if (document.body.dataset.page === 'cart' && typeof window.renderMysticVibeCart === 'function') {
+      window.renderMysticVibeCart();
+    }
   }
 
   function addGlassSpotlights(root) {
@@ -285,7 +288,7 @@
     drawer.setAttribute('inert', '');
     drawer.innerHTML =
       '<div class="mv-cart-drawer-head">' +
-        '<div><span class="mv-cart-eyebrow">MYSTIC VIBE</span><h2 id="mv-cart-drawer-title">Your Bag</h2></div>' +
+        '<div class="mv-cart-drawer-heading"><span class="mv-cart-eyebrow">MYSTIC VIBE · YOUR SELECTION</span><h2 id="mv-cart-drawer-title">Your Bag</h2><span class="mv-cart-count" data-mv-cart-count>0 items</span></div>' +
         '<button type="button" class="mv-cart-close" data-mv-cart-close aria-label="Close shopping bag">×</button>' +
       '</div>' +
       '<div class="mv-cart-drawer-items" data-mv-cart-items></div>' +
@@ -305,22 +308,29 @@
     const subtotalNode = drawer.querySelector('[data-mv-cart-subtotal]');
     const footer = drawer.querySelector('[data-mv-cart-footer]');
     const rows = getCartRows();
+    const countNode = drawer.querySelector('[data-mv-cart-count]');
+    const itemCount = rows.reduce((sum, row) => sum + Math.max(0, Number(row.qty) || 0), 0);
+    if (countNode) countNode.textContent = itemCount + ' ' + (itemCount === 1 ? 'item' : 'items');
     itemsRoot.replaceChildren();
 
     if (!rows.length) {
       footer.hidden = true;
       const empty = document.createElement('div');
       empty.className = 'mv-cart-empty';
+      const icon = document.createElement('span');
+      icon.className = 'mv-cart-empty-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.innerHTML = '<svg viewBox="0 0 48 48" width="44" height="44" fill="none"><path d="M8 17h32l-2 24H10L8 17Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M17 18v-5a7 7 0 0 1 14 0v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
       const heading = document.createElement('h3');
-      heading.textContent = 'Your bag is waiting';
+      heading.textContent = 'Your bag is empty';
       const copy = document.createElement('p');
-      copy.textContent = 'Explore the collection and find your next signature scent.';
+      copy.textContent = 'Discover a fragrance that feels like it was made for you.';
       const link = document.createElement('a');
       link.href = pagePath('collection.html');
       link.className = 'mv-cart-empty-link';
-      link.textContent = 'Explore fragrances';
+      link.textContent = 'Shop fragrances';
       itemsRoot.append(empty);
-      empty.append(heading, copy, link);
+      empty.append(icon, heading, copy, link);
       return;
     }
 
@@ -335,20 +345,40 @@
 
       const item = document.createElement('article');
       item.className = 'mv-cart-line';
+      const imageLink = document.createElement(product ? 'a' : 'div');
+      imageLink.className = 'mv-cart-line-image';
+      if (product) imageLink.href = new URL('products/' + encodeURIComponent(row.slug) + '.html', window.location.origin).href;
       const image = document.createElement('img');
-      image.alt = product ? product.name + ' perfume' : 'Perfume';
+      image.alt = product ? product.name + ' ' + (size || '') + 'ML perfume' : 'Unavailable fragrance';
       image.loading = 'lazy';
       image.src = drawerLineImage(product);
+      imageLink.append(image);
       const details = document.createElement('div');
       details.className = 'mv-cart-line-details';
       const name = document.createElement('strong');
       name.textContent = product ? product.name : 'Unavailable fragrance';
       const meta = document.createElement('span');
       meta.textContent = (size ? size + 'ML' : 'Size unavailable') + ' · Qty ' + Number(row.qty || 0);
+      const priceBlock = document.createElement('div');
+      priceBlock.className = 'mv-cart-line-pricing';
+      if (product && variant) {
+        const unit = document.createElement('span');
+        unit.textContent = formatPrice(price) + ' per item';
+        priceBlock.append(unit);
+        const mrp = Number(variant.mrp || 0);
+        if (mrp > price) {
+          const original = document.createElement('s');
+          original.textContent = formatPrice(mrp);
+          const save = document.createElement('em');
+          save.textContent = 'Save ' + Math.round((mrp - price) / mrp * 100) + '%';
+          priceBlock.append(original, save);
+        }
+      }
       const priceLine = document.createElement('b');
-      priceLine.textContent = formatPrice(price * Number(row.qty || 0));
-      details.append(name, meta, priceLine);
-      item.append(image, details);
+      priceLine.className = 'mv-cart-line-total';
+      priceLine.textContent = product && variant ? formatPrice(price * Number(row.qty || 0)) : 'Unavailable';
+      details.append(name, meta, priceBlock, priceLine);
+      item.append(imageLink, details);
       itemsRoot.appendChild(item);
     });
     subtotalNode.textContent = formatPrice(subtotal);
