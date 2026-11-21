@@ -148,10 +148,9 @@ body[data-theme="dark"] .site-header.mv-header-condensed > .nav {
 }
 
 /* Hero media gets a restrained scroll offset without changing its dimensions. */
-.premium-hero-media img[data-parallax],
-.hero .bottle-stage img[data-parallax] {
-  translate: 0 var(--mv-parallax-offset, 0px);
-  will-change: translate;
+.premium-hero-media img[data-parallax] {
+  transform: translate3d(0, var(--mv-parallax-offset, 0px), 0);
+  will-change: transform;
 }
 
 /* Product-image zoom is limited to real hover pointers. */
@@ -441,7 +440,7 @@ body[data-theme="dark"] .mv-cart-empty p { color: #aaa9a5; }
     transform: none !important;
   }
   [data-parallax] {
-    translate: 0 0 !important;
+    transform: none !important;
   }
   .mv-cart-drawer {
     transition: none !important;
