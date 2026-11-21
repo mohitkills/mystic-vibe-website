@@ -751,7 +751,7 @@ body[data-page="cart"] main {
   .cart-shell {
     width: min(100% - 24px, 620px);
     margin: 24px auto 0;
-    padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(148px + env(safe-area-inset-bottom, 0px));
   }
   .cart-page-heading {
     display: block;
@@ -896,41 +896,26 @@ body[data-page="cart"] main {
     margin: 0;
     padding-inline: 14px;
   }
-  /* On touch layouts the shared action dock owns the contact link too.
-     Keep only WhatsApp visible and lift it above the sticky checkout bar. */
-  body[data-page="cart"] .mobile-floating-actions {
-    display: flex !important;
-    position: fixed !important;
+  /* Cart is a focused checkout surface: keep category tabs out of the sticky
+     header and let the header scroll away with the page content. */
+  body[data-page="cart"] .site-header {
+    position: relative !important;
     top: auto !important;
-    right: 12px !important;
-    bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
-    left: auto !important;
-    width: 48px !important;
-    height: 48px !important;
-    min-width: 48px !important;
-    padding: 0 !important;
-    border: 0 !important;
-    border-radius: 50% !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    backdrop-filter: none !important;
-    pointer-events: none !important;
-    z-index: 1700 !important;
+    z-index: 100 !important;
   }
-  body[data-page="cart"] .mobile-floating-actions > :not(.whatsapp-float) {
+  body[data-page="cart"] .site-header .catalog-nav,
+  body[data-page="cart"] .catalog-nav {
     display: none !important;
   }
-  body[data-page="cart"] .mobile-floating-actions .whatsapp-float:not([hidden]),
+
+  /* The global floating action dock and Contact button were occupying the
+     same fixed position on mobile and covering cart rows. Hide both here. */
+  body[data-page="cart"] .mobile-floating-actions,
+  body[data-page="cart"] .mobile-floating-actions .whatsapp-float,
   body[data-page="cart"] .whatsapp-float:not([hidden]) {
-    position: fixed !important;
-    right: 14px !important;
-    bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
-    z-index: 1701 !important;
-    width: 46px !important;
-    min-width: 46px !important;
-    height: 46px !important;
-    min-height: 46px !important;
-    pointer-events: auto !important;
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
   .cart-empty-state {
     min-height: 310px;
