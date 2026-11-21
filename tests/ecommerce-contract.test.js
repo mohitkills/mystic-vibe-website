@@ -106,6 +106,18 @@ test('customer order history and guest order lookup are connected to the secured
   assert.match(account, /Track a guest order/);
 });
 
+test('Track Order keeps delivery status visible separately from a pending COD payment status', async () => {
+  const account = await read('js/customer-account.js');
+  const css = await read('css/orders-enhanced.css');
+  assert.ok(account.includes('order-status-badge order-status-badge--'));
+  assert.ok(account.includes('Order · '));
+  assert.ok(account.includes('payment-status-badge payment-status-badge--'));
+  assert.ok(account.includes('Payment · '));
+  assert.ok(css.includes('body[data-page="tracking"] .order-detail-top .order-badges .badge'));
+  assert.match(css, /body\[data-page="tracking"\] \.order-detail-top \.order-badges \.badge\s*\{[\s\S]*?position:\s*static !important/);
+  assert.ok(css.includes('.order-status-badge--delivered'));
+  assert.ok(css.includes('.payment-status-badge--pending'));
+});
 test('My Orders redesign preserves the existing signed-in order queries and data while adding presentation-only UI', async () => {
   const account = await read('js/customer-account.js');
   const html = await read('account.html');
