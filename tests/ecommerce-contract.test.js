@@ -83,7 +83,7 @@ test('storefront blocks out-of-stock products and cart quantities above current 
   const app = await read('js/app.js');
   const checkout = await read('js/checkout.js');
   assert.match(app, /outOfStock\?' disabled aria-disabled="true"'/);
-  assert.match(app, /This perfume is out of stock/);
+  assert.match(app, /This size is out of stock/);
   assert.match(app, /stock<currentQty\+q/);
   assert.match(app, /Only '\+Number\(product\.stock\)\+' available in stock/);
   assert.match(app, /Out of stock; remove this item to continue checkout/);
@@ -478,7 +478,8 @@ test('Product detail page has a database-backed responsive retail layout without
   assert.ok(page.includes('p.description'));
   assert.ok(page.includes('p.notes'));
   assert.ok(page.includes('p.family'));
-  assert.ok(page.includes('p.size'));
+  assert.ok(page.includes('selectedVariant.size_ml'));
+  assert.ok(page.includes('sizeSelectorMarkup'));
   assert.ok(page.includes('p.price'));
   assert.ok(page.includes('p.mrp'));
   assert.ok(page.includes('p.stock'));
@@ -546,8 +547,8 @@ test('Product size variants are admin-managed, selected through the storefront, 
   const app = await read('js/app.js');
   const checkout = await read('js/checkout.js');
   const migration = await read('supabase/migrations/20261121090000_product_size_variants.sql');
-  const editor = adminHtml.slice(adminHtml.indexOf('id="product-size-variant-editor"'), adminHtml.indexOf('</div>', adminHtml.indexOf('id="product-size-variant-editor"')) + 6);
-  assert.ok(editor.includes('product-size-variant-grid'));
+  assert.ok(adminHtml.includes('id="product-size-variant-editor"'));
+  assert.ok(adminHtml.includes('id="product-size-variant-grid"'));
   assert.ok(admin.includes('PRODUCT_SIZE_OPTIONS = [30, 50, 100]'));
   assert.ok(admin.includes('readProductSizeVariants(form)'));
   assert.ok(admin.includes('size_variants: sizeVariants'));
