@@ -896,10 +896,33 @@ body[data-page="cart"] main {
     margin: 0;
     padding-inline: 14px;
   }
+  /* On touch layouts the shared action dock owns the contact link too.
+     Keep only WhatsApp visible and lift it above the sticky checkout bar. */
   body[data-page="cart"] .mobile-floating-actions {
+    display: flex !important;
+    position: fixed !important;
+    top: auto !important;
+    right: 12px !important;
+    bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
+    left: auto !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    pointer-events: none !important;
+    z-index: 1700 !important;
+  }
+  body[data-page="cart"] .mobile-floating-actions > :not(.whatsapp-float) {
     display: none !important;
   }
+  body[data-page="cart"] .mobile-floating-actions .whatsapp-float:not([hidden]),
   body[data-page="cart"] .whatsapp-float:not([hidden]) {
+    position: fixed !important;
     right: 14px !important;
     bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
     z-index: 1701 !important;
@@ -907,6 +930,7 @@ body[data-page="cart"] main {
     min-width: 46px !important;
     height: 46px !important;
     min-height: 46px !important;
+    pointer-events: auto !important;
   }
   .cart-empty-state {
     min-height: 310px;
