@@ -110,3 +110,17 @@
 .admin-product-image-actions button{min-height:34px;padding:6px 9px;border:1px solid var(--mv-line);border-radius:8px;background:rgba(255,255,255,.07);color:var(--mv-text);font-size:10px;cursor:pointer}
 .admin-product-image-actions button:focus-visible,.product-list-tools :focus-visible{outline:3px solid #f4d87c;outline-offset:2px}
 @media(max-width:640px){.product-list-tools{grid-template-columns:1fr}.admin-product-image-gallery{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}.admin-product-image-gallery .admin-product-image-item img{height:120px}}
+
+
+/* Keep every admin product-image preview in the same reusable square canvas. */
+.admin-product-image-gallery .admin-product-image-item img{
+  display:block;
+  width:100%;
+  height:auto;
+  aspect-ratio:1/1;
+  object-fit:contain;
+  object-position:center;
+}
+@media(max-width:640px){
+  .admin-product-image-gallery .admin-product-image-item img{height:auto;aspect-ratio:1/1}
+}
