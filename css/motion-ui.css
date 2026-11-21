@@ -126,7 +126,6 @@ button:not([data-magnetic]):active,
 }
 .skel-kicker { width: 43%; height: 8px; margin-top: 1px; }
 .skel-title { width: 68%; height: 17px; }
-.skel-meta { width: 56%; height: 10px; }
 .skel-button { width: 100%; height: 40px; margin-top: auto; border-radius: 4px; }
 
 /* Header compacts into its existing glass pill after the first scroll. */
