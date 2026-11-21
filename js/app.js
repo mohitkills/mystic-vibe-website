@@ -1,4 +1,63 @@
-var rupee=function(n){return '₹'+Number(n||0).toLocaleString('en-IN')};var escapeHtml=function(v){return String(v==null?'':v).replace(/[&<>"\']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]})};var isProductPage=location.pathname.indexOf('/products/')>-1;var imagePath=function(){return isProductPage?MV_PRODUCT_IMAGE:MV_IMAGE};var pagePath=function(p){return isProductPage?'../'+p:p};var productPath=function(s){return isProductPage?s+'.html':'products/'+s+'.html'};var productBySlug=function(s){var live=MV_PRODUCTS.find(function(p){return p.slug===s});if(live)return live;if(window.MV_STOREFRONT_CMS_CONNECTED===true)return null;return (window.MV_STATIC_PRODUCTS||[]).find(function(p){return p.slug===s})||MV_PRODUCTS[0]||null};function cart(){try{var rows=JSON.parse(localStorage.getItem('mv_cart')||'[]');if(!Array.isArray(rows))return [];return rows.filter(function(v){return v&&typeof v.slug==='string'&&/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(v.slug)&&Number.isSafeInteger(Number(v.qty))&&Number(v.qty)>=1&&Number(v.qty)<=20}).map(function(v){return {slug:v.slug,qty:Number(v.qty)}})}catch(error){console.warn('Ignoring invalid saved cart data.');return []}}function saveCart(i){localStorage.setItem('mv_cart',JSON.stringify(i));updateCounts()}function wishlist(){return JSON.parse(localStorage.getItem('mv_wishlist')||'[]')}function saveWishlist(i){localStorage.setItem('mv_wishlist',JSON.stringify(i));updateCounts()}function addToCart(s,q){q=Number(q||1);if(!Number.isSafeInteger(q)||q<1||q>20){toast('Choose a valid quantity');return}var p=productBySlug(s);if(!p){toast('This perfume is no longer available');return}var i=cart(),x=i.find(function(v){return v.slug===s}),stockKnown=p.stock!==undefined&&p.stock!==null&&Number.isFinite(Number(p.stock)),stock=stockKnown?Number(p.stock):null,currentQty=x?x.qty:0;if(stockKnown&&stock<currentQty+q){toast(stock>0?'Only '+stock+' available in stock':'This perfume is out of stock');return}if(x)x.qty+=q;else i.push({slug:s,qty:q});saveCart(i);toast('Added to cart')}function toggleWish(s){var i=wishlist();i=i.indexOf(s)>-1?i.filter(function(x){return x!==s}):i.concat([s]);saveWishlist(i);toast(i.indexOf(s)>-1?'Saved to wishlist':'Removed from wishlist')}function updateCounts(){document.querySelectorAll('[data-cart-count]').forEach(function(e){e.textContent=cart().reduce(function(s,i){return s+i.qty},0)});document.querySelectorAll('[data-wish-count]').forEach(function(e){e.textContent=wishlist().length})}function toast(m){var t=document.querySelector('.toast');if(!t){t=document.createElement('div');t.className='toast';document.body.appendChild(t)}t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2100)}function catalogFilterProducts(products,filter){
+var rupee=function(n){return '₹'+Number(n||0).toLocaleString('en-IN')};var escapeHtml=function(v){return String(v==null?'':v).replace(/[&<>"\']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]})};var isProductPage=location.pathname.indexOf('/products/')>-1;var imagePath=function(){return isProductPage?MV_PRODUCT_IMAGE:MV_IMAGE};var pagePath=function(p){return isProductPage?'../'+p:p};var productPath=function(s){return isProductPage?s+'.html':'products/'+s+'.html'};var productBySlug=function(s){var live=MV_PRODUCTS.find(function(p){return p.slug===s});if(live)return live;if(window.MV_STOREFRONT_CMS_CONNECTED===true)return null;return (window.MV_STATIC_PRODUCTS||[]).find(function(p){return p.slug===s})||MV_PRODUCTS[0]||null};function productSizeMl(p){
+  var value=Number(p&&p.size_ml);
+  if(Number.isSafeInteger(value)&&value>0)return value;
+  var match=String(p&&p.size||'').match(/(\d{1,3})\s*ML/i);
+  return match?Number(match[1]):null;
+}
+function productVariants(p){
+  if(!p)return [];
+  var rows=Array.isArray(p.size_variants)?p.size_variants:[];
+  var variants=rows.map(function(row){
+    return {size_ml:Number(row.size_ml),price:Number(row.price),mrp:Number(row.mrp),stock:Number(row.stock),is_available:row.is_available!==false};
+  }).filter(function(row){
+    return Number.isSafeInteger(row.size_ml)&&row.size_ml>0&&Number.isFinite(row.price)&&row.price>=0
+      &&Number.isFinite(row.mrp)&&row.mrp>=row.price&&Number.isSafeInteger(row.stock)&&row.stock>=0&&row.is_available;
+  }).sort(function(left,right){return left.size_ml-right.size_ml});
+  if(variants.length)return variants;
+  var size=productSizeMl(p);
+  if(!size)return [];
+  return [{size_ml:size,price:Number(p.price||0),mrp:Number(p.mrp||p.price||0),stock:Number.isFinite(Number(p.stock))?Number(p.stock):0,is_available:true}];
+}
+function productVariant(p,sizeMl){
+  var variants=productVariants(p);
+  if(!variants.length)return null;
+  var target=Number(sizeMl);
+  return variants.find(function(variant){return variant.size_ml===target})||variants.find(function(variant){return variant.size_ml===productSizeMl(p)})||variants[0];
+}
+function cart(){
+  try{
+    var rows=JSON.parse(localStorage.getItem('mv_cart')||'[]');
+    if(!Array.isArray(rows))return [];
+    return rows.filter(function(v){
+      return v&&typeof v.slug==='string'&&/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(v.slug)
+        &&Number.isSafeInteger(Number(v.qty))&&Number(v.qty)>=1&&Number(v.qty)<=20;
+    }).map(function(v){
+      var p=productBySlug(v.slug);
+      var selected=Number(v.size_ml)>0?Number(v.size_ml):(productVariant(p)?.size_ml||null);
+      return {slug:v.slug,qty:Number(v.qty),size_ml:selected};
+    });
+  }catch(error){console.warn('Ignoring invalid saved cart data.');return []}
+}
+function saveCart(i){localStorage.setItem('mv_cart',JSON.stringify(i));updateCounts()}
+function wishlist(){return JSON.parse(localStorage.getItem('mv_wishlist')||'[]')}
+function saveWishlist(i){localStorage.setItem('mv_wishlist',JSON.stringify(i));updateCounts()}
+function addToCart(s,q,sizeMl){
+  q=Number(q||1);
+  if(!Number.isSafeInteger(q)||q<1||q>20){toast('Choose a valid quantity');return false}
+  var p=productBySlug(s);
+  if(!p){toast('This perfume is no longer available');return false}
+  var variant=productVariant(p,sizeMl);
+  if(!variant||!variant.is_available){toast('This size is no longer available');return false}
+  var i=cart(),selectedSize=variant.size_ml;
+  var x=i.find(function(v){return v.slug===s&&Number(v.size_ml)===selectedSize});
+  var stock=Number(variant.stock),currentQty=x?x.qty:0;
+  if(Number.isFinite(stock)&&stock<currentQty+q){
+    toast(stock>0?'Only '+stock+' available in this size':'This size is out of stock');
+    return false;
+  }
+  if(x)x.qty+=q;else i.push({slug:s,qty:q,size_ml:selectedSize});
+  saveCart(i);toast('Added to cart');return true;
+}function toggleWish(s){var i=wishlist();i=i.indexOf(s)>-1?i.filter(function(x){return x!==s}):i.concat([s]);saveWishlist(i);toast(i.indexOf(s)>-1?'Saved to wishlist':'Removed from wishlist')}function updateCounts(){document.querySelectorAll('[data-cart-count]').forEach(function(e){e.textContent=cart().reduce(function(s,i){return s+i.qty},0)});document.querySelectorAll('[data-wish-count]').forEach(function(e){e.textContent=wishlist().length})}function toast(m){var t=document.querySelector('.toast');if(!t){t=document.createElement('div');t.className='toast';document.body.appendChild(t)}t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2100)}function catalogFilterProducts(products,filter){
   if(!filter||filter==='all'||filter==='perfumes') return products;
   if(filter==='deals') return products.filter(function(p){
     return p.storefront_category==='deals'||(Number(p.mrp)>Number(p.price)&&Number(p.price)>0);
@@ -173,7 +232,9 @@ function header(){
   var hasDiscount=Number.isFinite(priceValue)&&Number.isFinite(mrpValue)&&mrpValue>priceValue;
   var discountPercent=hasDiscount?Math.round((mrpValue-priceValue)/mrpValue*100):0;
   var bestseller=p.best===true||p.best===1||p.best==='true'||p.storefront_category==='bestsellers'||p.storefront_category_label==='Bestsellers';
-  var imageBadges=(bestseller?'<span class="product-card-badge product-card-bestseller">Bestseller</span>':'')+(hasDiscount?'<span class="product-card-badge product-card-discount">'+discountPercent+'% Off</span>':'');
+  var imageBadges=bestseller?'<span class="product-card-badge product-card-bestseller">Bestseller</span>':'';
+  var discountLabel=hasDiscount?'<span class="product-card-save">'+discountPercent+'% OFF</span>':'';
+  var defaultVariant=productVariant(p);
   var wishlistButton='<button class="icon-btn product-card-wishlist" data-wish="'+escapeHtml(p.slug)+'" aria-label="Add '+escapeHtml(p.name)+' to wishlist" title="Add to wishlist">&#9825;</button>';
   var ratingValue=Number(p.rating!==undefined?p.rating:(p.average_rating!==undefined?p.average_rating:p.averageRating));
   var reviewValue=Number(p.review_count!==undefined?p.review_count:(p.reviewCount!==undefined?p.reviewCount:p.reviews_count));
@@ -182,7 +243,7 @@ function header(){
     :'<div class="product-card-specs"><span>'+escapeHtml(p.size||'')+'</span>'+(p.family?'<span class="product-card-spec-separator" aria-hidden="true">·</span><span>'+escapeHtml(p.family)+'</span>':'')+'</div>';
   var tagline=p.tagline||p.description||p.family||'Mystic Vibe Fragrance';
   var stock=stockKnown?'<p class="product-stock">'+(Number(p.stock)>0?'In stock':'Out of stock')+'</p>':'';
-  var addButton='<button class="btn product-card-add" data-add="'+escapeHtml(p.slug)+'"'+(outOfStock?' disabled aria-disabled="true"':'')+'>'+(outOfStock?'Out of Stock':'Add To Cart')+'</button>';
+  var addButton='<button class="btn product-card-add" data-add="'+escapeHtml(p.slug)+'" data-size-ml="'+(defaultVariant?defaultVariant.size_ml:'')+'"'+(outOfStock?' disabled aria-disabled="true"':'')+'>'+(outOfStock?'Out of Stock':'Add To Cart')+'</button>';
   var originalPrice=hasDiscount?'<span class="product-card-price-original">'+rupee(mrpValue)+'</span>':'';
   var mrp=Number.isFinite(mrpValue)&&mrpValue>0?'<span class="product-mrp">MRP '+rupee(mrpValue)+'</span>':'';
   var detail='<details class="product-card-details"><summary>Details</summary><div class="product-card-detail-copy">'+(tagline?'<p>'+escapeHtml(tagline)+'</p>':'')+(p.family?'<p><strong>Family:</strong> '+escapeHtml(p.family)+'</p>':'')+(p.notes?'<p><strong>Notes:</strong> '+escapeHtml(p.notes)+'</p>':'')+'<p><strong>Size:</strong> '+escapeHtml(p.size||'')+'</p>'+(mrp?'<p>'+mrp+'</p>':'')+stock+'<a class="product-details-link" href="'+productPath(p.slug)+'">View Details</a></div></details>';
@@ -195,7 +256,7 @@ function header(){
     +'<p class="product-card-kicker">'+escapeHtml(tagline)+'</p>'
     +'<h3 class="serif"><a href="'+productPath(p.slug)+'">'+escapeHtml(p.name)+'</a></h3>'
     +ratingMarkup
-    +'<div class="product-card-price-row"><span class="product-card-price-current">'+rupee(p.price)+'</span>'+originalPrice+'</div>'
+    +'<div class="product-card-price-row"><span class="product-card-price-current">'+rupee(p.price)+'</span>'+originalPrice+discountLabel+'</div>'
     +detail+stock
     +'<div class="product-actions product-card-actions">'+addButton+'</div>'
     +'</div></article>'
@@ -275,6 +336,10 @@ function pageHero(t,c){return '<section class="page-hero"><div class="page-title
       +'<section class="section"><div class="container"><div class="panel"><p>This fragrance is not currently available in the store. Please explore the published collection.</p><a class="btn" href="'+pagePath('collection.html')+'">Browse perfumes</a></div></div></section>';
     return;
   }
+  var variants=productVariants(p);
+  var defaultVariant=productVariant(p);
+  var selectedVariant=defaultVariant;
+  if(!selectedVariant){main.innerHTML=pageHero('Fragrance unavailable','No available size is configured for this product.');return;}
   document.title=p.name+' | Mystic Vibe Eau de Parfum';
   var rawDescription=String(p.description||p.tagline||'').trim();
   var descriptionMeta=[p.tagline,p.name+' Eau de Parfum',p.family,p.notes].filter(Boolean).join('. ').slice(0,320);
@@ -292,9 +357,9 @@ function pageHero(t,c){return '<section class="page-hero"><div class="page-title
     document.head.append(canonical);
   }
   canonical.href=canonicalUrl;
-  var productSchema={"@context":"https://schema.org","@type":"Product",name:p.name,description:descriptionMeta,brand:{"@type":"Brand",name:"Mystic Vibe"},offers:{"@type":"Offer",priceCurrency:"INR",price:Number(p.price||0).toFixed(2),url:canonicalUrl}};
+  var productSchema={"@context":"https://schema.org","@type":"Product",name:p.name,description:descriptionMeta,brand:{"@type":"Brand",name:"Mystic Vibe"},offers:{"@type":"Offer",priceCurrency:"INR",price:Number(selectedVariant.price||0).toFixed(2),url:canonicalUrl}};
   if(p.sku)productSchema.sku=p.sku;
-  if(p.stock!==undefined&&p.stock!==null&&Number.isFinite(Number(p.stock)))productSchema.offers.availability=Number(p.stock)>0?"https://schema.org/InStock":"https://schema.org/OutOfStock";
+  productSchema.offers.availability=Number(selectedVariant.stock)>0?"https://schema.org/InStock":"https://schema.org/OutOfStock";
   var schemaTag=document.querySelector('#mv-product-schema');
   if(!schemaTag){
     schemaTag=document.createElement('script');
@@ -331,15 +396,12 @@ function pageHero(t,c){return '<section class="page-hero"><div class="page-title
     ?'<section class="pdp-notes"><h2>Notes</h2>'+notesContent+'</section>'
     :'';
 
-  var priceValue=Number(p.price);
-  if(!Number.isFinite(priceValue))priceValue=0;
-  var mrpValue=Number(p.mrp);
+  var priceValue=Number(selectedVariant.price);
+  var mrpValue=Number(selectedVariant.mrp);
   var discountPercent=productDiscountPercent(mrpValue,priceValue);
-  var priceMarkup='<span class="pdp-now">'+productCurrency(priceValue)+'</span>';
-  if(discountPercent>0){
-    priceMarkup+='<s class="pdp-mrp">'+productCurrency(mrpValue)+'</s>'
-      +'<span class="pdp-save">(Save '+discountPercent+'%)</span>';
-  }
+  var priceMarkup='<span class="pdp-now" data-pdp-current>'+productCurrency(priceValue)+'</span>'
+    +'<s class="pdp-mrp" data-pdp-mrp'+(discountPercent?'':' hidden')+'>'+productCurrency(mrpValue)+'</s>'
+    +'<span class="pdp-save" data-pdp-save'+(discountPercent?'':' hidden')+'>'+(discountPercent?'(Save '+discountPercent+'%)':'')+'</span>';
   var ratingValue=Number(p.rating!==undefined?p.rating:(p.average_rating!==undefined?p.average_rating:p.averageRating));
   var reviewCount=Number(p.review_count!==undefined?p.review_count:(p.reviewCount!==undefined?p.reviewCount:p.reviews_count));
   var hasRating=Number.isFinite(ratingValue)&&ratingValue>0&&ratingValue<=5;
@@ -351,16 +413,22 @@ function pageHero(t,c){return '<section class="page-hero"><div class="page-title
       +'</div>'
     :'';
   var availability=productAvailability(p)||'Availability information not available';
-  var stockKnown=p.stock!==undefined&&p.stock!==null&&Number.isFinite(Number(p.stock));
-  var outOfStock=stockKnown&&Number(p.stock)<=0;
+  var stockKnown=Number.isFinite(Number(selectedVariant.stock));
+  var outOfStock=stockKnown&&Number(selectedVariant.stock)<=0;
   var buttonLabel=outOfStock?'Out of stock':'Add to cart';
-  var sizeMarkup=p.size?escapeHtml(p.size):'—';
+  var selectedSizeLabel=selectedVariant.size_ml+'ML';
+  var sizeSelectorMarkup='<div class="pdp-size-control"><span class="pdp-control-label">Available size</span><div class="pdp-size-options" role="group" aria-label="Choose fragrance size">'
+    +variants.map(function(variant){
+      var unavailable=Number(variant.stock)<=0;
+      return '<button type="button" class="pdp-size-option '+(variant.size_ml===selectedVariant.size_ml?'active':'')+'" data-select-size="'+variant.size_ml+'" aria-pressed="'+(variant.size_ml===selectedVariant.size_ml)+'"'+(unavailable?' disabled aria-disabled="true"':'')+'>'
+        +variant.size_ml+'ML'+(unavailable?'<small>Out of stock</small>':'')+'</button>';
+    }).join('')+'</div></div>';
   var familyMarkup=p.family?escapeHtml(p.family):'—';
   var availabilityMarkup=escapeHtml(availability);
   var descriptionMarkup=cleanDescription?'<p class="pdp-description">'+escapeHtml(cleanDescription)+'</p>':'';
-  var addButton='<button type="button" class="btn pdp-action pdp-add" data-product-add="'+escapeHtml(p.slug)+'"'
+  var addButton='<button type="button" class="btn pdp-action pdp-add" data-product-add="'+escapeHtml(p.slug)+'" data-size-ml="'+selectedVariant.size_ml+'"'
     +(outOfStock?' disabled aria-disabled="true"':'')+' aria-live="polite">'+buttonLabel+'</button>';
-  var buyButton='<button type="button" class="btn light pdp-action pdp-buy" data-buy="'+escapeHtml(p.slug)+'"'
+  var buyButton='<button type="button" class="btn light pdp-action pdp-buy" data-buy="'+escapeHtml(p.slug)+'" data-size-ml="'+selectedVariant.size_ml+'"'
     +(outOfStock?' disabled aria-disabled="true"':'')+'>'+(outOfStock?'Out of stock':'Buy now')+'</button>';
 
   var page='<section class="section pdp-section"><div class="container product-detail pdp-layout" data-product-slug="'+escapeHtml(p.slug)+'">'
@@ -372,10 +440,10 @@ function pageHero(t,c){return '<section class="page-hero"><div class="page-title
     +'<div class="pdp-price"><div class="pdp-price-row">'+priceMarkup+'</div><p class="pdp-tax">Inclusive of all taxes</p></div>'
     +descriptionMarkup
     +notesMarkup
+    +sizeSelectorMarkup
     +'<div class="pdp-info-grid">'
-    +'<div class="pdp-info-chip"><span>Size</span><strong>'+sizeMarkup+'</strong></div>'
     +'<div class="pdp-info-chip"><span>Family</span><strong>'+familyMarkup+'</strong></div>'
-    +'<div class="pdp-info-chip"><span>Availability</span><strong class="'+(outOfStock?'is-out':'is-in')+'">'+availabilityMarkup+'</strong></div>'
+    +'<div class="pdp-info-chip"><span>Availability</span><strong class="pdp-availability '+(outOfStock?'is-out':'is-in')+'">'+(outOfStock?'Out of stock':'In stock')+'</strong></div>'
     +'</div>'
     +'<div class="pdp-purchase-controls"><div class="pdp-quantity-wrap"><span class="pdp-control-label">Quantity</span>'
     +'<div class="pdp-qty-stepper"><button type="button" data-dec aria-label="Decrease quantity" '+(outOfStock?'disabled':'')+'>−</button>'
@@ -386,8 +454,8 @@ function pageHero(t,c){return '<section class="page-hero"><div class="page-title
     +reviews()
     +section('Related Products','Complete your fragrance wardrobe.','<div class="grid product-grid">'+MV_PRODUCTS.filter(function(item){return item.slug!==p.slug}).slice(0,4).map(productCard).join('')+'</div>');
   var mobileBar='<div class="pdp-mobile-bar" role="region" aria-label="Quick purchase">'
-    +'<div class="pdp-mobile-price"><span>Price</span><strong>'+productCurrency(priceValue)+'</strong></div>'
-    +'<button type="button" class="btn pdp-action pdp-add pdp-mobile-add" data-product-add="'+escapeHtml(p.slug)+'"'
+    +'<div class="pdp-mobile-price"><span>Price · '+selectedSizeLabel+'</span><strong data-pdp-mobile-price>'+productCurrency(priceValue)+'</strong></div>'
+    +'<button type="button" class="btn pdp-action pdp-add pdp-mobile-add" data-product-add="'+escapeHtml(p.slug)+'" data-size-ml="'+selectedVariant.size_ml+'"'
     +(outOfStock?' disabled aria-disabled="true"':'')+' aria-live="polite">'+buttonLabel+'</button></div>';
   main.innerHTML=page+mobileBar;
 
@@ -395,6 +463,48 @@ function pageHero(t,c){return '<section class="page-hero"><div class="page-title
     var reviewSection=main.querySelector('.review-grid');
     if(reviewSection&&reviewSection.closest('.section'))reviewSection.closest('.section').id='reviews';
   }
+
+  function applySelectedSize(sizeMl){
+    var next=variants.find(function(variant){return variant.size_ml===Number(sizeMl)&&variant.is_available!==false;});
+    if(!next)return;
+    selectedVariant=next;
+    var price=Number(next.price),mrp=Number(next.mrp),discount=productDiscountPercent(mrp,price);
+    var priceNode=main.querySelector('[data-pdp-current]');
+    var mrpNode=main.querySelector('[data-pdp-mrp]');
+    var saveNode=main.querySelector('[data-pdp-save]');
+    var mobilePrice=main.querySelector('[data-pdp-mobile-price]');
+    if(priceNode)priceNode.textContent=productCurrency(price);
+    if(mrpNode){mrpNode.textContent=productCurrency(mrp);mrpNode.hidden=!discount;}
+    if(saveNode){saveNode.textContent=discount?'(Save '+discount+'%)':'';saveNode.hidden=!discount;}
+    if(mobilePrice)mobilePrice.textContent=productCurrency(price);
+    main.querySelectorAll('[data-select-size]').forEach(function(button){
+      var active=Number(button.dataset.selectSize)===next.size_ml;
+      button.classList.toggle('active',active);
+      button.setAttribute('aria-pressed',String(active));
+    });
+    var stock=Number(next.stock),out=!(stock>0);
+    var availabilityNode=main.querySelector('.pdp-availability');
+    if(availabilityNode){
+      availabilityNode.textContent=out?'Out of stock':'In stock';
+      availabilityNode.classList.toggle('is-out',out);
+      availabilityNode.classList.toggle('is-in',!out);
+    }
+    main.querySelectorAll('[data-product-add],[data-buy]').forEach(function(button){
+      button.dataset.sizeMl=String(next.size_ml);
+      button.disabled=out;
+      if(out)button.setAttribute('aria-disabled','true');else button.removeAttribute('aria-disabled');
+      if(!button.dataset.busy)button.textContent=out?'Out of stock':(button.hasAttribute('data-buy')?'Buy now':'Add to cart');
+    });
+    if(quantityInput){quantityInput.value='1';quantityInput.disabled=out;}
+    if(schemaTag){
+      productSchema.offers.price=price.toFixed(2);
+      productSchema.offers.availability=out?'https://schema.org/OutOfStock':'https://schema.org/InStock';
+      schemaTag.textContent=JSON.stringify(productSchema);
+    }
+  }
+  main.querySelectorAll('[data-select-size]').forEach(function(button){
+    button.addEventListener('click',function(){applySelectedSize(Number(button.dataset.selectSize));});
+  });
   var quantityInput=document.querySelector('#qty');
   var inc=document.querySelector('[data-inc]');
   var dec=document.querySelector('[data-dec]');
@@ -406,44 +516,44 @@ function pageHero(t,c){return '<section class="page-hero"><div class="page-title
   };
   if(window.refreshMysticVibeReveals)window.refreshMysticVibeReveals(main);
 }
-function renderCart(){var items=cart(),sub=items.reduce(function(sum,item){var product=productBySlug(item.slug);return sum+(product?product.price*item.qty:0)},0);var rows=items.map(function(i){var p=productBySlug(i.slug);if(!p)return '<div class="cart-row cart-unavailable"><div><strong>Product no longer available</strong><br><small>'+i.slug.replace(/-/g,' ')+'</small><br><span class="product-stock">Remove this item to continue checkout.</span></div><button class="icon-btn remove" data-remove="'+i.slug+'" aria-label="Remove unavailable item">×</button></div>';var stockKnown=p.stock!==undefined&&p.stock!==null&&Number.isFinite(Number(p.stock)),available=stockKnown?Number(p.stock):null,outOfStock=stockKnown&&available<i.qty;return '<div class="cart-row'+(outOfStock?' cart-unavailable':'')+'"><img src="'+imagePath()+'"><div><strong>'+p.name+'</strong><br>'+p.size+(outOfStock?'<br><span class="product-stock">'+(available>0?'Only '+available+' available; reduce quantity to continue.':'Out of stock; remove this item to continue checkout.')+'</span>':'')+'</div><div class="row-price">'+(outOfStock?'Unavailable':rupee(p.price*i.qty))+'</div><div class="qty"><button data-qdec="'+p.slug+'" '+(i.qty<=1?'disabled':'')+'>-</button><input value="'+i.qty+'" readonly><button data-qinc="'+p.slug+'" '+(stockKnown&&available<=i.qty?'disabled':'')+'>+</button></div><button class="icon-btn remove" data-remove="'+p.slug+'" aria-label="Remove '+p.name+' from cart">×</button></div>'}).join('');main.innerHTML=pageHero('Shopping Cart','Review your selected Mystic Vibe fragrances.')+'<section class="section"><div class="container split"><div class="panel">'+(items.length?rows:'<p>Your cart is empty.</p><a class="btn" href="collection.html">Shop Collection</a>')+'</div><aside class="panel summary"><h2 class="serif">Cart Totals</h2><p>Subtotal <strong style="float:right">'+rupee(sub)+'</strong></p><p>Shipping <strong style="float:right">'+(sub?'Free':'₹0')+'</strong></p><hr><h3>Total <span style="float:right">'+rupee(sub)+'</span></h3><a class="btn" href="checkout.html">Checkout</a></aside></div></section>'}function renderCheckout(){var items=cart(),sub=items.reduce(function(s,i){return s+productBySlug(i.slug).price*i.qty},0),pays=['Razorpay','PhonePe','UPI','Google Pay','Paytm','Credit Card','Debit Card','Cash On Delivery'];main.innerHTML=pageHero('Checkout','Secure checkout with integration-ready payment options.')+'<section class="section"><div class="container split"><form class="panel" id="checkout-form"><h2 class="serif">Customer Details</h2><div class="form-grid"><input required placeholder="Full name"><input required type="email" placeholder="Email"><input required placeholder="Phone"><input required placeholder="City"><textarea class="full" required placeholder="Shipping address"></textarea><input required placeholder="PIN code"><select required><option value="">State</option><option>Maharashtra</option><option>Delhi</option><option>Karnataka</option><option>Tamil Nadu</option><option>Gujarat</option></select></div><h2 class="serif">Payment</h2><div class="payment-options">'+pays.map(function(x,i){return '<label class="pay-option '+(i?'':'active')+'"><input type="radio" name="pay" value="'+x+'" '+(i?'':'checked')+'> '+x+'</label>'}).join('')+'</div><br><button class="btn" '+(sub?'':'disabled')+'>Place Order</button></form><aside class="panel summary"><h2 class="serif">Order Summary</h2>'+(items.map(function(i){var p=productBySlug(i.slug);return '<p>'+p.name+' × '+i.qty+'<strong style="float:right">'+rupee(p.price*i.qty)+'</strong></p>'}).join('')||'<p>No items in cart.</p>')+'<hr><h3>Total <span style="float:right">'+rupee(sub)+'</span></h3></aside></div></section>'}function simplePage(t,c,b){main.innerHTML=pageHero(t,c)+'<section class="section"><div class="container"><div class="panel">'+b+'</div></div></section>'}function faqHtml(){return ['How long does the fragrance last?|Mystic Vibe fragrances are designed for long-lasting everyday wear.','Are all products 50ML?|Yes, every fragrance is 50ML at ₹499.','Do you support COD?|Yes, Cash On Delivery is included.','How do I track my order?|Use the Track Order page with your order ID.'].map(function(x){var v=x.split('|');return '<div class="faq-item"><button type="button">'+v[0]+'<span>+</span></button><div class="faq-answer">'+v[1]+'</div></div>'}).join('')}function renderStatic(page){var map={about:['About Mystic Vibe','Premium fragrances crafted for confidence, elegance and unforgettable moments.','<h2 class="serif">Our Story</h2><p>Mystic Vibe creates modern luxury fragrances with polished presentation, memorable scent profiles and accessible pricing.</p>'],contact:['Contact','We would love to hear from you.','<form class="form-grid"><input required placeholder="Name"><input required type="email" placeholder="Email"><input class="full" placeholder="Subject"><textarea class="full" placeholder="Message"></textarea><button class="btn">Send Message</button></form>'],faq:['FAQ','Answers for shopping, shipping and fragrance care.',faqHtml()],privacy:['Privacy Policy','How Mystic Vibe handles customer information.','<p>We collect details needed to process orders, deliver products, support customers and improve the shopping experience. We do not sell personal information.</p>'],terms:['Terms And Conditions','The terms for using this website and purchasing Mystic Vibe products.','<p>By using this website, you agree to provide accurate order information, use the site lawfully and review product details before purchase.</p>'],shipping:['Shipping Policy','Fast, careful shipping across serviceable Indian locations.','<p>Orders are typically dispatched within 1-3 business days. Tracking details are shared after dispatch.</p>'],returns:['Return & Refund Policy','Clear support for eligible concerns.','<p>Returns or replacements may be accepted for damaged, incorrect or defective items reported promptly after delivery.</p>'],login:['Login','Access your Mystic Vibe account.','<form class="form-grid"><input class="full" type="email" placeholder="Email"><input class="full" type="password" placeholder="Password"><button class="btn">Login</button><a class="btn light" href="register.html">Create Account</a></form>'],register:['Register','Create your Mystic Vibe account.','<form class="form-grid"><input placeholder="First name"><input placeholder="Last name"><input class="full" type="email" placeholder="Email"><input class="full" type="password" placeholder="Password"><button class="btn">Register</button></form>'],thanks:['Request status unavailable','The contact form is not connected.','<p>No request was submitted.</p><a class="btn" href="collection.html">Continue shopping</a>'],success:['Order status unavailable','This site has no order-processing service.','<p>No order is confirmed.</p><a class="btn" href="collection.html">Continue shopping</a>'],payok:['Payment status unavailable','A payment provider is not connected.','<p>No payment or order has been confirmed.</p><a class="btn" href="collection.html">Continue shopping</a>'],payfail:['Payment status unavailable','A payment provider is not connected.','<p>No payment was attempted.</p><a class="btn" href="collection.html">Continue shopping</a>']};simplePage.apply(null,map[page]);}function renderWishlist(){var items=wishlist().map(productBySlug);main.innerHTML=pageHero('Wishlist','Your saved Mystic Vibe fragrances.')+section('Saved Products',items.length?'Ready when you are.':'No products saved yet.','<div class="grid product-grid">'+(items.map(productCard).join('')||'<p>Browse the collection and save your favorites.</p>')+'</div>')}function renderTracking(){main.innerHTML=pageHero('Track Order','Live order tracking is not connected to a fulfillment service.')+'<section class="section"><div class="container"><div class="panel"><p>No shipment status is available because this site has no live order records.</p></div></div></section>'}function cycleHero(){if(window.mysticVibeHeroCycleTimer)clearInterval(window.mysticVibeHeroCycleTimer);var s=[].slice.call(document.querySelectorAll('.hero-slide')),i=0;if(s.length)window.mysticVibeHeroCycleTimer=setInterval(function(){s[i].classList.remove('active');i=(i+1)%s.length;s[i].classList.add('active')},4200)}function handleProductAdd(slug,quantity){
+function renderCart(){
+  var items=cart();
+  var sub=items.reduce(function(sum,item){
+    var product=productBySlug(item.slug),variant=productVariant(product,item.size_ml);
+    return sum+(variant?variant.price*item.qty:0);
+  },0);
+  var rows=items.map(function(item){
+    var p=productBySlug(item.slug),variant=productVariant(p,item.size_ml);
+    if(!p||!variant)return '<div class="cart-row cart-unavailable"><div><strong>Product no longer available</strong><br><small>'+escapeHtml(item.slug.replace(/-/g,' '))+'</small><br><span class="product-stock">Remove this item to continue checkout.</span></div><button class="icon-btn remove" data-remove="'+item.slug+'" data-size-ml="'+(item.size_ml||'')+'" aria-label="Remove unavailable item">×</button></div>';
+    var available=Number(variant.stock),outOfStock=Number.isFinite(available)&&available<item.qty;
+    return '<div class="cart-row'+(outOfStock?' cart-unavailable':'')+'"><img src="'+imagePath()+'"><div><strong>'+escapeHtml(p.name)+'</strong><br>'+variant.size_ml+'ML'+(outOfStock?'<br><span class="product-stock">'+(available>0?'Only '+available+' available; reduce quantity to continue.':'Out of stock; remove this item to continue checkout.')+'</span>':'')+'</div><div class="row-price">'+(outOfStock?'Unavailable':rupee(variant.price*item.qty))+'</div><div class="qty"><button data-qdec="'+p.slug+'" data-size-ml="'+variant.size_ml+'" '+(item.qty<=1?'disabled':'')+'>-</button><input value="'+item.qty+'" readonly><button data-qinc="'+p.slug+'" data-size-ml="'+variant.size_ml+'" '+(Number.isFinite(available)&&available<=item.qty?'disabled':'')+'>+</button></div><button class="icon-btn remove" data-remove="'+p.slug+'" data-size-ml="'+variant.size_ml+'" aria-label="Remove '+escapeHtml(p.name)+' '+variant.size_ml+'ML from cart">×</button></div>';
+  }).join('');
+  main.innerHTML=pageHero('Shopping Cart','Review your selected Mystic Vibe fragrances.')
+    +'<section class="section"><div class="container split"><div class="panel">'+(items.length?rows:'<p>Your cart is empty.</p><a class="btn" href="collection.html">Shop Collection</a>')+'</div><aside class="panel summary"><h2 class="serif">Cart Totals</h2><p>Subtotal <strong style="float:right">'+rupee(sub)+'</strong></p><p>Shipping <strong style="float:right">'+(sub?'Free':'₹0')+'</strong></p><hr><h3>Total <span style="float:right">'+rupee(sub)+'</span></h3><a class="btn" href="checkout.html">Checkout</a></aside></div></section>';
+}
+function renderCheckout(){var items=cart(),sub=items.reduce(function(s,i){var p=productBySlug(i.slug),v=productVariant(p,i.size_ml);return s+(v?v.price*i.qty:0)},0),pays=['Razorpay','PhonePe','UPI','Google Pay','Paytm','Credit Card','Debit Card','Cash On Delivery'];main.innerHTML=pageHero('Checkout','Secure checkout with integration-ready payment options.')+'<section class="section"><div class="container split"><form class="panel" id="checkout-form"><h2 class="serif">Customer Details</h2><div class="form-grid"><input required placeholder="Full name"><input required type="email" placeholder="Email"><input required placeholder="Phone"><input required placeholder="City"><textarea class="full" required placeholder="Shipping address"></textarea><input required placeholder="PIN code"><select required><option value="">State</option><option>Maharashtra</option><option>Delhi</option><option>Karnataka</option><option>Tamil Nadu</option><option>Gujarat</option></select></div><h2 class="serif">Payment</h2><div class="payment-options">'+pays.map(function(x,i){return '<label class="pay-option '+(i?'':'active')+'"><input type="radio" name="pay" value="'+x+'" '+(i?'':'checked')+'> '+x+'</label>'}).join('')+'</div><br><button class="btn" '+(sub?'':'disabled')+'>Place Order</button></form><aside class="panel summary"><h2 class="serif">Order Summary</h2>'+(items.map(function(i){var p=productBySlug(i.slug),v=productVariant(p,i.size_ml);return '<p>'+p.name+' · '+(v?v.size_ml+'ML':'Size unavailable')+' × '+i.qty+'<strong style="float:right">'+rupee(v?v.price*i.qty:0)+'</strong></p>'}).join('')||'<p>No items in cart.</p>')+'<hr><h3>Total <span style="float:right">'+rupee(sub)+'</span></h3></aside></div></section>'}function simplePage(t,c,b){main.innerHTML=pageHero(t,c)+'<section class="section"><div class="container"><div class="panel">'+b+'</div></div></section>'}function faqHtml(){return ['How long does the fragrance last?|Mystic Vibe fragrances are designed for long-lasting everyday wear.','Are all products 50ML?|Yes, every fragrance is 50ML at ₹499.','Do you support COD?|Yes, Cash On Delivery is included.','How do I track my order?|Use the Track Order page with your order ID.'].map(function(x){var v=x.split('|');return '<div class="faq-item"><button type="button">'+v[0]+'<span>+</span></button><div class="faq-answer">'+v[1]+'</div></div>'}).join('')}function renderStatic(page){var map={about:['About Mystic Vibe','Premium fragrances crafted for confidence, elegance and unforgettable moments.','<h2 class="serif">Our Story</h2><p>Mystic Vibe creates modern luxury fragrances with polished presentation, memorable scent profiles and accessible pricing.</p>'],contact:['Contact','We would love to hear from you.','<form class="form-grid"><input required placeholder="Name"><input required type="email" placeholder="Email"><input class="full" placeholder="Subject"><textarea class="full" placeholder="Message"></textarea><button class="btn">Send Message</button></form>'],faq:['FAQ','Answers for shopping, shipping and fragrance care.',faqHtml()],privacy:['Privacy Policy','How Mystic Vibe handles customer information.','<p>We collect details needed to process orders, deliver products, support customers and improve the shopping experience. We do not sell personal information.</p>'],terms:['Terms And Conditions','The terms for using this website and purchasing Mystic Vibe products.','<p>By using this website, you agree to provide accurate order information, use the site lawfully and review product details before purchase.</p>'],shipping:['Shipping Policy','Fast, careful shipping across serviceable Indian locations.','<p>Orders are typically dispatched within 1-3 business days. Tracking details are shared after dispatch.</p>'],returns:['Return & Refund Policy','Clear support for eligible concerns.','<p>Returns or replacements may be accepted for damaged, incorrect or defective items reported promptly after delivery.</p>'],login:['Login','Access your Mystic Vibe account.','<form class="form-grid"><input class="full" type="email" placeholder="Email"><input class="full" type="password" placeholder="Password"><button class="btn">Login</button><a class="btn light" href="register.html">Create Account</a></form>'],register:['Register','Create your Mystic Vibe account.','<form class="form-grid"><input placeholder="First name"><input placeholder="Last name"><input class="full" type="email" placeholder="Email"><input class="full" type="password" placeholder="Password"><button class="btn">Register</button></form>'],thanks:['Request status unavailable','The contact form is not connected.','<p>No request was submitted.</p><a class="btn" href="collection.html">Continue shopping</a>'],success:['Order status unavailable','This site has no order-processing service.','<p>No order is confirmed.</p><a class="btn" href="collection.html">Continue shopping</a>'],payok:['Payment status unavailable','A payment provider is not connected.','<p>No payment or order has been confirmed.</p><a class="btn" href="collection.html">Continue shopping</a>'],payfail:['Payment status unavailable','A payment provider is not connected.','<p>No payment was attempted.</p><a class="btn" href="collection.html">Continue shopping</a>']};simplePage.apply(null,map[page]);}function renderWishlist(){var items=wishlist().map(productBySlug);main.innerHTML=pageHero('Wishlist','Your saved Mystic Vibe fragrances.')+section('Saved Products',items.length?'Ready when you are.':'No products saved yet.','<div class="grid product-grid">'+(items.map(productCard).join('')||'<p>Browse the collection and save your favorites.</p>')+'</div>')}function renderTracking(){main.innerHTML=pageHero('Track Order','Live order tracking is not connected to a fulfillment service.')+'<section class="section"><div class="container"><div class="panel"><p>No shipment status is available because this site has no live order records.</p></div></div></section>'}function cycleHero(){if(window.mysticVibeHeroCycleTimer)clearInterval(window.mysticVibeHeroCycleTimer);var s=[].slice.call(document.querySelectorAll('.hero-slide')),i=0;if(s.length)window.mysticVibeHeroCycleTimer=setInterval(function(){s[i].classList.remove('active');i=(i+1)%s.length;s[i].classList.add('active')},4200)}function handleProductAdd(slug,quantity,sizeMl){
+  var selectedSize=Number(sizeMl)||productVariant(productBySlug(slug))?.size_ml;
   var buttons=[].slice.call(document.querySelectorAll('[data-product-add]')).filter(function(button){
-    return button.dataset.productAdd===slug;
+    return button.dataset.productAdd===slug&&Number(button.dataset.sizeMl)===Number(selectedSize);
   });
   if(!buttons.length||buttons.some(function(button){return button.disabled||button.dataset.busy==='true'}))return;
-  var current=cart().find(function(item){return item.slug===slug});
+  var current=cart().find(function(item){return item.slug===slug&&Number(item.size_ml)===Number(selectedSize)});
   var before=current?current.qty:0;
-  buttons.forEach(function(button){
-    button.dataset.busy='true';
-    button.disabled=true;
-    button.setAttribute('aria-busy','true');
-    button.textContent='Adding…';
-  });
-  addToCart(slug,quantity);
-  var updated=cart().find(function(item){return item.slug===slug});
-  var added=(updated?updated.qty:0)>before;
+  buttons.forEach(function(button){button.dataset.busy='true';button.disabled=true;button.setAttribute('aria-busy','true');button.textContent='Adding…';});
+  var success=addToCart(slug,quantity,selectedSize);
+  var updated=cart().find(function(item){return item.slug===slug&&Number(item.size_ml)===Number(selectedSize)});
+  var added=success&&(updated?updated.qty:0)>before;
   buttons.forEach(function(button){
     button.removeAttribute('aria-busy');
-    button.textContent=added?'Added':'Add to cart';
+    button.textContent=added?'Added':(Number(productVariant(productBySlug(slug),selectedSize)?.stock||0)>0?'Add to cart':'Out of stock');
     button.classList.toggle('is-added',added);
-    if(!added){
-      button.disabled=false;
-      delete button.dataset.busy;
-    }
+    if(!added){button.disabled=Number(productVariant(productBySlug(slug),selectedSize)?.stock||0)<=0;delete button.dataset.busy;}
   });
-  if(added){
-    window.setTimeout(function(){
-      buttons.forEach(function(button){
-        if(!button.isConnected)return;
-        button.textContent='Add to cart';
-        button.classList.remove('is-added');
-        button.disabled=false;
-        delete button.dataset.busy;
-      });
-    },1300);
-  }
+  if(added)window.setTimeout(function(){buttons.forEach(function(button){
+    if(!button.isConnected)return;button.textContent='Add to cart';button.classList.remove('is-added');button.disabled=false;delete button.dataset.busy;
+  });},1300);
 }
-function bind(){document.addEventListener('click',function(e){var galleryButton=e.target.closest('[data-gallery-to],[data-gallery-prev],[data-gallery-next]');if(galleryButton){var gallery=galleryButton.closest('[data-gallery]');if(gallery){if(galleryButton.hasAttribute('data-gallery-to'))changeGalleryImage(gallery,0,Number(galleryButton.dataset.galleryTo));else changeGalleryImage(gallery,galleryButton.hasAttribute('data-gallery-next')?1:-1)}return}var a=e.target.closest('[data-add]');if(a)addToCart(a.dataset.add);var category=e.target.closest('[data-collection-filter]');if(category){window.MV_SELECTED_COLLECTION=category.dataset.collectionFilter;var filterUrl=new URL(location.href);filterUrl.searchParams.delete('filter');history.replaceState(null,'',filterUrl.pathname+filterUrl.search+filterUrl.hash);renderCollection()}var w=e.target.closest('[data-wish]');if(w)toggleWish(w.dataset.wish);var pa=e.target.closest('[data-product-add]');if(pa&&!pa.disabled&&pa.dataset.busy!=='true')handleProductAdd(pa.dataset.productAdd,Number(document.querySelector('#qty')?.value||1));var b=e.target.closest('[data-buy]');if(b&&!b.disabled&&b.dataset.busy!=='true'){b.dataset.busy='true';b.disabled=true;b.setAttribute('aria-busy','true');b.textContent='Loading…';addToCart(b.dataset.buy,Number(document.querySelector('#qty')?.value||1));location.href='../checkout.html'}var rm=e.target.closest('[data-remove]');if(rm){saveCart(cart().filter(function(i){return i.slug!==rm.dataset.remove}));renderCart()}var qi=e.target.closest('[data-qinc]');if(qi){var c=cart(),item=c.find(function(i){return i.slug===qi.dataset.qinc}),product=productBySlug(qi.dataset.qinc),stockKnown=product&&product.stock!==undefined&&product.stock!==null&&Number.isFinite(Number(product.stock));if(!item||!product){toast('This perfume is no longer available');return}if(stockKnown&&Number(product.stock)<item.qty+1){toast(Number(product.stock)>0?'Only '+Number(product.stock)+' available in stock':'This perfume is out of stock');return}item.qty++;saveCart(c);renderCart()}var qd=e.target.closest('[data-qdec]');if(qd){var c2=cart(),it=c2.find(function(i){return i.slug===qd.dataset.qdec});it.qty--;saveCart(c2.filter(function(i){return i.qty>0}));renderCart()}});var galleryPointer=null;document.addEventListener('pointerdown',function(e){var gallery=e.target.closest('[data-gallery]');if(gallery&&Number(gallery.dataset.galleryCount)>1&&e.pointerType==='touch')galleryPointer={gallery:gallery,x:e.clientX,y:e.clientY}},{passive:true});document.addEventListener('pointerup',function(e){if(!galleryPointer)return;var start=galleryPointer;galleryPointer=null;var dx=e.clientX-start.x,dy=e.clientY-start.y;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.2){changeGalleryImage(start.gallery,dx<0?1:-1);start.gallery.dataset.justSwiped='true';setTimeout(function(){delete start.gallery.dataset.justSwiped},500)}},{passive:true});document.addEventListener('click',function(e){if(e.target.closest('[data-gallery]')?.dataset.justSwiped){e.preventDefault();e.stopPropagation()}},true);document.addEventListener('submit',function(e){if(e.target.matches('[data-newsletter]')){e.preventDefault();toast('Newsletter signup is not connected; no subscription was created')}if(e.target.id==='checkout-form'){e.preventDefault();toast('Checkout unavailable; no order was placed')}if(e.target.id==='track-form'){e.preventDefault()}});document.addEventListener('change',function(e){if(e.target.name==='pay'){document.querySelectorAll('.pay-option').forEach(function(x){x.classList.remove('active')});e.target.closest('.pay-option').classList.add('active')}});document.querySelectorAll('.faq-item button').forEach(function(b){b.onclick=function(){b.parentElement.classList.toggle('open')}});var io=new IntersectionObserver(function(es){es.forEach(function(x){if(x.isIntersecting)x.target.classList.add('visible')})},{threshold:.12});document.querySelectorAll('.reveal').forEach(function(x){io.observe(x)})}var main=document.querySelector('main');header();document.querySelector('#site-header').insertAdjacentHTML('beforeend',catalogNavigation());window.addEventListener('mystic-vibe-storefront-data',function(){var nav=document.querySelector('.catalog-nav');if(nav)nav.outerHTML=catalogNavigation()});footer();document.body.insertAdjacentHTML('beforeend','<a class="whatsapp-float" href="'+pagePath('contact.html')+'" aria-label="Contact Mystic Vibe" title="Contact Mystic Vibe"><svg class="mobile-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-7l-5 3v-3H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"></path><path d="M7.5 8.5h9M7.5 12h6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg><span class="mobile-nav-label">Contact</span></a>');if(window.mysticVibeSyncMobileActionDock)window.mysticVibeSyncMobileActionDock();var page=document.body.dataset.page;if(page==='home')renderHome();if(page==='collection')renderCollection();if(page==='product')renderProduct();if(page==='cart')renderCart();if(page==='checkout')renderCheckout();if(page==='wishlist')renderWishlist();if(page==='tracking')renderTracking();if(['about','contact','faq','privacy','terms','shipping','returns','login','register','thanks','success','payok','payfail'].indexOf(page)>-1)renderStatic(page);window.renderMysticVibeHome=renderHome;window.renderMysticVibeCollection=renderCollection;window.renderMysticVibeProduct=renderProduct;updateCounts();bind();
+function bind(){document.addEventListener('click',function(e){var galleryButton=e.target.closest('[data-gallery-to],[data-gallery-prev],[data-gallery-next]');if(galleryButton){var gallery=galleryButton.closest('[data-gallery]');if(gallery){if(galleryButton.hasAttribute('data-gallery-to'))changeGalleryImage(gallery,0,Number(galleryButton.dataset.galleryTo));else changeGalleryImage(gallery,galleryButton.hasAttribute('data-gallery-next')?1:-1)}return}var a=e.target.closest('[data-add]');if(a)addToCart(a.dataset.add,1,Number(a.dataset.sizeMl));var category=e.target.closest('[data-collection-filter]');if(category){window.MV_SELECTED_COLLECTION=category.dataset.collectionFilter;var filterUrl=new URL(location.href);filterUrl.searchParams.delete('filter');history.replaceState(null,'',filterUrl.pathname+filterUrl.search+filterUrl.hash);renderCollection()}var w=e.target.closest('[data-wish]');if(w)toggleWish(w.dataset.wish);var pa=e.target.closest('[data-product-add]');if(pa&&!pa.disabled&&pa.dataset.busy!=='true')handleProductAdd(pa.dataset.productAdd,Number(document.querySelector('#qty')?.value||1),Number(pa.dataset.sizeMl));var b=e.target.closest('[data-buy]');if(b&&!b.disabled&&b.dataset.busy!=='true'){var bought=addToCart(b.dataset.buy,Number(document.querySelector('#qty')?.value||1),Number(b.dataset.sizeMl));if(bought){b.dataset.busy='true';b.disabled=true;b.setAttribute('aria-busy','true');b.textContent='Loading…';location.href='../checkout.html'}}var rm=e.target.closest('[data-remove]');if(rm){saveCart(cart().filter(function(i){return !(i.slug===rm.dataset.remove&&Number(i.size_ml)===Number(rm.dataset.sizeMl))}));renderCart()}var qi=e.target.closest('[data-qinc]');if(qi){var c=cart(),item=c.find(function(i){return i.slug===qi.dataset.qinc&&Number(i.size_ml)===Number(qi.dataset.sizeMl)}),product=productBySlug(qi.dataset.qinc),variant=productVariant(product,Number(qi.dataset.sizeMl));if(!item||!variant){toast('This perfume size is no longer available');return}if(Number(variant.stock)<item.qty+1){toast(Number(variant.stock)>0?'Only '+Number(variant.stock)+' available in this size':'This size is out of stock');return}item.qty++;saveCart(c);renderCart()}var qd=e.target.closest('[data-qdec]');if(qd){var c2=cart(),it=c2.find(function(i){return i.slug===qd.dataset.qdec&&Number(i.size_ml)===Number(qd.dataset.sizeMl)});if(!it)return;it.qty--;saveCart(c2.filter(function(i){return i.qty>0}));renderCart()}});var galleryPointer=null;document.addEventListener('pointerdown',function(e){var gallery=e.target.closest('[data-gallery]');if(gallery&&Number(gallery.dataset.galleryCount)>1&&e.pointerType==='touch')galleryPointer={gallery:gallery,x:e.clientX,y:e.clientY}},{passive:true});document.addEventListener('pointerup',function(e){if(!galleryPointer)return;var start=galleryPointer;galleryPointer=null;var dx=e.clientX-start.x,dy=e.clientY-start.y;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.2){changeGalleryImage(start.gallery,dx<0?1:-1);start.gallery.dataset.justSwiped='true';setTimeout(function(){delete start.gallery.dataset.justSwiped},500)}},{passive:true});document.addEventListener('click',function(e){if(e.target.closest('[data-gallery]')?.dataset.justSwiped){e.preventDefault();e.stopPropagation()}},true);document.addEventListener('submit',function(e){if(e.target.matches('[data-newsletter]')){e.preventDefault();toast('Newsletter signup is not connected; no subscription was created')}if(e.target.id==='checkout-form'){e.preventDefault();toast('Checkout unavailable; no order was placed')}if(e.target.id==='track-form'){e.preventDefault()}});document.addEventListener('change',function(e){if(e.target.name==='pay'){document.querySelectorAll('.pay-option').forEach(function(x){x.classList.remove('active')});e.target.closest('.pay-option').classList.add('active')}});document.querySelectorAll('.faq-item button').forEach(function(b){b.onclick=function(){b.parentElement.classList.toggle('open')}});var io=new IntersectionObserver(function(es){es.forEach(function(x){if(x.isIntersecting)x.target.classList.add('visible')})},{threshold:.12});document.querySelectorAll('.reveal').forEach(function(x){io.observe(x)})}var main=document.querySelector('main');header();document.querySelector('#site-header').insertAdjacentHTML('beforeend',catalogNavigation());window.addEventListener('mystic-vibe-storefront-data',function(){var nav=document.querySelector('.catalog-nav');if(nav)nav.outerHTML=catalogNavigation()});footer();document.body.insertAdjacentHTML('beforeend','<a class="whatsapp-float" href="'+pagePath('contact.html')+'" aria-label="Contact Mystic Vibe" title="Contact Mystic Vibe"><svg class="mobile-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-7l-5 3v-3H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"></path><path d="M7.5 8.5h9M7.5 12h6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg><span class="mobile-nav-label">Contact</span></a>');if(window.mysticVibeSyncMobileActionDock)window.mysticVibeSyncMobileActionDock();var page=document.body.dataset.page;if(page==='home')renderHome();if(page==='collection')renderCollection();if(page==='product')renderProduct();if(page==='cart')renderCart();if(page==='checkout')renderCheckout();if(page==='wishlist')renderWishlist();if(page==='tracking')renderTracking();if(['about','contact','faq','privacy','terms','shipping','returns','login','register','thanks','success','payok','payfail'].indexOf(page)>-1)renderStatic(page);window.renderMysticVibeHome=renderHome;window.renderMysticVibeCollection=renderCollection;window.renderMysticVibeProduct=renderProduct;updateCounts();bind();
 import(new URL(pagePath('js/auth.js'),location.href)).catch(function(error){console.error('Mystic Vibe authentication could not initialize:',error)});
 import(new URL(pagePath('js/storefront-sync.js'),location.href)).catch(function(error){console.warn('Mystic Vibe is using its local storefront catalog:',error.message)});
 (function(){
