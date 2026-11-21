@@ -1131,3 +1131,27 @@ test('storefront hydration loads homepage and collection extras only where neede
   assert.ok(sync.includes('window.renderMysticVibeCollection?.()'));
   assert.ok(sync.includes("dispatchStorefrontData();"));
 });
+
+
+test('website and Admin display typography use the shared readable Inter family everywhere', async () => {
+  const cssFiles = [
+    'css/styles.css', 'css/premium.css', 'css/theme-system.css', 'css/admin.css',
+    'css/cart-page.css', 'css/motion-ui.css', 'css/orders-enhanced.css', 'css/product-detail.css',
+  ];
+  const pageFiles = [
+    'index.html', 'admin.html', 'account.html', 'cart.html', 'checkout.html',
+    'tracking.html', 'collection.html', 'login.html', 'register.html',
+    'products/_dynamic.html', 'products/royal-marine.html',
+  ];
+  for (const file of cssFiles) {
+    const content = await read(file);
+    assert.doesNotMatch(content, /Cormorant(?:\\+| )Garamond/);
+  }
+  for (const file of pageFiles) {
+    const content = await read(file);
+    assert.doesNotMatch(content, /Cormorant(?:\\+| )Garamond/);
+    assert.match(content, /family=Inter:wght@400;500;600;700/);
+  }
+  const base = await read('css/styles.css');
+  assert.ok(base.includes('.serif,h1,h2,h3{font-family:Inter, Arial, sans-serif}'));
+});
