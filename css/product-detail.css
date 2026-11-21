@@ -170,7 +170,7 @@ body[data-page="product"] .pdp-family-label {
 body[data-page="product"] .pdp-title {
   margin: -8px 0 0 !important;
   color: var(--mv-text,#191919) !important;
-  font: 600 clamp(2.2rem,4vw,3.4rem)/.98 'Cormorant Garamond',Georgia,serif !important;
+  font: 600 clamp(2.2rem,4vw,3.4rem)/.98 Inter, Arial, sans-serif !important;
   letter-spacing: -.025em;
   overflow-wrap: anywhere;
 }
@@ -246,7 +246,7 @@ body[data-page="product"] .pdp-notes {
 body[data-page="product"] .pdp-notes h2 {
   margin: 0;
   color: var(--mv-text,#191919);
-  font: 600 1.05rem/1.2 'Cormorant Garamond',Georgia,serif;
+  font: 600 1.05rem/1.2 Inter, Arial, sans-serif;
 }
 body[data-page="product"] .pdp-note-accords {
   margin: 0 !important;
