@@ -110,3 +110,19 @@
 .admin-product-image-actions button{min-height:34px;padding:6px 9px;border:1px solid var(--mv-line);border-radius:8px;background:rgba(255,255,255,.07);color:var(--mv-text);font-size:10px;cursor:pointer}
 .admin-product-image-actions button:focus-visible,.product-list-tools :focus-visible{outline:3px solid #f4d87c;outline-offset:2px}
 @media(max-width:640px){.product-list-tools{grid-template-columns:1fr}.admin-product-image-gallery{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}.admin-product-image-gallery .admin-product-image-item img{height:120px}}
+
+
+/* Admin size/pricing controls and square uploaded-product previews. */
+.size-variants-editor{min-width:0;margin:8px 0;padding:18px;border:1px solid var(--mv-line);border-radius:14px;background:rgba(255,255,255,.025)}
+.size-variants-editor legend{padding:0 8px;color:var(--mv-text);font-weight:700;letter-spacing:.08em}
+.size-variants-help{margin:0 0 14px;color:var(--mv-muted);font-size:12px;line-height:1.6}
+.size-variant-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.size-variant-card{min-width:0;padding:13px;border:1px solid var(--mv-line);border-radius:12px;background:rgba(0,0,0,.14);opacity:.7}
+.size-variant-card.is-enabled{border-color:rgba(212,176,91,.6);opacity:1}
+.size-variant-choice{display:flex!important;grid-template-columns:none!important;align-items:center;gap:9px!important;margin-bottom:12px;color:var(--mv-text)!important;font-size:13px!important;letter-spacing:.06em}
+.size-variant-choice input{width:17px;height:17px;accent-color:var(--mv-gold)}
+.size-variant-fields{display:grid;gap:9px}
+.size-variant-fields label{display:grid;gap:5px;color:var(--mv-muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.size-variant-fields input:disabled{opacity:.35;cursor:not-allowed}
+.admin-product-image-gallery .admin-product-image-item img{display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;background:#08090b}
+@media(max-width:720px){.size-variant-grid{grid-template-columns:1fr}.size-variant-card{padding:12px}.admin-product-image-gallery .admin-product-image-item img{aspect-ratio:1/1;height:auto}}
