@@ -1,4 +1,9 @@
 import { supabase } from './supabase-client.js';
+
+// Always return auth emails to the published site, even when signup starts on localhost or a Vercel preview.
+const AUTH_SITE_URL = 'https://mystic-vibe.vercel.app';
+const SIGNUP_CONFIRMATION_REDIRECT = new URL('/login.html', AUTH_SITE_URL).href;
+const PASSWORD_RESET_REDIRECT = new URL('/reset-password.html', AUTH_SITE_URL).href;
 const page = document.body.dataset.page;
 const authForm = ['login', 'register'].includes(page)
   ? document.querySelector('main form.form-grid')
@@ -96,7 +101,7 @@ if (authForm) {
     authForm.appendChild(resetLink);
   }
 
-  const feedback = document.createElement('p');
+  const feedback = document.createElement('div');
   feedback.className = 'full';
   feedback.setAttribute('role', 'status');
   feedback.setAttribute('aria-live', 'polite');
@@ -121,16 +126,11 @@ if (authForm) {
         result = await supabase.auth.signInWithPassword({ email, password });
       } else {
         const names = authForm.querySelectorAll('input:not([type])');
-        const accountLink = document.querySelector('.nav-actions a[href$="login.html"]');
-        const confirmationRedirect = new URL(
-          accountLink?.getAttribute('href') || 'login.html',
-          location.href,
-        ).href;
         result = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: confirmationRedirect,
+            emailRedirectTo: SIGNUP_CONFIRMATION_REDIRECT,
             data: {
               first_name: names[0]?.value.trim() || '',
               last_name: names[1]?.value.trim() || '',
@@ -142,8 +142,38 @@ if (authForm) {
       if (result.error) throw result.error;
 
       if (page === 'register' && !result.data.session) {
-        feedback.textContent = 'Registration submitted. If this address can be registered, check your email for a confirmation link before signing in.';
         feedback.hidden = false;
+        const message = document.createElement('p');
+        message.textContent = 'Your registration request was received. Check your inbox and Spam folder for the verification email. Open the link on any device; it will return to the published Mystic Vibe website.';
+        const resendButton = document.createElement('button');
+        resendButton.type = 'button';
+        resendButton.className = 'btn light';
+        resendButton.textContent = 'Resend confirmation email';
+        const resendStatus = document.createElement('span');
+        resendStatus.className = 'full';
+        resendStatus.setAttribute('aria-live', 'polite');
+        feedback.replaceChildren(message, resendButton, resendStatus);
+
+        resendButton.addEventListener('click', async function () {
+          resendButton.disabled = true;
+          resendButton.textContent = 'Sending…';
+          resendStatus.textContent = '';
+          try {
+            const { error } = await supabase.auth.resend({
+              type: 'signup',
+              email,
+              options: { emailRedirectTo: SIGNUP_CONFIRMATION_REDIRECT },
+            });
+            if (error) throw error;
+            resendStatus.textContent = 'If this address still needs verification, a fresh email has been sent. If you have already verified it, please sign in instead.';
+          } catch (resendError) {
+            console.warn('Could not resend signup confirmation:', resendError?.message || resendError);
+            resendStatus.textContent = 'A new email could not be sent right now. Please wait briefly and try again, or sign in if this address is already verified.';
+          } finally {
+            resendButton.disabled = false;
+            resendButton.textContent = 'Resend confirmation email';
+          }
+        });
         return;
       }
 
@@ -198,7 +228,7 @@ if (resetRequestForm) {
     feedback.hidden = true;
     setBusy(button, true, buttonLabel);
     try {
-      const redirectTo = new URL('reset-password.html', location.href).href;
+      const redirectTo = PASSWORD_RESET_REDIRECT;
       const { error } = await supabase.auth.resetPasswordForEmail(emailInput.value.trim(), { redirectTo });
       if (error) throw error;
       feedback.textContent = 'If an account exists for this address, a password reset link will arrive by email.';
