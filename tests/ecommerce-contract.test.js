@@ -633,6 +633,20 @@ test('product detail and card image areas remain square and the discount stays b
   assert.ok(card.includes('+originalPrice+discountLabel'));
 });
 
+test('Signup and password reset email callbacks always target the published site and allow confirmation resend', async () => {
+  const auth = await read('js/auth.js');
+  assert.ok(auth.includes("const AUTH_SITE_URL = 'https://mystic-vibe.vercel.app'"));
+  assert.ok(auth.includes("new URL('/login.html', AUTH_SITE_URL).href"));
+  assert.ok(auth.includes("new URL('/reset-password.html', AUTH_SITE_URL).href"));
+  assert.ok(auth.includes('emailRedirectTo: SIGNUP_CONFIRMATION_REDIRECT'));
+  assert.ok(auth.includes("supabase.auth.resend({"));
+  assert.ok(auth.includes("type: 'signup'"));
+  assert.ok(auth.includes('options: { emailRedirectTo: SIGNUP_CONFIRMATION_REDIRECT }'));
+  assert.ok(auth.includes('Resend confirmation email'));
+  assert.ok(auth.includes('if (page === \'register\' && !result.data.session)'));
+  assert.doesNotMatch(auth, /new URL\([^\n]*(?:location\.href|location\.origin)/);
+});
+
 test('Login and registration password inputs have an accessible show/hide control', async () => {
   const auth = await read('js/auth.js');
   const css = await read('css/theme-system.css');
