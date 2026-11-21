@@ -42,6 +42,84 @@ let productFormDirty = false;
 const activeFormSaves = new WeakSet();
 const dirtyForms = new WeakSet();
 
+const PRODUCT_SIZE_OPTIONS = [30, 50, 100];
+
+function renderProductSizeVariantEditor(savedVariants = []) {
+  const form = document.querySelector('#product-form');
+  const container = document.querySelector('#product-size-variant-grid');
+  if (!form || !container) return;
+  const saved = Array.isArray(savedVariants) ? savedVariants : [];
+  const legacySize = Number(form.elements.namedItem('size_ml')?.value || 50);
+  const legacyPrice = form.elements.namedItem('price')?.value ?? '';
+  const legacyMrp = form.elements.namedItem('mrp')?.value ?? '';
+  const legacyStock = form.elements.namedItem('stock')?.value ?? '0';
+  const variants = PRODUCT_SIZE_OPTIONS.map((size) => {
+    const match = saved.find((row) => Number(row?.size_ml) === size);
+    const legacyMatch = !saved.length && legacySize === size;
+    return {
+      size_ml: size,
+      enabled: match ? match.is_available !== false : legacyMatch,
+      price: match ? match.price : legacyMatch ? legacyPrice : '',
+      mrp: match ? match.mrp : legacyMatch ? legacyMrp : '',
+      stock: match ? match.stock : legacyMatch ? legacyStock : '0',
+    };
+  });
+  container.innerHTML = variants.map((variant) => {
+    const size = variant.size_ml;
+    return '<section class="product-size-variant-card" data-size-variant="' + size + '">'
+      + '<label class="product-size-variant-toggle">'
+      + '<input type="checkbox" data-size-enabled="' + size + '"' + (variant.enabled ? ' checked' : '') + '>'
+      + '<strong>' + size + 'ML</strong><span>Show on product page</span></label>'
+      + '<div class="product-size-variant-fields">'
+      + '<label>Price (₹)<input type="number" min="0" step="0.01" data-size-price="' + size + '" value="' + escapeAdminAttribute(variant.price) + '"' + (variant.enabled ? ' required' : ' disabled') + '></label>'
+      + '<label>MRP (₹)<input type="number" min="0" step="0.01" data-size-mrp="' + size + '" value="' + escapeAdminAttribute(variant.mrp) + '"' + (variant.enabled ? ' required' : ' disabled') + '></label>'
+      + '<label>Stock<input type="number" min="0" step="1" data-size-stock="' + size + '" value="' + escapeAdminAttribute(variant.stock) + '"' + (variant.enabled ? ' required' : ' disabled') + '></label>'
+      + '</div></section>';
+  }).join('');
+  syncProductSizeVariantFields();
+}
+
+function escapeAdminAttribute(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  })[character]);
+}
+
+function readProductSizeVariants(form) {
+  const variants = PRODUCT_SIZE_OPTIONS.map((size) => {
+    const enabled = form.querySelector('[data-size-enabled="' + size + '"]')?.checked === true;
+    if (!enabled) return null;
+    const priceRaw = form.querySelector('[data-size-price="' + size + '"]')?.value ?? '';
+    const mrpRaw = form.querySelector('[data-size-mrp="' + size + '"]')?.value ?? '';
+    const stockRaw = form.querySelector('[data-size-stock="' + size + '"]')?.value ?? '';
+    const price = Number(priceRaw), mrp = Number(mrpRaw), stock = Number(stockRaw);
+    if (priceRaw === '' || mrpRaw === '' || stockRaw === ''
+      || !Number.isFinite(price) || price < 0
+      || !Number.isFinite(mrp) || mrp < price
+      || !Number.isSafeInteger(stock) || stock < 0) {
+      throw new Error('Enter a valid price, MRP and whole-number stock for ' + size + 'ML. MRP must be at least the selling price.');
+    }
+    return { size_ml: size, price, mrp, stock, is_available: true };
+  }).filter(Boolean);
+  if (!variants.length) throw new Error('Enable at least one bottle size before saving this product.');
+  return variants;
+}
+
+function syncProductSizeVariantFields() {
+  const form = document.querySelector('#product-form');
+  if (!form) return;
+  PRODUCT_SIZE_OPTIONS.forEach((size) => {
+    const enabled = form.querySelector('[data-size-enabled="' + size + '"]')?.checked === true;
+    ['price','mrp','stock'].forEach((field) => {
+      const input = form.querySelector('[data-size-' + field + '="' + size + '"]');
+      if (input) {
+        input.disabled = !enabled;
+        input.required = enabled && field !== 'stock';
+      }
+    });
+  });
+}
+
 function setStatus(message, isError) {
   statusNode.textContent = message || '';
   statusNode.classList.toggle('error', Boolean(isError));
@@ -505,6 +583,7 @@ function resetForm(formId, options = {}) {
     pendingProductImagePaths.clear();
     productFormDirty = false;
     renderProductImageGallery();
+    renderProductSizeVariantEditor([]);
     setProductImageStatus('');
     renderCollectionOptions();
   }
@@ -531,6 +610,7 @@ function fillProductForm(id) {
   dirtyForms.delete(form);
   dirtyForms.delete(form);
   renderProductImageGallery();
+  renderProductSizeVariantEditor(product.size_variants);
   setProductImageStatus(productImagePaths.length ? 'Saved product image path loaded.' : '');
   renderCollectionOptions(product.collection_id);
   form.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -611,6 +691,14 @@ async function saveProduct(event) {
     }
     const imagePaths = uniquePaths(productImagePaths.map((reference) => normalizePersistentImageReference(reference, SUPABASE_URL)));
     syncProductImagePaths(imagePaths);
+    const sizeVariants = readProductSizeVariants(form);
+    const currentLegacySize = Number(formValue(form, 'size_ml') || 50);
+    const primaryVariant = sizeVariants.find((variant) => variant.size_ml === currentLegacySize) || sizeVariants[0];
+    form.elements.namedItem('size_ml').value = String(primaryVariant.size_ml);
+    form.elements.namedItem('price').value = String(primaryVariant.price);
+    form.elements.namedItem('mrp').value = String(primaryVariant.mrp);
+    form.elements.namedItem('stock').value = String(sizeVariants.reduce((total, variant) => total + variant.stock, 0));
+    form.elements.namedItem('size_variants').value = JSON.stringify(sizeVariants);
     const payload = {
       name: formValue(form, 'name'),
       slug,
@@ -625,6 +713,7 @@ async function saveProduct(event) {
       price: Number(formValue(form, 'price')),
       mrp: Number(formValue(form, 'mrp')),
       stock: Number(formValue(form, 'stock')),
+      size_variants: sizeVariants,
       sort_order: Number(formValue(form, 'sort_order') || 0),
       image_urls: imagePaths,
       is_featured: form.elements.namedItem('is_featured').checked,
@@ -632,10 +721,9 @@ async function saveProduct(event) {
     };
     if (!payload.name || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(payload.slug)) throw new Error('Enter a product name and a valid lowercase slug.');
     if (!storefrontCategoryLabels.has(payload.storefront_category)) throw new Error('Choose a valid storefront category.');
-    if (!Number.isSafeInteger(payload.size_ml) || payload.size_ml < 1) throw new Error('Product size must be a positive whole number of milliliters.');
-    if (![payload.price, payload.mrp].every((value) => Number.isFinite(value) && value >= 0)) throw new Error('Price and MRP must be valid non-negative amounts.');
-    if (payload.price > payload.mrp) throw new Error('Sale price cannot be higher than MRP.');
-    if (!Number.isSafeInteger(payload.stock) || payload.stock < 0) throw new Error('Stock must be a non-negative whole number.');
+    if (!sizeVariants.some((variant) => variant.size_ml === payload.size_ml)) throw new Error('The primary product size must be enabled.');
+    if (![payload.price, payload.mrp].every((value) => Number.isFinite(value) && value >= 0)) throw new Error('The primary size price and MRP are invalid.');
+    if (!Number.isSafeInteger(payload.stock) || payload.stock < 0) throw new Error('Combined stock must be a non-negative whole number.');
     if (!Number.isSafeInteger(payload.sort_order)) throw new Error('Product order must be a whole number.');
     const orphanedUploads = [...pendingProductImagePaths].filter((reference) => !imagePaths.includes(reference));
     const { saved, refreshed } = await saveAndRefresh({
@@ -1131,7 +1219,12 @@ document.querySelector('#product-form').addEventListener('input', (event) => {
     renderProductImageGallery();
   }
 });
-document.querySelector('#product-form').addEventListener('change', (event) => { productFormDirty = true; dirtyForms.add(event.currentTarget); });
+document.querySelector('#product-form').addEventListener('change', (event) => {
+  productFormDirty = true;
+  dirtyForms.add(event.currentTarget);
+  if (event.target.matches('[data-size-enabled]')) syncProductSizeVariantFields();
+});
+renderProductSizeVariantEditor([]);
 ['collection-form', 'slide-form', 'content-form'].forEach((id) => {
   const form = document.getElementById(id);
   form.addEventListener('input', () => dirtyForms.add(form));
