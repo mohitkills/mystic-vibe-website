@@ -84,8 +84,8 @@ test('storefront blocks out-of-stock products and cart quantities above current 
   const checkout = await read('js/checkout.js');
   assert.match(app, /outOfStock\?' disabled aria-disabled="true"'/);
   assert.match(app, /This size is out of stock/);
-  assert.match(app, /stock<currentQty\+q/);
-  assert.match(app, /Only '\+Number\(product\.stock\)\+' available in stock/);
+  assert.match(app, /var stock=Number\(variant\.stock\),currentQty=x\?x\.qty:0/);
+  assert.match(app, /Only '\+stock\+' available in this size/);
   assert.match(app, /Out of stock; remove this item to continue checkout/);
   assert.match(checkout, /function cartAvailability\(item\)/);
   assert.match(checkout, /data-remove-checkout-item/);
@@ -480,9 +480,9 @@ test('Product detail page has a database-backed responsive retail layout without
   assert.ok(page.includes('p.family'));
   assert.ok(page.includes('selectedVariant.size_ml'));
   assert.ok(page.includes('sizeSelectorMarkup'));
-  assert.ok(page.includes('p.price'));
-  assert.ok(page.includes('p.mrp'));
-  assert.ok(page.includes('p.stock'));
+  assert.ok(page.includes('selectedVariant.price'));
+  assert.ok(page.includes('selectedVariant.mrp'));
+  assert.ok(page.includes('selectedVariant.stock'));
   assert.ok(page.includes('productDetailGallery(p)'));
   assert.ok(page.includes('pdp-price-row'));
   assert.ok(page.includes('pdp-now'));
