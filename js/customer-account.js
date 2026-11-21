@@ -110,7 +110,7 @@ function accountDateText(value) {
 
 function accountStatusInfo(value) {
   const raw = String(value ?? '');
-  const key = raw.trim().toLowerCase().replace(/[\\s-]+/g, '_');
+  const key = raw.trim().toLowerCase().replaceAll(' ', '_').replaceAll('-', '_');
   const known = {
     pending: { label: 'Pending', tone: 'pending' },
     confirmed: { label: 'Confirmed', tone: 'processing' },
@@ -128,7 +128,7 @@ function accountStatusInfo(value) {
 
 function accountProgressMarkup(value) {
   const raw = String(value ?? '');
-  const key = raw.trim().toLowerCase().replace(/[\\s-]+/g, '_');
+  const key = raw.trim().toLowerCase().replaceAll(' ', '_').replaceAll('-', '_');
   if (['cancelled', 'canceled', 'failed'].includes(key)) {
     const message = key === 'failed'
       ? 'This order has failed. No delivery progress is available.'
