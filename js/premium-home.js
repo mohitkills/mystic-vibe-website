@@ -221,7 +221,7 @@
       inactiveImage.setAttribute('aria-hidden','true');
       activeImage.classList.add('is-active');
       activeImage.alt=alt || fallback.heading;
-      if(onReady) onReady();
+      if(onReady) onReady(activeImage,activeImage);
       return;
     }
 
@@ -234,13 +234,13 @@
       var oldImage=activeImage;
       var incomingImage=inactiveImage;
       var style=transitionNames.includes(requestedTransition) ? requestedTransition : 'fade';
-      incomingImage.classList.remove('is-active','is-incoming','hero-transition-fade','hero-transition-slide-left','hero-transition-slide-up','hero-transition-zoom');
+      incomingImage.classList.remove('is-active','is-incoming','hero-transition-fade','hero-transition-slide-left','hero-transition-slide-up','hero-transition-zoom','mv-hero-stale-fallback');
       incomingImage.src=candidate;
       incomingImage.alt='';
       incomingImage.setAttribute('aria-hidden','true');
       void incomingImage.offsetWidth;
       incomingImage.classList.add('is-incoming','hero-transition-'+style);
-      if(onReady) onReady();
+      if(onReady) onReady(oldImage,incomingImage);
 
       var finalized=false;
       var finish=function(){
@@ -263,7 +263,7 @@
     if(probe.complete && probe.naturalWidth>0) probe.onload();
   }
 
-  function show(index){
+  function show(index,onReady){
     if(!slides.length) return;
     active=(index+slides.length)%slides.length;
     syncControls();
@@ -272,7 +272,10 @@
       slide.display_image_url || slide.image_url || fallbackImage,
       slide.heading ? String(slide.heading).trim() : fallback.heading,
       slide.transition_style || 'fade',
-      function(){syncCta(slide.cta_text,slide.cta_link);}
+      function(oldImage,incomingImage){
+        syncCta(slide.cta_text,slide.cta_link);
+        if(onReady) onReady(oldImage,incomingImage);
+      }
     );
   }
 
@@ -304,13 +307,13 @@
     });
     return result;
   }
-  function showFallback(){
+  function showFallback(onReady){
     slides=fallbackSlides.slice();
     active=0;
     stop();
     syncControls();
     hero.classList.add('premium-hero-image-fallback');
-    show(0);
+    show(0,onReady);
     start();
   }
 
@@ -382,12 +385,21 @@
     var incoming=Array.isArray(data.slides)?data.slides.filter(function(slide){
       return slide && slide.is_published===true && String(slide.image_url || '').trim();
     }):[];
+    function revealReadyHero(oldImage,incomingImage){
+      // The previous image is the local boot fallback. Do not reveal it again
+      // when the global storefront loading mask is lifted.
+      if(oldImage && incomingImage && oldImage!==incomingImage){
+        oldImage.classList.add('mv-hero-stale-fallback');
+      }
+      document.body.classList.remove('mv-storefront-hero-loading');
+      window.dispatchEvent(new Event('mystic-vibe-hero-ready'));
+    }
     if(!incoming.length){
-      showFallback();
+      showFallback(revealReadyHero);
       return;
     }
     slides=completeSlides(incoming);
-    show(0);
+    show(0,revealReadyHero);
     start();
   });
 
