@@ -958,7 +958,7 @@ test('cart rows refresh from the published Supabase catalogue after storefront h
   const sync = await read('js/storefront-sync.js');
   assert.ok(app.includes('window.renderMysticVibeCart=renderCart'));
   assert.ok(app.includes('window.renderMysticVibeWishlist=renderWishlist'));
-  assert.match(app, /function renderWishlist\\(\\)\\{var items=wishlist\\(\\)\\.map\\(productBySlug\\)\\.filter\\(Boolean\\)/);
+  assert.ok(app.includes('function renderWishlist(){var items=wishlist().map(productBySlug).filter(Boolean)'));
   const refresh = sync.slice(sync.indexOf('function rerenderImagePage()'), sync.indexOf('function dispatchStorefrontData()'));
   assert.match(refresh, /if \(page === 'cart'\) window\.renderMysticVibeCart\?\.\(\);/);
   assert.match(sync, /window\.MV_STOREFRONT_CMS_CONNECTED = Array\.isArray\(products\)/);
