@@ -6,7 +6,7 @@ body[data-theme='light']{--mv-bg:#f3efe6;--mv-surface:#faf7f1;--mv-surface-2:#ee
 /* MYSTIC VIBE — IVORY GLASS THEME, adapted from the supplied style.css. */
 body:not([data-theme="dark"]){--iv-bg:#F8F7F3;--iv-sf:#fff;--iv-tx:#191919;--iv-mu:#77736D;--iv-gd:#B49A60;--iv-gd-deep:#7D6730;--iv-bd:rgba(25,25,25,.09);--iv-gl:rgba(255,255,255,.68);--iv-glb:rgba(255,255,255,.82);--iv-sh:0 14px 44px rgba(70,55,25,.09);--iv-shh:0 22px 56px rgba(70,55,25,.15);color-scheme:light;background:var(--iv-bg)!important;color:var(--iv-tx)!important}
 body:not([data-theme="dark"])::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(46% 44% at 8% 12%,rgba(232,220,192,.43),transparent 78%),radial-gradient(40% 44% at 92% 28%,rgba(220,216,240,.28),transparent 80%),radial-gradient(38% 42% at 50% 100%,rgba(212,236,227,.24),transparent 80%)}
-body:not([data-theme="dark"]) h1,body:not([data-theme="dark"]) h2,body:not([data-theme="dark"]) h3,body:not([data-theme="dark"]) .serif{font-family:"Cormorant Garamond",Georgia,serif;color:var(--iv-tx)}
+body:not([data-theme="dark"]) h1,body:not([data-theme="dark"]) h2,body:not([data-theme="dark"]) h3,body:not([data-theme="dark"]) .serif{font-family:Inter, Arial, sans-serif;color:var(--iv-tx)}
 body:not([data-theme="dark"]) .eyebrow{color:var(--iv-gd-deep)!important;letter-spacing:.2em!important}
 body:not([data-theme="dark"]) .site-header{padding:12px 0 0;background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important}
 body:not([data-theme="dark"]) .site-header.scrolled{background:transparent!important;box-shadow:none!important}
@@ -40,7 +40,7 @@ body:not([data-theme="dark"]) .premium-hero-media:after{content:"";position:abso
 body:not([data-theme="dark"]) .premium-hero-media img.premium-hero-image{position:absolute;inset:0 0 0 auto;left:auto;width:57%;height:100%;object-fit:cover;object-position:center;border-radius:0;filter:saturate(.88) contrast(.98)}
 body:not([data-theme="dark"]) .premium-hero-content{position:relative;inset:auto;z-index:3;width:52%;max-width:620px;padding:clamp(36px,6vw,80px);margin:0;color:var(--iv-tx)!important}
 body:not([data-theme="dark"]) .premium-hero-kicker{display:inline-block;margin-bottom:18px;font-size:10px!important}
-body:not([data-theme="dark"]) .premium-hero-heading{max-width:8.5ch;margin:0 0 17px;color:var(--iv-tx)!important;font:600 clamp(48px,6vw,88px)/.92 "Cormorant Garamond",Georgia,serif!important;letter-spacing:-.045em}
+body:not([data-theme="dark"]) .premium-hero-heading{max-width:8.5ch;margin:0 0 17px;color:var(--iv-tx)!important;font:600 clamp(48px,6vw,88px)/.92 Inter, Arial, sans-serif!important;letter-spacing:-.045em}
 body:not([data-theme="dark"]) .premium-hero-description{max-width:41ch;margin:0 0 26px;color:var(--iv-mu)!important;font-size:clamp(14px,1.25vw,17px);line-height:1.7}
 body:not([data-theme="dark"]) .premium-hero-actions .btn{min-width:164px;min-height:48px;border-radius:999px!important;background:var(--iv-tx)!important;border-color:var(--iv-tx)!important;color:#fff!important;box-shadow:0 8px 24px rgba(25,25,25,.1)!important}
 body:not([data-theme="dark"]) .premium-hero-actions .btn:hover{background:var(--iv-gd)!important;border-color:var(--iv-gd)!important;color:var(--iv-tx)!important}
@@ -52,7 +52,7 @@ body:not([data-theme="dark"]) .premium-slide-status{color:var(--iv-mu)!important
 body:not([data-theme="dark"]) .signature-strip{width:min(1240px,calc(100% - 36px));margin:12px auto 0;padding:0 18px;border:1px solid var(--iv-glb);border-radius:18px;background:rgba(255,255,255,.56)!important;box-shadow:var(--iv-sh);backdrop-filter:blur(18px) saturate(140%)}
 body:not([data-theme="dark"]) .signature-strip .container{max-width:none}
 body:not([data-theme="dark"]) .signature-stat{padding:18px 14px;border-color:var(--iv-bd)!important;color:var(--iv-mu)!important;font-size:10px;letter-spacing:.1em}
-body:not([data-theme="dark"]) .signature-stat b{color:var(--iv-tx)!important;font:600 25px/1.05 "Cormorant Garamond",Georgia,serif!important;letter-spacing:0}
+body:not([data-theme="dark"]) .signature-stat b{color:var(--iv-tx)!important;font:600 25px/1.05 Inter, Arial, sans-serif!important;letter-spacing:0}
 body:not([data-theme="dark"]) .section{padding:clamp(64px,8vw,110px) 24px 0}
 body:not([data-theme="dark"]) .section .container{max-width:1200px}
 body:not([data-theme="dark"]) .section-head{margin-bottom:32px;gap:24px}
