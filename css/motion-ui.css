@@ -1,0 +1,455 @@
+:root {
+  --mv-motion-ease: cubic-bezier(.3,.7,.3,1);
+}
+
+/* Scroll reveals share one observer and stagger within their rendered row. */
+[data-reveal] {
+  opacity: 0;
+  translate: 0 18px;
+  transition-property: opacity, translate;
+  transition-duration: .62s;
+  transition-timing-function: var(--mv-motion-ease);
+  transition-delay: var(--mv-reveal-delay, 0ms);
+}
+[data-reveal].in {
+  opacity: 1;
+  translate: 0 0;
+}
+
+/* Desktop product-card tilt and pointer-positioned glare. */
+.product-card-reference[data-tilt] {
+  position: relative;
+  transform: perspective(900px) rotateX(var(--mv-rotate-x, 0deg)) rotateY(var(--mv-rotate-y, 0deg));
+  transform-style: preserve-3d;
+  transition: transform .24s var(--mv-motion-ease) !important;
+}
+.product-card-reference[data-tilt]:hover {
+  transform: perspective(900px) rotateX(var(--mv-rotate-x, 0deg)) rotateY(var(--mv-rotate-y, 0deg)) translateY(-4px) !important;
+}
+.mv-tilt-glare {
+  position: absolute;
+  z-index: 12;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(260px circle at var(--mv-glare-x, 50%) var(--mv-glare-y, 50%), rgba(255,255,255,.38), transparent 64%);
+  transition: opacity .24s ease;
+}
+.product-card-reference[data-tilt].mv-tilt-hover .mv-tilt-glare {
+  opacity: 1;
+}
+
+/* A soft, non-interactive highlight on existing glass surfaces. */
+.glass-spot {
+  position: relative;
+  isolation: isolate;
+}
+.mv-glass-spotlight {
+  position: absolute;
+  z-index: 12;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(320px circle at var(--mv-spot-x, 50%) var(--mv-spot-y, 50%), rgba(180,154,96,.18), transparent 66%);
+  transition: opacity .28s ease;
+}
+.glass-spot.mv-glass-hover .mv-glass-spotlight {
+  opacity: 1;
+}
+
+/* Small magnetic movement is applied with transform only. */
+[data-magnetic] {
+  transform: translate3d(var(--mv-magnet-x, 0px), var(--mv-magnet-y, 0px), 0);
+  transition: transform .22s var(--mv-motion-ease);
+}
+[data-magnetic]:hover {
+  transform: translate3d(var(--mv-magnet-x, 0px), calc(var(--mv-magnet-y, 0px) - 2px), 0) !important;
+}
+[data-magnetic]:active {
+  transform: translate3d(var(--mv-magnet-x, 0px), var(--mv-magnet-y, 0px), 0) scale(.97) !important;
+}
+.btn:not([data-magnetic]):active,
+button:not([data-magnetic]):active,
+[role="button"]:not([data-magnetic]):active {
+  transform: scale(.97);
+}
+
+/* Skeletons cover existing cards rather than adding/removing layout space. */
+.product-card-reference {
+  position: relative;
+}
+.mv-skeleton-loading > :not(.mv-skeleton-overlay) {
+  opacity: 0;
+  transition: opacity .16s ease;
+}
+.mv-skeleton-overlay {
+  position: absolute;
+  z-index: 18;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(34,32,28,.07);
+  border-radius: inherit;
+  background: rgba(255,255,255,.97);
+  pointer-events: auto;
+}
+.skel {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: 7px;
+  background: #eeeae1;
+}
+.skel::after {
+  position: absolute;
+  inset: 0;
+  width: 200%;
+  content: "";
+  background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.7) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: mv-skeleton-shimmer 1.35s linear infinite;
+}
+@keyframes mv-skeleton-shimmer {
+  to { transform: translateX(50%); }
+}
+.skel-media {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 6px;
+}
+.skel-kicker { width: 43%; height: 8px; margin-top: 1px; }
+.skel-title { width: 68%; height: 17px; }
+.skel-meta { width: 56%; height: 10px; }
+.skel-button { width: 100%; height: 40px; margin-top: auto; border-radius: 4px; }
+
+/* Header compacts into its existing glass pill after the first scroll. */
+.site-header > .nav {
+  transition: transform .22s var(--mv-motion-ease);
+}
+.site-header.mv-header-condensed > .nav {
+  transform: translateY(-2px) scale(.985);
+  background: rgba(255,255,255,.86) !important;
+  border-color: rgba(255,255,255,.88) !important;
+  box-shadow: 0 12px 34px rgba(53,42,23,.12), inset 0 1px 0 rgba(255,255,255,.9) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(155%);
+  backdrop-filter: blur(22px) saturate(155%);
+}
+body[data-theme="dark"] .site-header.mv-header-condensed > .nav {
+  background: rgba(16,18,22,.84) !important;
+  border-color: rgba(255,255,255,.16) !important;
+  box-shadow: 0 12px 34px rgba(0,0,0,.24) !important;
+}
+
+/* Hero media gets a restrained scroll offset without changing its dimensions. */
+.premium-hero-media img[data-parallax],
+.hero .bottle-stage img[data-parallax] {
+  translate: 0 var(--mv-parallax-offset, 0px);
+  will-change: translate;
+}
+
+/* Product-image zoom is limited to real hover pointers. */
+@media (hover: hover) and (pointer: fine) {
+  .product-card-image-stage > .visual img,
+  .pdp-main-image,
+  .pdp-thumb img {
+    transition: transform .5s var(--mv-motion-ease) !important;
+  }
+  .product-card-reference:hover .product-card-image-stage > .visual img {
+    transform: scale(1.06) !important;
+  }
+  .pdp-gallery-stage:hover .pdp-main-image {
+    transform: scale(1.06);
+  }
+}
+
+/* Fly-to-cart clone uses a fixed starting box; only transform and opacity move. */
+.mv-fly-to-cart {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  object-fit: contain;
+  box-shadow: 0 12px 30px rgba(25,25,25,.18);
+  will-change: transform, opacity;
+}
+
+/* Count and wishlist feedback. */
+@keyframes mv-cart-bump {
+  45% { transform: scale(1.38); }
+}
+.mv-cart-bump {
+  animation: mv-cart-bump .3s var(--mv-motion-ease);
+}
+@keyframes mv-wish-pop {
+  40% { transform: scale(1.32); }
+}
+.mv-wish-pop {
+  animation: mv-wish-pop .35s var(--mv-motion-ease);
+}
+
+/* Frosted-glass cart drawer with a keyboard-accessible modal surface. */
+.mv-cart-scrim {
+  position: fixed;
+  z-index: 98;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: rgba(25,25,25,.28);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .28s ease;
+}
+.mv-cart-scrim.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.mv-cart-drawer {
+  position: fixed;
+  z-index: 100;
+  inset: 0 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  width: min(430px, 100%);
+  max-width: 100%;
+  padding: 22px;
+  overflow: hidden;
+  border-left: 1px solid rgba(255,255,255,.86);
+  background: rgba(255,255,255,.86);
+  color: #191919;
+  box-shadow: -18px 0 54px rgba(35,30,22,.16);
+  -webkit-backdrop-filter: blur(24px) saturate(155%);
+  backdrop-filter: blur(24px) saturate(155%);
+  opacity: .96;
+  transform: translate3d(102%,0,0);
+  transition: transform .34s var(--mv-motion-ease), opacity .34s ease;
+}
+.mv-cart-drawer.is-open {
+  opacity: 1;
+  transform: translate3d(0,0,0);
+}
+body[data-theme="dark"] .mv-cart-drawer {
+  border-color: rgba(255,255,255,.16);
+  background: rgba(16,18,22,.88);
+  color: #f7f5ef;
+}
+.mv-cart-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(25,25,25,.1);
+}
+body[data-theme="dark"] .mv-cart-drawer-head { border-color: rgba(255,255,255,.14); }
+.mv-cart-eyebrow {
+  color: #8e6d2d;
+  font: 700 9px/1.2 Inter, sans-serif;
+  letter-spacing: .2em;
+}
+.mv-cart-drawer-head h2 {
+  margin: 4px 0 0;
+  color: inherit;
+  font: 600 32px/1.05 "Cormorant Garamond", Georgia, serif;
+}
+.mv-cart-close {
+  display: grid;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  padding: 0 0 3px;
+  border: 1px solid rgba(25,25,25,.12);
+  border-radius: 50%;
+  background: rgba(255,255,255,.58);
+  color: inherit;
+  font: 300 29px/1 Inter, sans-serif;
+  cursor: pointer;
+}
+body[data-theme="dark"] .mv-cart-close {
+  border-color: rgba(255,255,255,.18);
+  background: rgba(255,255,255,.07);
+}
+.mv-cart-drawer-items {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 18px 2px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.mv-cart-line {
+  display: grid;
+  grid-template-columns: 76px minmax(0,1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 0 0 16px;
+  margin: 0 0 16px;
+  border-bottom: 1px solid rgba(25,25,25,.1);
+}
+body[data-theme="dark"] .mv-cart-line { border-color: rgba(255,255,255,.12); }
+.mv-cart-line img {
+  display: block;
+  width: 76px;
+  height: 88px;
+  border-radius: 8px;
+  background: rgba(180,154,96,.1);
+  object-fit: contain;
+}
+.mv-cart-line-details {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.mv-cart-line-details strong {
+  color: inherit;
+  font: 600 15px/1.3 Inter, sans-serif;
+  overflow-wrap: anywhere;
+}
+.mv-cart-line-details span {
+  color: #77736b;
+  font: 400 11px/1.4 Inter, sans-serif;
+}
+body[data-theme="dark"] .mv-cart-line-details span { color: #aaa9a5; }
+.mv-cart-line-details b {
+  color: inherit;
+  font: 700 13px/1.3 Inter, sans-serif;
+}
+.mv-cart-drawer-footer {
+  flex: 0 0 auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(25,25,25,.12);
+}
+body[data-theme="dark"] .mv-cart-drawer-footer { border-color: rgba(255,255,255,.14); }
+.mv-cart-subtotal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 5px;
+  color: inherit;
+  font: 500 13px/1.4 Inter, sans-serif;
+}
+.mv-cart-subtotal strong { font-size: 17px; }
+.mv-cart-note {
+  margin: 0 0 15px;
+  color: #77736b;
+  font-size: 10px;
+  line-height: 1.5;
+}
+body[data-theme="dark"] .mv-cart-note { color: #aaa9a5; }
+.mv-cart-checkout,
+.mv-cart-view,
+.mv-cart-empty-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 14px;
+  border-radius: 999px;
+  text-align: center;
+  text-decoration: none;
+  font: 700 10px/1.3 Inter, sans-serif;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.mv-cart-checkout {
+  border: 1px solid #191919;
+  background: #191919;
+  color: #fff !important;
+}
+.mv-cart-view,
+.mv-cart-empty-link {
+  margin-top: 9px;
+  border: 1px solid rgba(25,25,25,.18);
+  background: rgba(255,255,255,.5);
+  color: #191919 !important;
+}
+body[data-theme="dark"] .mv-cart-view,
+body[data-theme="dark"] .mv-cart-empty-link {
+  border-color: rgba(255,255,255,.2);
+  background: rgba(255,255,255,.06);
+  color: #f7f5ef !important;
+}
+.mv-cart-empty {
+  display: grid;
+  gap: 10px;
+  padding: 28px 4px;
+  color: inherit;
+}
+.mv-cart-empty h3 {
+  margin: 0;
+  font: 600 28px/1.1 "Cormorant Garamond", Georgia, serif;
+}
+.mv-cart-empty p {
+  margin: 0;
+  color: #77736b;
+  font-size: 13px;
+  line-height: 1.6;
+}
+body[data-theme="dark"] .mv-cart-empty p { color: #aaa9a5; }
+
+@media (max-width: 480px) {
+  .mv-cart-drawer { padding: 18px 16px; }
+  .mv-cart-drawer-head h2 { font-size: 29px; }
+  .mv-cart-line { grid-template-columns: 66px minmax(0,1fr); gap: 11px; }
+  .mv-cart-line img { width: 66px; height: 78px; }
+}
+
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root) {
+  animation: mv-view-fade-out .2s ease both;
+}
+::view-transition-new(root) {
+  animation: mv-view-fade-in .28s ease both;
+}
+@keyframes mv-view-fade-out {
+  to { opacity: 0; }
+}
+@keyframes mv-view-fade-in {
+  from { opacity: 0; }
+}
+
+/* Motion is fully opt-out, including hover effects and loading shimmer. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition-duration: .01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+  [data-reveal] {
+    opacity: 1 !important;
+    translate: 0 0 !important;
+  }
+  [data-tilt] {
+    transform: none !important;
+  }
+  [data-magnetic] {
+    transform: none !important;
+  }
+  [data-parallax] {
+    translate: 0 0 !important;
+  }
+  .mv-cart-drawer {
+    transition: none !important;
+  }
+  .mv-cart-scrim {
+    transition: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .skel-media { aspect-ratio: 4 / 5; }
+}
