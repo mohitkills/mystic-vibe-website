@@ -9,7 +9,7 @@
   const reduced = () => reduceQuery.matches;
   const finePointer = () => pointerQuery.matches && !reduced();
   const revealSelector = '.section-head, .page-title, .product-card-reference, .ivory-category-card, .ivory-family-card, .feature-grid > .feature, .pdp-gallery-column, .pdp-buybox, .home-shop-all, .reveal';
-  const glassSelector = '.story-panel, .newsletter, .panel, .product-gallery, .summary';
+  const glassSelector = '.story-panel, .newsletter, .panel, .pdp-buybox, .product-gallery, .summary';
   const magneticSelector = '.premium-hero-actions .btn, .home-shop-all .btn, .pdp-buybox .btn, .newsletter .btn, .page-title .btn';
 
   const stylesheet = document.createElement('link');
@@ -58,7 +58,7 @@
           ? Array.from(element.parentElement.children).filter((item) => item.matches(revealSelector))
           : [element];
         const index = Math.max(0, siblings.indexOf(element));
-        element.style.setProperty('--mv-reveal-delay', String((index % 4) * 65) + 'ms');
+        element.style.setProperty('--mv-reveal-delay', String((index % 4) * 70) + 'ms');
       }
 
       if (reduced() || !('IntersectionObserver' in window)) {
@@ -80,7 +80,6 @@
       '<span class="skel skel-media"></span>' +
       '<span class="skel skel-kicker"></span>' +
       '<span class="skel skel-title"></span>' +
-      '<span class="skel skel-meta"></span>' +
       '<span class="skel skel-button"></span>';
     card.classList.add('mv-skeleton-loading');
     card.appendChild(overlay);
