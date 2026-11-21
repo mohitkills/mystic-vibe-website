@@ -10,6 +10,7 @@ const statusNode = document.querySelector('#admin-status');
 const productImageStatus = document.querySelector('#product-image-status');
 const productImagePreview = document.querySelector('#product-image-preview');
 const productImageGallery = document.querySelector('#product-image-gallery');
+const sizeVariantEditor = document.querySelector('#size-variant-editor');
 const signOutButton = document.querySelector('#sign-out');
 const bucketIds = ['mystic-vibe-images', 'mystic-vibe-media'];
 const imageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
@@ -244,7 +245,10 @@ async function renderProducts() {
   for (const product of visibleProducts) {
     const image = parseImagePaths(product.image_urls)[0] || '';
     const imageUrl = image ? await signedImageUrl(image) : '';
-    appendRecord(container, product.name, `${product.slug} · ${product.is_published ? 'Published' : 'Draft'} · Stock ${product.stock}`, product.id, [
+    const availableSizes = Array.isArray(product.size_variants)
+      ? product.size_variants.filter((variant) => variant && variant.is_available !== false).map((variant) => `${variant.size_ml}ml`).join(' / ')
+      : `${product.size_ml}ml`;
+    appendRecord(container, product.name, `${product.slug} · ${product.is_published ? 'Published' : 'Draft'} · ${availableSizes || 'No sizes'} · Stock ${product.stock}`, product.id, [
       { label: 'Edit', action: 'edit-product' },
       { label: 'Duplicate', action: 'duplicate-product' },
       { label: product.is_published ? 'Unpublish' : 'Publish', action: 'toggle-product' },
@@ -464,6 +468,66 @@ function formValue(form, name) {
   return form.elements.namedItem(name).value.trim();
 }
 
+function updateSizeVariantRow(row) {
+  const enabled = row.querySelector('[data-variant-enabled]').checked;
+  row.classList.toggle('is-enabled', enabled);
+  row.querySelectorAll('[data-variant-value]').forEach((input) => {
+    input.disabled = !enabled;
+    input.required = enabled && input.hasAttribute('data-variant-price');
+  });
+}
+
+function renderSizeVariantEditor(value, fallback = {}) {
+  let variants = value;
+  if (typeof variants === 'string') {
+    try { variants = JSON.parse(variants); } catch (error) { variants = []; }
+  }
+  if (!Array.isArray(variants)) variants = [];
+  variants = variants.filter((variant) => variant && typeof variant === 'object');
+  if (!variants.length && Number(fallback.size_ml) > 0) {
+    variants = [{
+      size_ml: Number(fallback.size_ml), price: Number(fallback.price || 0),
+      mrp: Number(fallback.mrp || fallback.price || 0), stock: Number(fallback.stock || 0),
+      is_available: true,
+    }];
+  }
+  sizeVariantEditor.querySelectorAll('[data-size-variant-row]').forEach((row) => {
+    const size = Number(row.dataset.sizeVariantRow);
+    const variant = variants.find((item) => Number(item.size_ml) === size);
+    const enabled = Boolean(variant && variant.is_available !== false);
+    row.querySelector('[data-variant-enabled]').checked = enabled;
+    row.querySelector('[data-variant-price]').value = enabled && variant.price != null ? String(variant.price) : '';
+    row.querySelector('[data-variant-mrp]').value = enabled && variant.mrp != null ? String(variant.mrp) : '';
+    row.querySelector('[data-variant-stock]').value = enabled && variant.stock != null ? String(variant.stock) : '0';
+    updateSizeVariantRow(row);
+  });
+  if (!variants.length) {
+    const row = sizeVariantEditor.querySelector('[data-size-variant-row="50"]');
+    row.querySelector('[data-variant-enabled]').checked = true;
+    updateSizeVariantRow(row);
+  }
+}
+
+function collectSizeVariants() {
+  const variants = [];
+  sizeVariantEditor.querySelectorAll('[data-size-variant-row]').forEach((row) => {
+    if (!row.querySelector('[data-variant-enabled]').checked) return;
+    const sizeMl = Number(row.dataset.sizeVariantRow);
+    const priceText = row.querySelector('[data-variant-price]').value.trim();
+    const mrpText = row.querySelector('[data-variant-mrp]').value.trim();
+    const stockText = row.querySelector('[data-variant-stock]').value.trim();
+    const price = Number(priceText);
+    const mrp = mrpText ? Number(mrpText) : price;
+    const stock = stockText ? Number(stockText) : 0;
+    if (!priceText || !Number.isFinite(price) || price <= 0) throw new Error(`Enter a valid selling price for the ${sizeMl} ml size.`);
+    if (!Number.isFinite(mrp) || mrp < price) throw new Error(`MRP for the ${sizeMl} ml size must be equal to or higher than its selling price.`);
+    if (!Number.isSafeInteger(stock) || stock < 0) throw new Error(`Stock for the ${sizeMl} ml size must be a non-negative whole number.`);
+    variants.push({ size_ml: sizeMl, price, mrp, stock, is_available: true });
+  });
+  if (!variants.length) throw new Error('Enable at least one bottle size before saving this product.');
+  return variants.sort((a, b) => a.size_ml - b.size_ml);
+}
+
 function resetForm(formId, options = {}) {
   const form = document.getElementById(formId);
   const hasSavedRecordId = Boolean(form.elements.namedItem('id')?.value || form.elements.namedItem('content_key')?.readOnly);
@@ -476,6 +540,7 @@ function resetForm(formId, options = {}) {
   form.reset();
   if (formId === 'product-form') {
     form.elements.namedItem('id').value = '';
+    renderSizeVariantEditor([{ size_ml: 50, price: '', mrp: '', stock: 0, is_available: true }]);
     productImagePaths = [];
     pendingProductImagePaths.clear();
     productFormDirty = false;
@@ -497,13 +562,15 @@ function fillProductForm(id) {
     const field = form.elements.namedItem(key);
     if (!field) return;
     if (field.type === 'checkbox') field.checked = Boolean(value);
-    else if (key === 'image_urls') field.value = parseImagePaths(value).join('\n');
+    else if (key === 'image_urls') field.value = parseImagePaths(value).join('\\n');
     else field.value = value ?? '';
+  });
+  renderSizeVariantEditor(product.size_variants, {
+    size_ml: product.size_ml, price: product.price, mrp: product.mrp, stock: product.stock,
   });
   productImagePaths = parseImagePaths(product.image_urls);
   pendingProductImagePaths.clear();
   productFormDirty = false;
-  dirtyForms.delete(form);
   dirtyForms.delete(form);
   renderProductImageGallery();
   setProductImageStatus(productImagePaths.length ? 'Saved product image path loaded.' : '');
@@ -582,6 +649,10 @@ async function saveProduct(event) {
     if (sku && products.some((product) => product.id !== id && product.sku?.toLowerCase() === sku.toLowerCase())) {
       throw new Error('Another product already uses this SKU. Choose a unique SKU before saving.');
     }
+    const sizeVariants = collectSizeVariants();
+    const primaryVariant = sizeVariants.find((variant) => variant.size_ml === 50 && variant.stock > 0)
+      || sizeVariants.find((variant) => variant.stock > 0)
+      || sizeVariants.find((variant) => variant.size_ml === 50) || sizeVariants[0];
     const imagePaths = uniquePaths(productImagePaths.map((reference) => normalizePersistentImageReference(reference, SUPABASE_URL)));
     syncProductImagePaths(imagePaths);
     const payload = {
@@ -593,10 +664,11 @@ async function saveProduct(event) {
       description: formValue(form, 'description'),
       fragrance_family: formValue(form, 'fragrance_family'),
       fragrance_notes: formValue(form, 'fragrance_notes'),
-      size_ml: Number(formValue(form, 'size_ml')),
-      price: Number(formValue(form, 'price')),
-      mrp: Number(formValue(form, 'mrp')),
-      stock: Number(formValue(form, 'stock')),
+      size_ml: primaryVariant.size_ml,
+      size_variants: sizeVariants,
+      price: primaryVariant.price,
+      mrp: primaryVariant.mrp,
+      stock: primaryVariant.stock,
       sort_order: Number(formValue(form, 'sort_order') || 0),
       image_urls: imagePaths,
       is_featured: form.elements.namedItem('is_featured').checked,
@@ -1070,6 +1142,11 @@ document.querySelector('#product-form').addEventListener('input', (event) => {
   }
 });
 document.querySelector('#product-form').addEventListener('change', (event) => { productFormDirty = true; dirtyForms.add(event.currentTarget); });
+sizeVariantEditor.addEventListener('change', (event) => {
+  const row = event.target.closest('[data-size-variant-row]');
+  if (row && event.target.matches('[data-variant-enabled]')) updateSizeVariantRow(row);
+});
+sizeVariantEditor.querySelectorAll('[data-size-variant-row]').forEach(updateSizeVariantRow);
 ['collection-form', 'slide-form', 'content-form'].forEach((id) => {
   const form = document.getElementById(id);
   form.addEventListener('input', () => dirtyForms.add(form));
