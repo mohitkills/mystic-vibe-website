@@ -14,3 +14,5 @@
 .catalog-nav a:hover:after,.catalog-nav a.active:after{transform:scaleX(1)}
 .home-shop-all{display:flex;width:100%;justify-content:center;margin:32px auto 0}
 @media(max-width:640px){.catalog-nav-inner{min-height:46px;padding:0 5px}.catalog-nav a{min-height:46px;padding:0 11px;font-size:9px;letter-spacing:.12em}.catalog-nav a:after{right:11px;left:11px;bottom:6px}.home-shop-all{margin-top:24px}}
+
+/* Shared typography system: Inter is used for all storefront and Admin text. */
