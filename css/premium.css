@@ -371,3 +371,28 @@
   .profile-settings-form { grid-template-columns: 1fr; }
   .profile-settings-wide, .profile-settings-intro { grid-column: auto; }
 }
+
+
+/* Mystic Vibe product image canvas: square on desktop and mobile, never stretch the uploaded bottle artwork. */
+.product-card-gallery .visual{
+  display:grid!important;
+  place-items:center!important;
+  width:100%!important;
+  min-height:0!important;
+  aspect-ratio:1/1!important;
+  overflow:hidden!important;
+}
+.product-card-gallery .visual img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  object-position:center!important;
+}
+@media(max-width:980px){
+  .product-card-gallery .visual{min-height:0!important;aspect-ratio:1/1!important}
+}
+@media(max-width:640px){
+  .product-card-gallery .visual{min-height:0!important;aspect-ratio:1/1!important}
+}
