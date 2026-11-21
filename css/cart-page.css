@@ -68,7 +68,7 @@ body[data-page="cart"] main {
 .cart-page-heading h1 {
   margin: 0;
   color: var(--cart-text);
-  font: 600 clamp(42px, 5vw, 62px)/.98 "Cormorant Garamond", Georgia, serif;
+  font: 600 clamp(42px, 5vw, 62px)/.98 Inter, Arial, sans-serif;
   letter-spacing: -.025em;
 }
 
@@ -131,7 +131,7 @@ body[data-page="cart"] main {
 .cart-items-heading h2 {
   margin: 0;
   color: var(--cart-text);
-  font: 600 27px/1.05 "Cormorant Garamond", Georgia, serif;
+  font: 600 27px/1.05 Inter, Arial, sans-serif;
 }
 
 .cart-items-heading span {
@@ -206,7 +206,7 @@ body[data-page="cart"] main {
 }
 
 .ci-image-fallback {
-  font: 600 23px/1 "Cormorant Garamond", Georgia, serif;
+  font: 600 23px/1 Inter, Arial, sans-serif;
   letter-spacing: .12em;
 }
 
@@ -228,7 +228,7 @@ body[data-page="cart"] main {
   margin: 0;
   overflow: hidden;
   color: var(--cart-text);
-  font: 600 25px/1.08 "Cormorant Garamond", Georgia, serif;
+  font: 600 25px/1.08 Inter, Arial, sans-serif;
   letter-spacing: -.01em;
   overflow-wrap: normal;
   word-break: normal;
@@ -401,7 +401,7 @@ body[data-page="cart"] main {
 .cart-order-summary h2 {
   margin: 0 0 22px;
   color: var(--cart-text);
-  font: 600 29px/1.08 "Cormorant Garamond", Georgia, serif;
+  font: 600 29px/1.08 Inter, Arial, sans-serif;
 }
 
 .cart-summary-list {
@@ -603,7 +603,7 @@ body[data-page="cart"] main {
 .cart-empty-state h2 {
   margin: 0;
   color: var(--cart-text);
-  font: 600 35px/1.05 "Cormorant Garamond", Georgia, serif;
+  font: 600 35px/1.05 Inter, Arial, sans-serif;
 }
 
 .cart-empty-state > p:not(.cart-eyebrow) {
