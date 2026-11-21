@@ -434,7 +434,7 @@ test('Product cards match the compact retail reference while preserving cart, wi
   const app = await read('js/app.js');
   const css = await read('css/theme-system.css');
   const start = app.indexOf('function productCard(p){');
-  const end = app.indexOf('function galleryControlsMarkup(p,images){', start);
+  const end = app.indexOf('function productCurrency(value){', start);
   assert.ok(start >= 0 && end > start);
   const card = app.slice(start, end);
   assert.ok(card.includes('product-card-bestseller'));
@@ -459,7 +459,7 @@ test('Product cards match the compact retail reference while preserving cart, wi
 
 test('Product detail page has a database-backed responsive retail layout without altering cart or stock rules', async () => {
   const app = await read('js/app.js');
-  const css = await read('css/theme-system.css');
+  const css = await read('css/product-detail.css');
   const productFiles = (await readdir(path.join(root, 'products'))).filter((name) => name.endsWith('.html'));
   assert.ok(productFiles.length > 0);
   for (const file of productFiles) {
@@ -497,7 +497,7 @@ test('Product detail page has a database-backed responsive retail layout without
   assert.ok(app.includes('function handleProductAdd('));
   assert.ok(app.includes("button.textContent=added?'Added':'Add to cart'"));
   assert.ok(app.includes("addToCart(b.dataset.buy,Number(document.querySelector('#qty')?.value||1))"));
-  const discountMatch = app.match(/function productDiscountPercent\\(mrp,price\\)\\{[^}]*\\}/);
+  const discountMatch = app.match(/function productDiscountPercent\(mrp,price\)\{[^}]*\}/);
   assert.ok(discountMatch);
   const discount = runInNewContext(discountMatch[0] + '; productDiscountPercent;');
   assert.equal(discount(599, 449), 25);
