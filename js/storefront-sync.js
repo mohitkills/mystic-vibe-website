@@ -200,6 +200,35 @@ function toStorefrontProduct(row, collectionNames) {
   if (typeof row.description === 'string' && row.description.trim()) product.description = htmlText(row.description);
   if (Number.isFinite(Number(row.mrp)) && Number(row.mrp) > 0) product.mrp = Number(row.mrp);
   if (Number.isFinite(Number(row.stock)) && Number(row.stock) >= 0) product.stock = Number(row.stock);
+  let sizeVariants = row.size_variants;
+  if (typeof sizeVariants === 'string') {
+    try { sizeVariants = JSON.parse(sizeVariants); } catch (error) { sizeVariants = []; }
+  }
+  if (Array.isArray(sizeVariants)) {
+    sizeVariants = sizeVariants
+      .filter((variant) => variant && variant.is_available !== false
+        && Number.isSafeInteger(Number(variant.size_ml)) && Number(variant.size_ml) > 0
+        && Number.isFinite(Number(variant.price)) && Number(variant.price) >= 0)
+      .map((variant) => ({
+        size_ml: Number(variant.size_ml), price: Number(variant.price),
+        mrp: Number.isFinite(Number(variant.mrp)) && Number(variant.mrp) > 0 ? Number(variant.mrp) : Number(variant.price),
+        stock: Number.isSafeInteger(Number(variant.stock)) && Number(variant.stock) >= 0 ? Number(variant.stock) : 0,
+        is_available: true,
+      }))
+      .sort((left, right) => left.size_ml - right.size_ml);
+  } else {
+    sizeVariants = [];
+  }
+  if (sizeVariants.length) {
+    product.sizeVariants = sizeVariants;
+    const primaryVariant = sizeVariants.find((variant) => variant.size_ml === 50 && variant.stock > 0)
+      || sizeVariants.find((variant) => variant.stock > 0)
+      || sizeVariants.find((variant) => variant.size_ml === 50) || sizeVariants[0];
+    product.size = `${primaryVariant.size_ml}ML`;
+    product.price = primaryVariant.price;
+    product.mrp = primaryVariant.mrp;
+    product.stock = primaryVariant.stock;
+  }
   if (typeof row.created_at === 'string' && !Number.isNaN(Date.parse(row.created_at))) product.created_at = row.created_at;
   if (typeof row.product_type === 'string' && row.product_type.trim()) product.product_type = htmlText(row.product_type);
   if (row.fragrance_notes !== null && row.fragrance_notes !== undefined && notesText(row.fragrance_notes).trim()) {
