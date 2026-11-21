@@ -391,7 +391,7 @@
       if(oldImage && incomingImage && oldImage!==incomingImage){
         oldImage.classList.add('mv-hero-stale-fallback');
       }
-      document.body.classList.remove('mv-storefront-hero-loading');
+      if(document.body && document.body.classList) document.body.classList.remove('mv-storefront-hero-loading');
       window.dispatchEvent(new Event('mystic-vibe-hero-ready'));
     }
     if(!incoming.length){
