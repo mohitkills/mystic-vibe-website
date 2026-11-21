@@ -232,7 +232,7 @@
 
   function initParallax(root) {
     const scope = root || document;
-    queryIncludingRoot(scope, '.premium-hero-media img.premium-hero-image, .hero .bottle-stage img').forEach((image) => {
+    queryIncludingRoot(scope, '.premium-hero-media img.premium-hero-image').forEach((image) => {
       image.setAttribute('data-parallax', '');
     });
     if (!reduced()) handleScroll();
