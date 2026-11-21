@@ -178,6 +178,7 @@ function rerenderImagePage() {
   if (page === 'home') return;
   if (page === 'collection') window.renderMysticVibeCollection?.();
   if (page === 'product') window.renderMysticVibeProduct?.();
+  if (page === 'cart') window.renderMysticVibeCart?.();
 }
 
 function dispatchStorefrontData() {
