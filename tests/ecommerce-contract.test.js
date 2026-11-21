@@ -1020,3 +1020,12 @@ test('homepage CMS sync reaches the hero carousel after product sections are ref
   assert.match(sync, /dispatchStorefrontData\(\)/);
   assert.doesNotMatch(html, /homepage-cms\.js/, 'do not start a duplicate homepage slide loader');
 });
+
+
+test('mobile Cart page removes redundant category header and overlapping floating actions', async () => {
+  const css = await read('css/cart-page.css');
+  assert.match(css, /body\[data-page="cart"\] \.site-header\s*\{[\s\S]*?position:\s*relative !important;/);
+  assert.match(css, /body\[data-page="cart"\] \.catalog-nav\s*\{\s*display:\s*none !important;/);
+  assert.match(css, /body\[data-page="cart"\] \.mobile-floating-actions,[\s\S]*?body\[data-page="cart"\] \.whatsapp-float:not\(\[hidden\]\)\s*\{[\s\S]*?display:\s*none !important;[\s\S]*?visibility:\s*hidden !important;/);
+  assert.match(css, /padding-bottom:\s*calc\(148px \+ env\(safe-area-inset-bottom, 0px\)\)/);
+});
