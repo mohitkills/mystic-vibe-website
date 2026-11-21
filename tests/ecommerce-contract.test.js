@@ -1051,6 +1051,23 @@ test('storefront loading hides stale CMS-bound images until live content is hydr
   assert.match(motion, /document\.body\.classList\.remove\('mv-storefront-loading'\)/);
 });
 
+test('homepage never reveals its local fallback between global loading completion and the first CMS hero image', async () => {
+  const app = await read('js/app.js');
+  const hero = await read('js/premium-home.js');
+  const css = await read('css/theme-system.css');
+
+  assert.ok(app.includes("if(document.body.dataset.page==='home')document.body.classList.add('mv-storefront-hero-loading')"));
+  assert.ok(app.includes("document.body.classList.remove('mv-storefront-loading','mv-storefront-hero-loading')"));
+  assert.ok(css.includes('body.mv-storefront-hero-loading main .premium-hero-image'));
+  assert.ok(css.includes('body main .premium-hero-image.mv-hero-stale-fallback'));
+  assert.ok(hero.includes('function revealReadyHero(oldImage,incomingImage)'));
+  assert.ok(hero.includes("oldImage.classList.add('mv-hero-stale-fallback')"));
+  assert.ok(hero.includes("document.body.classList.remove('mv-storefront-hero-loading')"));
+  assert.ok(hero.includes('show(0,revealReadyHero)'));
+  assert.ok(hero.includes('showFallback(revealReadyHero)'));
+  assert.ok(hero.includes('if(onReady) onReady(oldImage,incomingImage)'));
+});
+
 test('storefront hydration loads homepage and collection extras only where needed and avoids unrelated private image downloads', async () => {
   const sync = await read('js/storefront-sync.js');
   assert.match(sync, /page === 'collection' \? readPublished\('collections'\)/);
