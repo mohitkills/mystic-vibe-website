@@ -89,6 +89,7 @@
 
   function clearSkeletons() {
     window.MV_STOREFRONT_LOADING = false;
+    document.body.classList.remove('mv-storefront-loading');
     document.querySelectorAll('.mv-skeleton-overlay').forEach((overlay) => overlay.remove());
     document.querySelectorAll('.mv-skeleton-loading').forEach((card) => card.classList.remove('mv-skeleton-loading'));
     document.querySelectorAll('.product-grid[aria-busy="true"]').forEach((grid) => grid.removeAttribute('aria-busy'));
