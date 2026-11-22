@@ -6,7 +6,7 @@ body[data-theme='light']{--mv-bg:#f3efe6;--mv-surface:#faf7f1;--mv-surface-2:#ee
 /* MYSTIC VIBE — IVORY GLASS THEME, adapted from the supplied style.css. */
 body:not([data-theme="dark"]){--iv-bg:#F8F7F3;--iv-sf:#fff;--iv-tx:#191919;--iv-mu:#77736D;--iv-gd:#B49A60;--iv-gd-deep:#7D6730;--iv-bd:rgba(25,25,25,.09);--iv-gl:rgba(255,255,255,.68);--iv-glb:rgba(255,255,255,.82);--iv-sh:0 14px 44px rgba(70,55,25,.09);--iv-shh:0 22px 56px rgba(70,55,25,.15);color-scheme:light;background:var(--iv-bg)!important;color:var(--iv-tx)!important}
 body:not([data-theme="dark"])::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(46% 44% at 8% 12%,rgba(232,220,192,.43),transparent 78%),radial-gradient(40% 44% at 92% 28%,rgba(220,216,240,.28),transparent 80%),radial-gradient(38% 42% at 50% 100%,rgba(212,236,227,.24),transparent 80%)}
-body:not([data-theme="dark"]) h1,body:not([data-theme="dark"]) h2,body:not([data-theme="dark"]) h3,body:not([data-theme="dark"]) .serif{font-family:"Cormorant Garamond",Georgia,serif;color:var(--iv-tx)}
+body:not([data-theme="dark"]) h1,body:not([data-theme="dark"]) h2,body:not([data-theme="dark"]) h3,body:not([data-theme="dark"]) .serif{font-family:Inter, Arial, sans-serif;color:var(--iv-tx)}
 body:not([data-theme="dark"]) .eyebrow{color:var(--iv-gd-deep)!important;letter-spacing:.2em!important}
 body:not([data-theme="dark"]) .site-header{padding:12px 0 0;background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important}
 body:not([data-theme="dark"]) .site-header.scrolled{background:transparent!important;box-shadow:none!important}
@@ -40,7 +40,7 @@ body:not([data-theme="dark"]) .premium-hero-media:after{content:"";position:abso
 body:not([data-theme="dark"]) .premium-hero-media img.premium-hero-image{position:absolute;inset:0 0 0 auto;left:auto;width:57%;height:100%;object-fit:cover;object-position:center;border-radius:0;filter:saturate(.88) contrast(.98)}
 body:not([data-theme="dark"]) .premium-hero-content{position:relative;inset:auto;z-index:3;width:52%;max-width:620px;padding:clamp(36px,6vw,80px);margin:0;color:var(--iv-tx)!important}
 body:not([data-theme="dark"]) .premium-hero-kicker{display:inline-block;margin-bottom:18px;font-size:10px!important}
-body:not([data-theme="dark"]) .premium-hero-heading{max-width:8.5ch;margin:0 0 17px;color:var(--iv-tx)!important;font:600 clamp(48px,6vw,88px)/.92 "Cormorant Garamond",Georgia,serif!important;letter-spacing:-.045em}
+body:not([data-theme="dark"]) .premium-hero-heading{max-width:8.5ch;margin:0 0 17px;color:var(--iv-tx)!important;font:600 clamp(48px,6vw,88px)/.92 Inter, Arial, sans-serif!important;letter-spacing:-.045em}
 body:not([data-theme="dark"]) .premium-hero-description{max-width:41ch;margin:0 0 26px;color:var(--iv-mu)!important;font-size:clamp(14px,1.25vw,17px);line-height:1.7}
 body:not([data-theme="dark"]) .premium-hero-actions .btn{min-width:164px;min-height:48px;border-radius:999px!important;background:var(--iv-tx)!important;border-color:var(--iv-tx)!important;color:#fff!important;box-shadow:0 8px 24px rgba(25,25,25,.1)!important}
 body:not([data-theme="dark"]) .premium-hero-actions .btn:hover{background:var(--iv-gd)!important;border-color:var(--iv-gd)!important;color:var(--iv-tx)!important}
@@ -52,7 +52,7 @@ body:not([data-theme="dark"]) .premium-slide-status{color:var(--iv-mu)!important
 body:not([data-theme="dark"]) .signature-strip{width:min(1240px,calc(100% - 36px));margin:12px auto 0;padding:0 18px;border:1px solid var(--iv-glb);border-radius:18px;background:rgba(255,255,255,.56)!important;box-shadow:var(--iv-sh);backdrop-filter:blur(18px) saturate(140%)}
 body:not([data-theme="dark"]) .signature-strip .container{max-width:none}
 body:not([data-theme="dark"]) .signature-stat{padding:18px 14px;border-color:var(--iv-bd)!important;color:var(--iv-mu)!important;font-size:10px;letter-spacing:.1em}
-body:not([data-theme="dark"]) .signature-stat b{color:var(--iv-tx)!important;font:600 25px/1.05 "Cormorant Garamond",Georgia,serif!important;letter-spacing:0}
+body:not([data-theme="dark"]) .signature-stat b{color:var(--iv-tx)!important;font:600 25px/1.05 Inter, Arial, sans-serif!important;letter-spacing:0}
 body:not([data-theme="dark"]) .section{padding:clamp(64px,8vw,110px) 24px 0}
 body:not([data-theme="dark"]) .section .container{max-width:1200px}
 body:not([data-theme="dark"]) .section-head{margin-bottom:32px;gap:24px}
@@ -986,17 +986,7 @@ body:not([data-theme="dark"]) .whatsapp-float[hidden] { display: none !important
 }
 
 
-/* Halve the hero carousel height while preserving full-bleed images and controls. */
-@media (min-width: 761px) {
-  body:not([data-theme="dark"]) .premium-hero {
-    min-height: clamp(280px, calc(50svh - 90px), 380px) !important;
-  }
-}
-@media (max-width: 760px) {
-  body:not([data-theme="dark"]) .premium-hero {
-    min-height: 140px !important;
-  }
-}
+
 
 
 /* Compact premium slider controls for desktop and mobile; preserve clear tap targets. */
@@ -1810,3 +1800,229 @@ body:not([data-theme="dark"]) .product-card-reference .product-card-add:disabled
 }
 
 
+
+
+/* Keep the discount percentage beside the current and original prices, never floating over the product action button. */
+.product-card-content .product-card-price-row{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  flex-wrap:wrap!important;
+  gap:7px 9px!important;
+  min-width:0;
+  margin:0 0 10px!important;
+}
+.product-card-content .product-card-price-current,
+.product-card-content .product-card-price-original,
+.product-card-content .product-card-save{
+  position:static!important;
+  inset:auto!important;
+  float:none!important;
+  transform:none!important;
+  margin:0!important;
+  flex:0 0 auto;
+}
+.product-card-content .product-card-save{
+  display:inline-flex!important;
+  align-items:center!important;
+  white-space:nowrap!important;
+}
+.product-card-content .product-card-actions{
+  position:relative;
+  clear:both;
+}
+
+
+/* Prevent stale/static catalogue photos flashing while the live CMS is loading. */
+body.mv-storefront-loading main .premium-hero-image,
+body.mv-storefront-loading main .product-card-reference img,
+body.mv-storefront-loading main .pdp-gallery-column img,
+body.mv-storefront-loading main .cart-item .ci-img img,
+body.mv-storefront-loading main .wishlist-card img,
+body.mv-storefront-loading main .wishlist-item img {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+body.mv-storefront-loading main .premium-hero-media,
+body.mv-storefront-loading main .product-card-image-stage .visual,
+body.mv-storefront-loading main .pdp-gallery-column,
+body.mv-storefront-loading main .cart-item .ci-img {
+  background: linear-gradient(135deg, rgba(235,231,222,.92), rgba(250,249,246,.98)) !important;
+}
+
+
+/* The homepage hero has a separate readiness gate: the fallback must stay
+   invisible until the first CMS slide image has actually been preloaded. */
+body.mv-storefront-hero-loading main .premium-hero-image,
+body main .premium-hero-image.mv-hero-stale-fallback {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+
+/* Mystic Vibe current storefront — shared fluid full-width layout.
+   Layout-only overrides: CMS, product data, cart and auth behaviour are untouched. */
+:root {
+  --gutter: clamp(16px, 3.2vw, 56px);
+  --max: 1920px;
+  --max-text: 68ch;
+}
+html,body { max-width:100%; overflow-x:clip; }
+.site-header { width:100%; max-width:none; }
+body:not([data-theme="dark"]) .site-header > .nav {
+  width:min(var(--max),calc(100% - 2 * var(--gutter))) !important;
+  max-width:var(--max) !important; margin-inline:auto !important;
+  padding-inline:var(--gutter) !important; box-sizing:border-box !important;
+  flex-wrap:nowrap !important; min-width:0;
+}
+body:not([data-theme="dark"]) .site-header > .nav .nav-links {
+  flex:1 1 auto; min-width:0; flex-wrap:nowrap;
+  justify-content:center; gap:clamp(7px,1vw,18px);
+}
+body:not([data-theme="dark"]) .site-header > .nav .brand,
+body:not([data-theme="dark"]) .site-header > .nav .nav-actions { flex-shrink:0; }
+
+.catalog-nav,body:not([data-theme="dark"]) .catalog-nav {
+  width:100% !important; max-width:none !important; margin-inline:0 !important;
+  border-radius:0 !important; border-inline:0 !important;
+}
+body:not([data-theme="dark"]) .catalog-nav { margin:8px 0 0 !important; }
+.catalog-nav-inner,body:not([data-theme="dark"]) .catalog-nav-inner {
+  width:100%; max-width:var(--max) !important; margin-inline:auto !important;
+  padding-inline:var(--gutter) !important; box-sizing:border-box;
+}
+
+/* The current CMS carousel is full bleed rather than a 1240px rounded card. */
+.premium-hero,body:not([data-theme="dark"]) .premium-hero {
+  width:100% !important; max-width:none !important;
+  min-height:clamp(520px,78vh,860px) !important;
+  margin:clamp(12px,1.8vw,24px) 0 0 !important;
+  border-radius:0 !important; box-sizing:border-box;
+}
+.premium-hero-media,body:not([data-theme="dark"]) .premium-hero-media {
+  position:absolute !important; inset:0 !important;
+  width:100% !important; height:100% !important;
+}
+.premium-hero-media img.premium-hero-image,
+body:not([data-theme="dark"]) .premium-hero-media img.premium-hero-image {
+  position:absolute !important; inset:0 !important;
+  width:100% !important; height:100% !important;
+  max-width:none !important; max-height:none !important;
+  object-fit:cover !important; object-position:center !important;
+}
+
+/* Full-width section backgrounds; readable content shares a capped 1920px grid. */
+.section {
+  width:100%; padding-block:clamp(56px,7vw,120px) !important;
+  padding-inline:0 !important; box-sizing:border-box;
+}
+.container,body:not([data-theme="dark"]) .section .container {
+  width:100%; max-width:var(--max) !important; margin-inline:auto !important;
+  padding-inline:var(--gutter) !important; box-sizing:border-box;
+}
+.text-block { max-width:var(--max-text); }
+.section-head {
+  grid-template-columns:minmax(0,1fr) minmax(240px,.62fr);
+  gap:clamp(18px,3vw,48px); align-items:end;
+}
+
+/* Keep live product cards and their square image canvases; expand only column count. */
+.product-grid,body:not([data-theme="dark"]) .product-grid {
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:clamp(12px,1.15vw,22px) !important; align-items:stretch;
+}
+@media (min-width:1600px) {
+  .product-grid,body:not([data-theme="dark"]) .product-grid {
+    grid-template-columns:repeat(5,minmax(0,1fr));
+  }
+}
+@media (min-width:1920px) {
+  .product-grid,body:not([data-theme="dark"]) .product-grid {
+    grid-template-columns:repeat(6,minmax(0,1fr));
+  }
+}
+@media (max-width:1199px) {
+  .product-grid,body:not([data-theme="dark"]) .product-grid {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}
+@media (max-width:760px) {
+  .product-grid,body:not([data-theme="dark"]) .product-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:10px !important;
+  }
+  .section-head { grid-template-columns:1fr; gap:12px; }
+}
+
+/* Wider editorial bands with their content aligned to the same site grid. */
+.signature-strip,body:not([data-theme="dark"]) .signature-strip {
+  width:100% !important; max-width:none !important; margin-inline:0 !important;
+  border-radius:0 !important; border-inline:0 !important; padding-inline:0 !important;
+}
+.signature-strip > .container,body:not([data-theme="dark"]) .signature-strip .container {
+  width:100%; max-width:var(--max) !important; margin-inline:auto !important;
+  padding-inline:var(--gutter) !important; box-sizing:border-box;
+}
+.discovery-band { width:100%; padding-inline:0 !important; }
+.discovery-inner,body:not([data-theme="dark"]) .discovery-inner {
+  width:100%; max-width:var(--max) !important; margin-inline:auto !important;
+  padding-inline:var(--gutter); box-sizing:border-box;
+}
+.story-band,body:not([data-theme="dark"]) .story-band {
+  display:block !important; width:100% !important; max-width:none !important;
+  margin-inline:0 !important; padding-inline:0 !important;
+  border-inline:0 !important; border-radius:0 !important; box-sizing:border-box;
+}
+.story-band > .container,body:not([data-theme="dark"]) .story-band > .container {
+  display:grid !important; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr) !important;
+  align-items:center; gap:clamp(24px,4vw,72px);
+  width:100%; max-width:var(--max) !important; margin-inline:auto !important;
+  padding-inline:var(--gutter) !important; box-sizing:border-box;
+}
+.newsletter,.page-hero { width:100%; box-sizing:border-box; }
+.page-title,body:not([data-theme="dark"]) .page-title {
+  width:100%; max-width:var(--max) !important; margin-inline:auto !important;
+  padding-inline:var(--gutter) !important; box-sizing:border-box;
+}
+
+/* Full-width footer background, with columns centred and capped consistently. */
+.footer { width:100%; max-width:none; padding-inline:0 !important; box-sizing:border-box; }
+.footer-grid,.copyright {
+  width:100%; max-width:var(--max) !important; margin-inline:auto !important;
+  padding-inline:var(--gutter) !important; box-sizing:border-box;
+}
+@media (min-width:761px) { .premium-slide-controls { bottom:20px !important; } }
+@media (max-width:760px) {
+  .premium-hero,body:not([data-theme="dark"]) .premium-hero {
+    width:100% !important; min-height:clamp(360px,68svh,600px) !important;
+    margin:12px 0 0 !important; border-radius:0 !important;
+  }
+  .premium-hero-media img.premium-hero-image,
+  body:not([data-theme="dark"]) .premium-hero-media img.premium-hero-image {
+    width:100% !important; height:100% !important;
+    object-fit:cover !important; object-position:center !important;
+  }
+  .story-band > .container,body:not([data-theme="dark"]) .story-band > .container {
+    grid-template-columns:1fr !important; gap:22px;
+  }
+  .premium-slide-controls { bottom:12px !important; }
+}
+
+/* Ensure the footer grid starts from the page gutter, not an inherited footer inset. */
+body:not([data-theme="dark"]) .footer {
+  padding-inline: 0 !important;
+}
+
+
+/* Preserve the current storefront's requested half-height hero treatment. */
+@media (min-width: 761px) {
+  body:not([data-theme="dark"]) .premium-hero {
+    min-height: clamp(280px, calc(50svh - 90px), 380px) !important;
+  }
+}
+@media (max-width: 760px) {
+  body:not([data-theme="dark"]) .premium-hero {
+    min-height: 140px !important;
+  }
+}

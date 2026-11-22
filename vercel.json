@@ -1,5 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "node --test tests/*.test.js && node scripts/build-static.mjs",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/products/:slug.html",
+      "destination": "/products/_dynamic.html"
+    }
+  ]
 }

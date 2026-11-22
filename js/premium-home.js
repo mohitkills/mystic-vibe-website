@@ -25,14 +25,16 @@
   +'<section class="section story-band"><div class="container"><div><span class="eyebrow">The Mystic Standard</span><h2 class="serif">A presence<br>that lingers.</h2></div><div class="story-panel"><p data-site-content="home.brand.promise">Thoughtfully composed, confidently worn. Premium fragrance should be expressive, not out of reach.</p><a class="btn" href="collection.html">Find Your Signature</a></div></div></section>'
   +'<section class="section"><div class="container"><div class="section-head"><div><span class="eyebrow">The Essentials</span><h2 class="serif">Why Mystic Vibe</h2></div><p data-site-content="home.why.description">We make a refined fragrance ritual feel effortless—from the first detail to the final impression.</p></div><div class="grid feature-grid"><div class="feature card"><strong>Lasting<br>character</strong></div><div class="feature card"><strong>Premium<br>presentation</strong></div><div class="feature card"><strong>Made in<br>India</strong></div><div class="feature card"><strong>Considered<br>compositions</strong></div><div class="feature card"><strong>Luxury made<br>accessible</strong></div></div></div></section>'
   +'<section class="section"><div class="container"><div class="newsletter"><div><span class="eyebrow">Private Access</span><h2 class="serif">Notes from Mystic Vibe.</h2><p data-site-content="home.newsletter.description">First access to new scents, private offers and curated fragrance stories.</p></div><form data-newsletter><input type="email" placeholder="Your email address" required aria-label="Email address"><button class="btn">Join The List</button></form></div></div></section>';
-  var observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){entry.target.classList.add('visible');observer.unobserve(entry.target)}})},{threshold:.1});
-  root.querySelectorAll('.card,.newsletter,.story-panel').forEach(function(el){el.classList.add('reveal');observer.observe(el)});
+  root.querySelectorAll('.card,.newsletter,.story-panel').forEach(function(el){el.classList.add('reveal');});
+  if(window.initReveal)window.initReveal(root);
 })();
 
 (function(){
   if(!document.body || document.body.dataset.page!=='home') return;
   var hero=document.querySelector('.premium-hero');
   if(!hero || hero.dataset.sliderInitialized==='true') return;
+  var root=document.querySelector('main') || hero;
+  if(!root) return;
   hero.dataset.sliderInitialized='true';
 
   var media=hero.querySelector('.premium-hero-media');
@@ -219,7 +221,7 @@
       inactiveImage.setAttribute('aria-hidden','true');
       activeImage.classList.add('is-active');
       activeImage.alt=alt || fallback.heading;
-      if(onReady) onReady();
+      if(onReady) onReady(activeImage,activeImage);
       return;
     }
 
@@ -232,13 +234,13 @@
       var oldImage=activeImage;
       var incomingImage=inactiveImage;
       var style=transitionNames.includes(requestedTransition) ? requestedTransition : 'fade';
-      incomingImage.classList.remove('is-active','is-incoming','hero-transition-fade','hero-transition-slide-left','hero-transition-slide-up','hero-transition-zoom');
+      incomingImage.classList.remove('is-active','is-incoming','hero-transition-fade','hero-transition-slide-left','hero-transition-slide-up','hero-transition-zoom','mv-hero-stale-fallback');
       incomingImage.src=candidate;
       incomingImage.alt='';
       incomingImage.setAttribute('aria-hidden','true');
       void incomingImage.offsetWidth;
       incomingImage.classList.add('is-incoming','hero-transition-'+style);
-      if(onReady) onReady();
+      if(onReady) onReady(oldImage,incomingImage);
 
       var finalized=false;
       var finish=function(){
@@ -261,7 +263,7 @@
     if(probe.complete && probe.naturalWidth>0) probe.onload();
   }
 
-  function show(index){
+  function show(index,onReady){
     if(!slides.length) return;
     active=(index+slides.length)%slides.length;
     syncControls();
@@ -270,7 +272,10 @@
       slide.display_image_url || slide.image_url || fallbackImage,
       slide.heading ? String(slide.heading).trim() : fallback.heading,
       slide.transition_style || 'fade',
-      function(){syncCta(slide.cta_text,slide.cta_link);}
+      function(oldImage,incomingImage){
+        syncCta(slide.cta_text,slide.cta_link);
+        if(onReady) onReady(oldImage,incomingImage);
+      }
     );
   }
 
@@ -302,13 +307,13 @@
     });
     return result;
   }
-  function showFallback(){
+  function showFallback(onReady){
     slides=fallbackSlides.slice();
     active=0;
     stop();
     syncControls();
     hero.classList.add('premium-hero-image-fallback');
-    show(0);
+    show(0,onReady);
     start();
   }
 
@@ -380,12 +385,21 @@
     var incoming=Array.isArray(data.slides)?data.slides.filter(function(slide){
       return slide && slide.is_published===true && String(slide.image_url || '').trim();
     }):[];
+    function revealReadyHero(oldImage,incomingImage){
+      // The previous image is the local boot fallback. Do not reveal it again
+      // when the global storefront loading mask is lifted.
+      if(oldImage && incomingImage && oldImage!==incomingImage){
+        oldImage.classList.add('mv-hero-stale-fallback');
+      }
+      if(document.body && document.body.classList) document.body.classList.remove('mv-storefront-hero-loading');
+      window.dispatchEvent(new CustomEvent('mystic-vibe-hero-ready'));
+    }
     if(!incoming.length){
-      showFallback();
+      showFallback(revealReadyHero);
       return;
     }
     slides=completeSlides(incoming);
-    show(0);
+    show(0,revealReadyHero);
     start();
   });
 

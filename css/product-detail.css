@@ -170,7 +170,7 @@ body[data-page="product"] .pdp-family-label {
 body[data-page="product"] .pdp-title {
   margin: -8px 0 0 !important;
   color: var(--mv-text,#191919) !important;
-  font: 600 clamp(2.2rem,4vw,3.4rem)/.98 'Cormorant Garamond',Georgia,serif !important;
+  font: 600 clamp(2.2rem,4vw,3.4rem)/.98 Inter, Arial, sans-serif !important;
   letter-spacing: -.025em;
   overflow-wrap: anywhere;
 }
@@ -246,7 +246,7 @@ body[data-page="product"] .pdp-notes {
 body[data-page="product"] .pdp-notes h2 {
   margin: 0;
   color: var(--mv-text,#191919);
-  font: 600 1.05rem/1.2 'Cormorant Garamond',Georgia,serif;
+  font: 600 1.05rem/1.2 Inter, Arial, sans-serif;
 }
 body[data-page="product"] .pdp-note-accords {
   margin: 0 !important;
@@ -587,4 +587,20 @@ body[data-page="product"] .pdp-size-option:focus-visible {
 @media (max-width: 380px) {
   body[data-page="product"] .pdp-size-options { gap: 7px; }
   body[data-page="product"] .pdp-size-option { min-width: 70px !important; padding-inline: 10px !important; }
+}
+
+/* Product detail gallery: use the entire 1:1 canvas for the source image.
+   Keep contain so portrait or landscape uploads are never cropped. */
+body[data-page="product"] .pdp-gallery-stage {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 1 / 1 !important;
+}
+body[data-page="product"] .pdp-main-image {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0 !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  clip-path: none !important;
 }

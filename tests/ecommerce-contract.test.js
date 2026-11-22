@@ -106,6 +106,54 @@ test('customer order history and guest order lookup are connected to the secured
   assert.match(account, /Track a guest order/);
 });
 
+test('Track Order keeps delivery status visible separately from a pending COD payment status', async () => {
+  const account = await read('js/customer-account.js');
+  const css = await read('css/orders-enhanced.css');
+  assert.ok(account.includes('order-status-badge order-status-badge--'));
+  assert.ok(account.includes('Order · '));
+  assert.ok(account.includes('payment-status-badge payment-status-badge--'));
+  assert.ok(account.includes('Payment · '));
+  assert.ok(css.includes('body[data-page="tracking"] .order-detail-top .order-badges .badge'));
+  assert.match(css, /body\[data-page="tracking"\] \.order-detail-top \.order-badges \.badge\s*\{[\s\S]*?position:\s*static !important/);
+  assert.ok(css.includes('.order-status-badge--delivered'));
+  assert.ok(css.includes('.payment-status-badge--pending'));
+});
+test('My Orders redesign preserves the existing signed-in order queries and data while adding presentation-only UI', async () => {
+  const account = await read('js/customer-account.js');
+  const html = await read('account.html');
+  const css = await read('css/orders-enhanced.css');
+
+  assert.ok(html.includes('<title>My Orders — Mystic Vibe</title>'));
+  assert.ok(account.includes("supabase.from('orders')"));
+  assert.ok(account.includes(".select('id,order_number,created_at,order_status,payment_status,payment_method,subtotal,shipping_fee,discount_amount,total,carrier,tracking_number')"));
+  assert.ok(account.includes(".order('created_at', { ascending: false }).limit(50)"));
+  assert.ok(account.includes("supabase.from('order_items')"));
+  assert.ok(account.includes(".select('order_id,product_name,product_slug,size_ml,quantity,unit_price,line_total')"));
+  assert.ok(account.includes(".in('order_id', ids).order('created_at', { ascending: true })"));
+  assert.ok(account.includes("supabase.auth.getUser()"));
+  assert.ok(account.includes("new Intl.DateTimeFormat('en-IN'"));
+  assert.ok(account.includes('data-copy-order='));
+  assert.ok(account.includes('data-orders-retry'));
+  assert.ok(account.includes('tracking.html?order='));
+  assert.ok(account.includes('items.slice(0, 3)'));
+  assert.ok(account.includes('money(item.line_total)'));
+  assert.ok(account.includes('money(item.unit_price)'));
+  assert.ok(account.includes('money(order.total)'));
+  assert.ok(account.includes("['cancelled', 'canceled', 'failed']"));
+  assert.ok(account.includes("pending: 0, confirmed: 1, processing: 1, shipped: 2, delivered: 3"));
+  assert.ok(!account.includes('Pay now'));
+  assert.ok(!account.includes('Retry payment'));
+
+  for (const selector of ['.oc-status--pending', '.oc-status--processing', '.oc-status--shipped',
+    '.oc-status--delivered', '.oc-status--cancelled', '.oc-status--failed', '.oc-status--refunded',
+    '.oc-copy:focus-visible', '.oc-track', '.oc-skeleton', '.oc-empty--error']) {
+    assert.ok(css.includes(selector), 'missing My Orders presentation style: ' + selector);
+  }
+  assert.ok(css.includes('max-width: 600px'));
+  assert.ok(css.includes('max-width: 360px'));
+  assert.ok(css.includes('prefers-reduced-motion: reduce'));
+  assert.ok(css.includes('mix-blend-mode: multiply'));
+});
 test('Admin native select options keep readable contrast in Windows dropdown popups', async () => {
   const html = await read('admin.html');
   const css = await read('css/admin.css');
@@ -292,6 +340,8 @@ test('Mobile header menu opens as a readable glass grid and account actions dock
   const app = await read('js/app.js');
   const theme = await read('css/theme-system.css');
   assert.ok(app.includes("navLinks.classList.toggle('open')"));
+  assert.ok(app.includes("event.key==='Escape'&&navLinks.classList.contains('open')"));
+  assert.ok(app.includes("menuButton.focus()"));
   assert.ok(theme.includes('.site-header > .nav .nav-links.open'));
   assert.ok(theme.includes('background: rgba(255,255,255,.97) !important'));
   assert.ok(theme.includes('.site-header > .nav > .nav-actions'));
@@ -583,6 +633,21 @@ test('product detail and card image areas remain square and the discount stays b
   assert.ok(card.includes('+originalPrice+discountLabel'));
 });
 
+test('Signup and password reset email callbacks always target the published site and allow confirmation resend', async () => {
+  const auth = await read('js/auth.js');
+  assert.ok(auth.includes("const AUTH_SITE_URL = 'https://mystic-vibe.vercel.app'"));
+  assert.ok(auth.includes("new URL('/login.html', AUTH_SITE_URL).href"));
+  assert.ok(auth.includes("new URL('/reset-password.html', AUTH_SITE_URL).href"));
+  assert.ok(auth.includes('emailRedirectTo: SIGNUP_CONFIRMATION_REDIRECT'));
+  assert.ok(auth.includes("supabase.auth.resend({"));
+  assert.ok(auth.includes("type: 'signup'"));
+  assert.ok(auth.includes('options: { emailRedirectTo: SIGNUP_CONFIRMATION_REDIRECT }'));
+  assert.ok(auth.includes('Resend confirmation email'));
+  assert.ok(auth.includes('if (page === \'register\' && !result.data.session)'));
+  assert.ok(!auth.includes('emailRedirectTo: confirmationRedirect'));
+  assert.ok(!auth.includes("new URL('reset-password.html', location.href)"));
+});
+
 test('Login and registration password inputs have an accessible show/hide control', async () => {
   const auth = await read('js/auth.js');
   const css = await read('css/theme-system.css');
@@ -604,6 +669,8 @@ test('Storefront header exposes live product search and a profile menu with secu
   const searchCss = await read('css/premium.css');
   assert.ok(app.includes('data-site-search role="search"'));
   assert.ok(app.includes('data-site-search-input name="search"'));
+  assert.ok(app.includes('role="combobox" aria-autocomplete="list"'));
+  assert.ok(app.includes("aria-controls=\"mv-search-suggestions\""));
   assert.ok(app.includes('searchCatalogProducts(searchQuery)'));
   assert.ok(app.includes("new URLSearchParams(location.search).get('search')"));
   assert.ok(app.includes('data-account-toggle'));
@@ -705,7 +772,9 @@ test('homepage has exactly one image-first hero, one configurable CTA and animat
   assert.match(homeRefresh, /if \(page === 'home'\) return;/, 'CMS refresh must preserve the single premium hero');
   assert.doesNotMatch(homeRefresh, /renderMysticVibeHome/, 'CMS refresh must not restore the legacy multi-slide hero');
   assert.match(sync, /readPublished\('homepage_slides'\)/);
-  assert.match(sync, /window\.MV_HOMEPAGE_SLIDES = await hydrateSlideImages\(publishedSlides\)/);
+  assert.ok(sync.includes("page === 'home' ? readPublished('homepage_slides')"));
+  assert.ok(sync.includes('const slideImagesPromise = Array.isArray(slides)'));
+  assert.ok(sync.includes('const [hydratedSlides] = await Promise.all([slideImagesPromise, productImagesPromise])'));
   assert.match(sync, /window\.MV_STOREFRONT_CMS_CONNECTED = Array\.isArray\(products\)/);
   assert.match(sync, /mergeCatalogBySlug\(\[\], mappedProducts/);
   assert.match(html, /Slide transition<select name="transition_style"/);
@@ -935,4 +1004,192 @@ test('hero controller rotates two slides in one image area and updates only the 
   assert.equal(status.textContent, '01 / 02', 'rightward mouse drag returns to the previous slide');
   media.children.find((child) => child.classList.contains('is-incoming')).dispatch('animationend');
   assert.equal(action.textContent, 'Buy Now');
+});
+
+test('signed-out account and profile pages render their sign-in states without treating a missing session as an error', async () => {
+  const account = await read('js/customer-account.js');
+  const profile = await read('js/profile-settings.js');
+  const missingSessionGuard = /error\?\.name === 'AuthSessionMissingError' \|\| error\?\.message === 'Auth session missing!'/;
+  assert.match(account, missingSessionGuard);
+  assert.match(account, /Sign in to view your orders/);
+  assert.match(profile, missingSessionGuard);
+  assert.match(profile, /showSignIn\(\);\s*return;/);
+});
+
+test('cart rows refresh from the published Supabase catalogue after storefront hydration', async () => {
+  const app = await read('js/app.js');
+  const sync = await read('js/storefront-sync.js');
+  assert.ok(app.includes('window.renderMysticVibeCart=renderCart'));
+  assert.ok(app.includes('window.renderMysticVibeWishlist=renderWishlist'));
+  assert.ok(app.includes('function renderWishlist(){var items=wishlist().map(productBySlug).filter(Boolean)'));
+  const refresh = sync.slice(sync.indexOf('function rerenderImagePage()'), sync.indexOf('function dispatchStorefrontData()'));
+  assert.match(refresh, /if \(page === 'cart'\) window\.renderMysticVibeCart\?\.\(\);/);
+  assert.match(sync, /window\.MV_STOREFRONT_CMS_CONNECTED = Array\.isArray\(products\)/);
+});
+
+test('Cart page presents live cart variants in the porcelain-glass layout without changing cart or shipping rules', async () => {
+  const app = await read('js/app.js');
+  const cartHtml = await read('cart.html');
+  const cartCss = await read('css/cart-page.css');
+  const checkout = await read('js/checkout.js');
+  const start = app.indexOf('function renderCart(){');
+  const end = app.indexOf('function renderCheckout()', start);
+  assert.ok(start >= 0 && end > start);
+  const render = app.slice(start, end);
+  for (const token of ['productBySlug(item.slug)', 'productVariant(p,item.size_ml)', 'data-qinc=', 'data-qdec=', 'data-remove=', 'ci-name', 'ci-unit', 'ci-line-total', 'cart-order-summary', 'data-cart-checkout', 'MV_SITE_CONTENT', 'free_shipping_threshold', 'standard_fee', 'cart-sticky-bar']) {
+    assert.ok(render.includes(token), 'cart renders the existing data and expected control: ' + token);
+  }
+  assert.ok(render.includes('window.MV_STOREFRONT_LOADING===true'), 'cart uses skeletons during storefront hydration');
+  assert.ok(render.includes('data-cart-retry'), 'failed storefront load provides a retry action');
+  assert.ok(cartHtml.includes('css/cart-page.css'));
+  assert.ok(cartCss.includes('.cart-item:hover'));
+  assert.ok(cartCss.includes('.cart-qty button:disabled'));
+  assert.ok(cartCss.includes('.cart-summary-list .cart-summary-total'));
+  assert.ok(cartCss.includes('.cart-sticky-bar'));
+  assert.ok(cartCss.includes('body[data-page="cart"] .whatsapp-float'));
+  assert.ok(cartCss.includes('prefers-reduced-motion: reduce'));
+  assert.ok(checkout.includes('const fee = threshold > 0 && subtotal >= threshold ? 0 : Number(shippingSettings.standard_fee || 0)'));
+  assert.match(render, /threshold>0&&subtotal>=threshold\?0:standardFee/);
+});
+
+test('Cart remove animation preserves the existing remove filter, and cart drawer stacks above the sticky header', async () => {
+  const app = await read('js/app.js');
+  const motion = await read('js/motion-ui.js');
+  const motionCss = await read('css/motion-ui.css');
+  assert.ok(app.includes("cartRow.classList.add('is-removing')"));
+  assert.ok(app.includes("i.slug===rm.dataset.remove&&Number(i.size_ml)===Number(rm.dataset.sizeMl)"));
+  assert.ok(app.includes("window.matchMedia('(prefers-reduced-motion: reduce)')"));
+  assert.ok(motion.includes("data-mv-cart-count"));
+  assert.ok(motion.includes("mv-cart-line-pricing"));
+  assert.ok(motion.includes("window.renderMysticVibeCart()"));
+  assert.match(motionCss, /\.mv-cart-scrim\s*\{[\s\S]*?z-index:\s*1998/);
+  assert.match(motionCss, /\.mv-cart-drawer\s*\{[\s\S]*?z-index:\s*2000/);
+  assert.ok(motionCss.includes('.mv-cart-checkout:hover'));
+});
+
+
+
+test('homepage CMS sync reaches the hero carousel after product sections are refreshed', async () => {
+  const html = await read('index.html');
+  const hero = await read('js/premium-home.js');
+  const sync = await read('js/storefront-sync.js');
+  const controllerStart = hero.indexOf("var hero=document.querySelector('.premium-hero');");
+  assert.ok(controllerStart >= 0, 'the image-first hero controller must be present');
+  const controller = hero.slice(controllerStart, hero.indexOf('})();', controllerStart));
+
+  assert.match(controller, /var root=document\.querySelector\('main'\) \|\| hero;/);
+  assert.match(controller, /var section=root\.querySelector\('\[data-home-section=/);
+  assert.match(controller, /var incoming=Array\.isArray\(data\.slides\)/);
+  assert.match(sync, /readPublished\('homepage_slides'\)/);
+  assert.ok(sync.includes("page === 'home' ? readPublished('homepage_slides')"));
+  assert.ok(sync.includes('const slideImagesPromise = Array.isArray(slides)'));
+  assert.ok(sync.includes('const [hydratedSlides] = await Promise.all([slideImagesPromise, productImagesPromise])'));
+  assert.match(sync, /functions\/v1\/slide-image/);
+  assert.match(sync, /slides: window\.MV_HOMEPAGE_SLIDES/);
+  assert.match(sync, /dispatchStorefrontData\(\)/);
+  assert.doesNotMatch(html, /homepage-cms\.js/, 'do not start a duplicate homepage slide loader');
+});
+
+
+test('mobile Cart page removes redundant category header and overlapping floating actions', async () => {
+  const css = await read('css/cart-page.css');
+  assert.match(css, /body\[data-page="cart"\] \.site-header\s*\{[\s\S]*?position:\s*relative !important;/);
+  assert.match(css, /body\[data-page="cart"\] \.catalog-nav\s*\{\s*display:\s*none !important;/);
+  assert.match(css, /body\[data-page="cart"\] \.mobile-floating-actions,[\s\S]*?body\[data-page="cart"\] \.whatsapp-float:not\(\[hidden\]\)\s*\{[\s\S]*?display:\s*none !important;[\s\S]*?visibility:\s*hidden !important;/);
+  assert.match(css, /padding-bottom:\s*calc\(148px \+ env\(safe-area-inset-bottom, 0px\)\)/);
+});
+
+
+test('storefront loading hides stale CMS-bound images until live content is hydrated', async () => {
+  const app = await read('js/app.js');
+  const sync = await read('js/storefront-sync.js');
+  const motion = await read('js/motion-ui.js');
+  const css = await read('css/theme-system.css');
+
+  assert.match(app, /window\.MV_STOREFRONT_LOADING=true;document\.body\.classList\.add\('mv-storefront-loading'\)/);
+  assert.ok(app.includes("document.body.classList.remove('mv-storefront-loading','mv-storefront-hero-loading')"));
+  assert.match(css, /body\.mv-storefront-loading main \.premium-hero-image/);
+  assert.match(css, /body\.mv-storefront-loading main \.product-card-reference img/);
+  assert.match(sync, /document\.body\.classList\.remove\('mv-storefront-loading'\)/);
+  assert.match(motion, /document\.body\.classList\.remove\('mv-storefront-loading'\)/);
+});
+
+test('homepage never reveals its local fallback between global loading completion and the first CMS hero image', async () => {
+  const app = await read('js/app.js');
+  const hero = await read('js/premium-home.js');
+  const css = await read('css/theme-system.css');
+
+  assert.ok(app.includes("if(document.body.dataset.page==='home')document.body.classList.add('mv-storefront-hero-loading')"));
+  assert.ok(app.includes("document.body.classList.remove('mv-storefront-loading','mv-storefront-hero-loading')"));
+  assert.ok(css.includes('body.mv-storefront-hero-loading main .premium-hero-image'));
+  assert.ok(css.includes('body main .premium-hero-image.mv-hero-stale-fallback'));
+  assert.ok(hero.includes('function revealReadyHero(oldImage,incomingImage)'));
+  assert.ok(hero.includes("oldImage.classList.add('mv-hero-stale-fallback')"));
+  assert.ok(hero.includes("document.body.classList.remove('mv-storefront-hero-loading')"));
+  assert.ok(hero.includes('show(0,revealReadyHero)'));
+  assert.ok(hero.includes('showFallback(revealReadyHero)'));
+  assert.ok(hero.includes('if(onReady) onReady(oldImage,incomingImage)'));
+});
+
+test('storefront hydration loads homepage and collection extras only where needed and avoids unrelated private image downloads', async () => {
+  const sync = await read('js/storefront-sync.js');
+  assert.match(sync, /page === 'collection' \? readPublished\('collections'\)/);
+  assert.ok(sync.includes("page === 'home' ? readPublished('homepage_slides')"));
+  assert.match(sync, /const shouldHydrateProducts = \['home', 'collection', 'product', 'cart', 'wishlist'\]\.includes\(page\)/);
+  assert.match(sync, /function currentImageHydrationScope\(\)/);
+  assert.match(sync, /return \{ slugs, primaryOnly: true \}/);
+  assert.ok(sync.includes('const slots = primaryOnly ? allSlots.slice(0, 1) : allSlots.slice(fromIndex)'));
+  assert.match(sync, /const \[hydratedSlides\] = await Promise\.all\(\[slideImagesPromise, productImagesPromise\]\)/);
+  assert.ok(sync.includes("if (page === 'home' || page === 'collection')"));
+  assert.ok(sync.includes('return { slugs: null, primaryOnly: true }'));
+  assert.ok(sync.includes('void hydrateProductImages(mergedProducts, imageSlotsBySlug, { fromIndex: 1 })'));
+  assert.ok(sync.includes('window.renderMysticVibeCollection?.()'));
+  assert.ok(sync.includes("dispatchStorefrontData();"));
+});
+
+
+test('website and Admin display typography use the shared readable Inter family everywhere', async () => {
+  const cssFiles = [
+    'css/styles.css', 'css/premium.css', 'css/theme-system.css', 'css/admin.css',
+    'css/cart-page.css', 'css/motion-ui.css', 'css/orders-enhanced.css', 'css/product-detail.css',
+  ];
+  const pageFiles = [
+    'index.html', 'admin.html', 'account.html', 'cart.html', 'checkout.html',
+    'tracking.html', 'collection.html', 'login.html', 'register.html',
+    'products/_dynamic.html', 'products/royal-marine.html',
+  ];
+  for (const file of cssFiles) {
+    const content = await read(file);
+    assert.doesNotMatch(content, /Cormorant(?:\\+| )Garamond/);
+  }
+  for (const file of pageFiles) {
+    const content = await read(file);
+    assert.doesNotMatch(content, /Cormorant(?:\\+| )Garamond/);
+    assert.match(content, /family=Inter:wght@400;500;600;700/);
+  }
+  const base = await read('css/styles.css');
+  assert.ok(base.includes('.serif,h1,h2,h3{font-family:Inter, Arial, sans-serif}'));
+});
+
+
+test('Mystic Vibe public contact email opens a direct email from Contact page and footer', async () => {
+  const app = await read('js/app.js');
+  const sync = await read('js/storefront-sync.js');
+  const settings = await read('js/store-settings.js');
+  const admin = await read('admin.html');
+  const contact = await read('contact.html');
+
+  assert.ok(app.includes('contact-email-line'));
+  assert.ok(app.includes('data-store-contact-email'));
+  assert.ok(app.includes('data-store-contact-cta'));
+  assert.ok(app.includes('mailto:mysticvibetheperfumes@gmail.com'));
+  assert.ok(sync.includes("const supportEmail = typeof contact.support_email === 'string'"));
+  assert.ok(sync.includes(String.raw`const supportEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supportEmail);`));
+  assert.ok(sync.includes("emailLink.href = 'mailto:' + supportEmail"));
+  assert.ok(sync.includes("link.href = 'mailto:' + supportEmail"));
+  assert.ok(sync.includes("link.href = 'mailto:' + supportEmail + '?subject='"));
+  assert.ok(settings.includes("support_email: 'mysticvibetheperfumes@gmail.com'"));
+  assert.ok(admin.includes('name="support_email"'));
+  assert.ok(admin.includes('placeholder="mysticvibetheperfumes@gmail.com"'));
+  assert.ok(contact.includes('"email":"mysticvibetheperfumes@gmail.com"'));
 });
