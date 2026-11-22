@@ -1184,6 +1184,7 @@ test('Mystic Vibe public contact email opens a direct email from Contact page an
   assert.ok(app.includes('data-store-contact-cta'));
   assert.ok(app.includes('mailto:mysticvibetheperfumes@gmail.com'));
   assert.ok(sync.includes("const supportEmail = typeof contact.support_email === 'string'"));
+  assert.ok(sync.includes(String.raw`const supportEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supportEmail);`));
   assert.ok(sync.includes("emailLink.href = 'mailto:' + supportEmail"));
   assert.ok(sync.includes("link.href = 'mailto:' + supportEmail"));
   assert.ok(sync.includes("link.href = 'mailto:' + supportEmail + '?subject='"));
