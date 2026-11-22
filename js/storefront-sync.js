@@ -371,11 +371,29 @@ function applySiteContent(rows) {
   }
 
   const supportEmail = typeof contact.support_email === 'string' ? contact.support_email.trim() : '';
+  const supportEmailValid = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(supportEmail);
+  document.querySelectorAll('[data-store-contact-email]').forEach((link) => {
+    if (supportEmailValid) {
+      link.href = 'mailto:' + supportEmail;
+      link.textContent = supportEmail;
+      link.hidden = false;
+    } else {
+      link.hidden = true;
+    }
+  });
+  document.querySelectorAll('[data-store-contact-cta]').forEach((link) => {
+    if (supportEmailValid) {
+      link.href = 'mailto:' + supportEmail + '?subject=' + encodeURIComponent('Mystic Vibe enquiry');
+      link.hidden = false;
+    } else {
+      link.hidden = true;
+    }
+  });
   const exploreLinks = [...document.querySelectorAll('.footer-grid .links')].find((group) =>
     group.querySelector('a[href$="contact.html"]'));
   if (exploreLinks) {
     let emailLink = exploreLinks.querySelector('[data-store-support-email]');
-    if (supportEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supportEmail)) {
+    if (supportEmailValid) {
       if (!emailLink) {
         emailLink = document.createElement('a');
         emailLink.dataset.storeSupportEmail = 'true';
