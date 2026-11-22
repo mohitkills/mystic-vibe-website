@@ -986,17 +986,7 @@ body:not([data-theme="dark"]) .whatsapp-float[hidden] { display: none !important
 }
 
 
-/* Halve the hero carousel height while preserving full-bleed images and controls. */
-@media (min-width: 761px) {
-  body:not([data-theme="dark"]) .premium-hero {
-    min-height: clamp(280px, calc(50svh - 90px), 380px) !important;
-  }
-}
-@media (max-width: 760px) {
-  body:not([data-theme="dark"]) .premium-hero {
-    min-height: 140px !important;
-  }
-}
+
 
 
 /* Compact premium slider controls for desktop and mobile; preserve clear tap targets. */
@@ -1868,4 +1858,158 @@ body.mv-storefront-hero-loading main .premium-hero-image,
 body main .premium-hero-image.mv-hero-stale-fallback {
   opacity: 0 !important;
   visibility: hidden !important;
+}
+
+
+/* Mystic Vibe current storefront — shared fluid full-width layout.
+   Layout-only overrides: CMS, product data, cart and auth behaviour are untouched. */
+:root {
+  --gutter: clamp(16px, 3.2vw, 56px);
+  --max: 1920px;
+  --max-text: 68ch;
+}
+html,body { max-width:100%; overflow-x:clip; }
+.site-header { width:100%; max-width:none; }
+body:not([data-theme="dark"]) .site-header > .nav {
+  width:min(var(--max),calc(100% - 2 * var(--gutter))) !important;
+  max-width:var(--max) !important; margin-inline:auto !important;
+  padding-inline:var(--gutter) !important; box-sizing:border-box !important;
+  flex-wrap:nowrap !important; min-width:0;
+}
+body:not([data-theme="dark"]) .site-header > .nav .nav-links {
+  flex:1 1 auto; min-width:0; flex-wrap:nowrap;
+  justify-content:center; gap:clamp(7px,1vw,18px);
+}
+body:not([data-theme="dark"]) .site-header > .nav .brand,
+body:not([data-theme="dark"]) .site-header > .nav .nav-actions { flex-shrink:0; }
+
+.catalog-nav,body:not([data-theme="dark"]) .catalog-nav {
+  width:100% !important; max-width:none !important; margin-inline:0 !important;
+  border-radius:0 !important; border-inline:0 !important;
+}
+body:not([data-theme="dark"]) .catalog-nav { margin:8px 0 0 !important; }
+.catalog-nav-inner,body:not([data-theme="dark"]) .catalog-nav-inner {
+  width:100%; max-width:var(--max) !important; margin-inline:auto !important;
+  padding-inline:var(--gutter) !important; box-sizing:border-box;
+}
+
+/* The current CMS carousel is full bleed rather than a 1240px rounded card. */
+.premium-hero,body:not([data-theme="dark"]) .premium-hero {
+  width:100% !important; max-width:none !important;
+  min-height:clamp(520px,78vh,860px) !important;
+  margin:clamp(12px,1.8vw,24px) 0 0 !important;
+  border-radius:0 !important; box-sizing:border-box;
+}
+.premium-hero-media,body:not([data-theme="dark"]) .premium-hero-media {
+  position:absolute !important; inset:0 !important;
+  width:100% !important; height:100% !important;
+}
+.premium-hero-media img.premium-hero-image,
+body:not([data-theme="dark"]) .premium-hero-media img.premium-hero-image {
+  position:absolute !important; inset:0 !important;
+  width:100% !important; height:100% !important;
+  max-width:none !important; max-height:none !important;
+  object-fit:cover !important; object-position:center !important;
+}
+
+/* Full-width section backgrounds; readable content shares a capped 1920px grid. */
+.section {
+  width:100%; padding-block:clamp(56px,7vw,120px) !important;
+  padding-inline:0 !important; box-sizing:border-box;
+}
+.container,body:not([data-theme="dark"]) .section .container {
+  width:100%; max-width:var(--max) !important; margin-inline:auto !important;
+  padding-inline:var(--gutter) !important; box-sizing:border-box;
+}
+.text-block { max-width:var(--max-text); }
+.section-head {
+  grid-template-columns:minmax(0,1fr) minmax(240px,.62fr);
+  gap:clamp(18px,3vw,48px); align-items:end;
+}
+
+/* Keep live product cards and their square image canvases; expand only column count. */
+.product-grid,body:not([data-theme="dark"]) .product-grid {
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:clamp(12px,1.15vw,22px) !important; align-items:stretch;
+}
+@media (min-width:1600px) {
+  .product-grid,body:not([data-theme="dark"]) .product-grid {
+    grid-template-columns:repeat(5,minmax(0,1fr));
+  }
+}
+@media (min-width:1920px) {
+  .product-grid,body:not([data-theme="dark"]) .product-grid {
+    grid-template-columns:repeat(6,minmax(0,1fr));
+  }
+}
+@media (max-width:1199px) {
+  .product-grid,body:not([data-theme="dark"]) .product-grid {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}
+@media (max-width:760px) {
+  .product-grid,body:not([data-theme="dark"]) .product-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:10px !important;
+  }
+  .section-head { grid-template-columns:1fr; gap:12px; }
+}
+
+/* Wider editorial bands with their content aligned to the same site grid. */
+.signature-strip,body:not([data-theme="dark"]) .signature-strip {
+  width:100% !important; max-width:none !important; margin-inline:0 !important;
+  border-radius:0 !important; border-inline:0 !important; padding-inline:0 !important;
+}
+.signature-strip > .container,body:not([data-theme="dark"]) .signature-strip .container {
+  width:100%; max-width:var(--max) !important; margin-inline:auto !important;
+  padding-inline:var(--gutter) !important; box-sizing:border-box;
+}
+.discovery-band { width:100%; padding-inline:0 !important; }
+.discovery-inner,body:not([data-theme="dark"]) .discovery-inner {
+  width:100%; max-width:var(--max) !important; margin-inline:auto !important;
+  padding-inline:var(--gutter); box-sizing:border-box;
+}
+.story-band,body:not([data-theme="dark"]) .story-band {
+  display:block !important; width:100% !important; max-width:none !important;
+  margin-inline:0 !important; padding-inline:0 !important;
+  border-inline:0 !important; border-radius:0 !important; box-sizing:border-box;
+}
+.story-band > .container,body:not([data-theme="dark"]) .story-band > .container {
+  display:grid !important; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr) !important;
+  align-items:center; gap:clamp(24px,4vw,72px);
+  width:100%; max-width:var(--max) !important; margin-inline:auto !important;
+  padding-inline:var(--gutter) !important; box-sizing:border-box;
+}
+.newsletter,.page-hero { width:100%; box-sizing:border-box; }
+.page-title,body:not([data-theme="dark"]) .page-title {
+  width:100%; max-width:var(--max) !important; margin-inline:auto !important;
+  padding-inline:var(--gutter) !important; box-sizing:border-box;
+}
+
+/* Full-width footer background, with columns centred and capped consistently. */
+.footer { width:100%; max-width:none; padding-inline:0 !important; box-sizing:border-box; }
+.footer-grid,.copyright {
+  width:100%; max-width:var(--max) !important; margin-inline:auto !important;
+  padding-inline:var(--gutter) !important; box-sizing:border-box;
+}
+@media (min-width:761px) { .premium-slide-controls { bottom:20px !important; } }
+@media (max-width:760px) {
+  .premium-hero,body:not([data-theme="dark"]) .premium-hero {
+    width:100% !important; min-height:clamp(360px,68svh,600px) !important;
+    margin:12px 0 0 !important; border-radius:0 !important;
+  }
+  .premium-hero-media img.premium-hero-image,
+  body:not([data-theme="dark"]) .premium-hero-media img.premium-hero-image {
+    width:100% !important; height:100% !important;
+    object-fit:cover !important; object-position:center !important;
+  }
+  .story-band > .container,body:not([data-theme="dark"]) .story-band > .container {
+    grid-template-columns:1fr !important; gap:22px;
+  }
+  .premium-slide-controls { bottom:12px !important; }
+}
+
+/* Ensure the footer grid starts from the page gutter, not an inherited footer inset. */
+body:not([data-theme="dark"]) .footer {
+  padding-inline: 0 !important;
 }
