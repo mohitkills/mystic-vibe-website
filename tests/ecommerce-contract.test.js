@@ -1170,3 +1170,25 @@ test('website and Admin display typography use the shared readable Inter family 
   const base = await read('css/styles.css');
   assert.ok(base.includes('.serif,h1,h2,h3{font-family:Inter, Arial, sans-serif}'));
 });
+
+
+test('Mystic Vibe public contact email opens a direct email from Contact page and footer', async () => {
+  const app = await read('js/app.js');
+  const sync = await read('js/storefront-sync.js');
+  const settings = await read('js/store-settings.js');
+  const admin = await read('admin.html');
+  const contact = await read('contact.html');
+
+  assert.ok(app.includes('contact-email-line'));
+  assert.ok(app.includes('data-store-contact-email'));
+  assert.ok(app.includes('data-store-contact-cta'));
+  assert.ok(app.includes('mailto:mysticvibetheperfumes@gmail.com'));
+  assert.ok(sync.includes("const supportEmail = typeof contact.support_email === 'string'"));
+  assert.ok(sync.includes("emailLink.href = 'mailto:' + supportEmail"));
+  assert.ok(sync.includes("link.href = 'mailto:' + supportEmail"));
+  assert.ok(sync.includes("link.href = 'mailto:' + supportEmail + '?subject='"));
+  assert.ok(settings.includes("support_email: 'mysticvibetheperfumes@gmail.com'"));
+  assert.ok(admin.includes('name="support_email"'));
+  assert.ok(admin.includes('placeholder="mysticvibetheperfumes@gmail.com"'));
+  assert.ok(contact.includes('"email":"mysticvibetheperfumes@gmail.com"'));
+});
