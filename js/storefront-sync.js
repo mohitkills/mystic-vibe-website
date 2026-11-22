@@ -371,7 +371,7 @@ function applySiteContent(rows) {
   }
 
   const supportEmail = typeof contact.support_email === 'string' ? contact.support_email.trim() : '';
-  const supportEmailValid = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(supportEmail);
+  const supportEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supportEmail);
   document.querySelectorAll('[data-store-contact-email]').forEach((link) => {
     if (supportEmailValid) {
       link.href = 'mailto:' + supportEmail;
