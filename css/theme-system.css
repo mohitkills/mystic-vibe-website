@@ -2013,3 +2013,16 @@ body:not([data-theme="dark"]) .premium-hero-media img.premium-hero-image {
 body:not([data-theme="dark"]) .footer {
   padding-inline: 0 !important;
 }
+
+
+/* Preserve the current storefront's requested half-height hero treatment. */
+@media (min-width: 761px) {
+  body:not([data-theme="dark"]) .premium-hero {
+    min-height: clamp(280px, calc(50svh - 90px), 380px) !important;
+  }
+}
+@media (max-width: 760px) {
+  body:not([data-theme="dark"]) .premium-hero {
+    min-height: 140px !important;
+  }
+}
